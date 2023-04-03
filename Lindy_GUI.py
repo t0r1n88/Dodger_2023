@@ -12,6 +12,8 @@ import time
 import warnings
 warnings.filterwarnings('ignore', category=UserWarning, module='openpyxl')
 import copy
+import openpyxl
+from openpyxl.utils.dataframe import dataframe_to_rows
 
 
 def resource_path(relative_path):
@@ -93,7 +95,7 @@ def check_first_error(df: pd.DataFrame, name_file):
     finish_lst_index = list(map(lambda x: f'Строка {str(x)}', finish_lst_index))
     temp_error_df['Строка или колонка с ошибкой'] = finish_lst_index
     temp_error_df['Название файла'] = name_file
-    temp_error_df['Описание ошибки'] = 'гр. 09 и гр. 10 < гр. 08 '
+    temp_error_df['Описание ошибки'] = 'Не выполняется условие: гр. 09 и гр. 10 <= гр. 08 '
     return temp_error_df
 
 
@@ -126,7 +128,7 @@ def check_second_error(df: pd.DataFrame, name_file):
     finish_lst_index = list(map(lambda x: f'Строка {str(x)}', finish_lst_index))
     temp_error_df['Строка или колонка с ошибкой'] = finish_lst_index
     temp_error_df['Название файла'] = name_file
-    temp_error_df['Описание ошибки'] = 'Не совпадает гр. 07 = гр.08 + сумма(с гр.11 по гр.32)'
+    temp_error_df['Описание ошибки'] = 'Не выполняется условие: гр. 07 = гр.08 + сумма(с гр.11 по гр.32)'
     return temp_error_df
 
 
@@ -156,7 +158,7 @@ def check_third_error(df: pd.DataFrame, name_file, border):
 
     temp_error_df['Строка или колонка с ошибкой'] = finish_lst_index
     temp_error_df['Название файла'] = name_file
-    temp_error_df['Описание ошибки'] = ' Не совпадает сумма стр. 06 = стр. 02 + стр. 04 '
+    temp_error_df['Описание ошибки'] = 'Не выполняется условие: стр. 06 = стр. 02 + стр. 04 '
     return temp_error_df
 
 
@@ -195,7 +197,7 @@ def check_fourth_error(df: pd.DataFrame, name_file, border):
     temp_error_df['Строка или колонка с ошибкой'] = finish_lst_index
     temp_error_df['Название файла'] = name_file
     temp_error_df[
-        'Описание ошибки'] = ' Не совпадает сумма стр. 06 = стр.07 + стр.08 + стр.09 + стр.10 + стр.11 + стр.12 + стр. 13 '
+        'Описание ошибки'] = 'Не выполняется условие: стр. 06 = стр.07 + стр.08 + стр.09 + стр.10 + стр.11 + стр.12 + стр. 13 '
 
     return temp_error_df
 
@@ -223,10 +225,10 @@ def check_fifth_error(df: pd.DataFrame, name_file, border):
     raw_lst_index = foo_df[
         'index'].tolist()  # делаем список, прибавляем для того чтобы номера строк совпадали с строками в файле
     finish_lst_index = list(
-        map(lambda x: f'В диапазоне строк {border + 9} - {border + 23} в колонке {str(x)}', raw_lst_index))
+        map(lambda x: f'Диапазон строк  {border + 9} - {border + 23} колонка {str(x)}', raw_lst_index))
     temp_error_df['Строка или колонка с ошибкой'] = finish_lst_index
     temp_error_df['Название файла'] = name_file
-    temp_error_df['Описание ошибки'] = ' Не совпадает сумма стр. 14<=стр. 06, стр. 14<=стр 05'
+    temp_error_df['Описание ошибки'] = 'Не выполняется условие: стр. 14<=стр. 06, стр. 14<=стр 05'
     return temp_error_df
 
 
@@ -467,7 +469,18 @@ def processing_data_employment():
         t = time.localtime()
         current_time = time.strftime('%H_%M_%S', t)
         finish_df.to_excel(f'{path_to_end_folder}/Итоговая таблица от {current_time}.xlsx', index=False)
-        error_df.to_excel(f'{path_to_end_folder}/ОШИБКИ от {current_time}.xlsx', index=False)
+
+        # Создаем документ
+        wb = openpyxl.Workbook()
+        for r in dataframe_to_rows(error_df, index=False, header=True):
+            wb['Sheet'].append(r)
+
+        wb['Sheet'].column_dimensions['A'].width = 30
+        wb['Sheet'].column_dimensions['B'].width = 40
+        wb['Sheet'].column_dimensions['C'].width = 50
+
+        wb.save(f'{path_to_end_folder}/ОШИБКИ от {current_time}.xlsx')
+
     except NameError:
         messagebox.showerror('ЛИНДИ Подсчет данных по трудоустройству выпускников ver 1.0',
                              f'Выберите файлы с данными и папку куда будет генерироваться файл')
