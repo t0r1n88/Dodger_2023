@@ -277,6 +277,127 @@ def check_error(df: pd.DataFrame,name_file):
     return error_df
 
 
+def create_check_tables(high_level_dct: dict):
+    """
+    Функция для создания файла с данными по каждой специальности
+    """
+    # Создаем словарь в котором будут храниться словари по специальностям
+    code_spec_dct = {}
+
+    # инвертируем словарь так чтобы код специальности стал внешним ключом а названия файлов внутренними
+    for poo, spec_data in high_level_dct.items():
+        for code_spec, data in spec_data.items():
+            if code_spec not in code_spec_dct:
+                code_spec_dct[code_spec] = {f'{poo}': high_level_dct[poo][code_spec]}
+            else:
+                code_spec_dct[code_spec].update({f'{poo}': high_level_dct[poo][code_spec]})
+
+                # Сортируем получившийся словарь по возрастанию для удобства использования
+    sort_code_spec_dct = sorted(code_spec_dct.items())
+    code_spec_dct = {dct[0]: dct[1] for dct in sort_code_spec_dct}
+
+    # Создаем файл
+    wb = openpyxl.Workbook()
+    # Создаем листы
+    for idx, code_spec in enumerate(code_spec_dct.keys()):
+        wb.create_sheet(title=code_spec, index=idx)
+    del wb['Sheet']  # удаляем лишний лист
+
+    for code_spec in code_spec_dct.keys():
+        temp_code_df = pd.DataFrame.from_dict(code_spec_dct[code_spec], orient='index')
+        temp_code_df = temp_code_df.stack()
+        temp_code_df = temp_code_df.to_frame()
+
+        temp_code_df['Всего'] = temp_code_df[0].apply(lambda x: x.get('Колонка 7'))
+        temp_code_df[
+            'Трудоустроены (по трудовому договору, договору ГПХ в соответствии с трудовым законодательством, законодательством  об обязательном пенсионном страховании)'] = \
+        temp_code_df[0].apply(lambda x: x.get('Колонка 8'))
+        temp_code_df[
+            'В том числе (из трудоустроенных): в соответствии с освоенной профессией, специальностью (исходя из осуществляемой трудовой функции)'] = \
+        temp_code_df[0].apply(lambda x: x.get('Колонка 9'))
+        temp_code_df[
+            'В том числе (из трудоустроенных): работают на протяжении не менее 4-х месяцев на последнем месте работы'] = \
+        temp_code_df[0].apply(lambda x: x.get('Колонка 10'))
+        temp_code_df['Индивидуальные предприниматели'] = temp_code_df[0].apply(lambda x: x.get('Колонка 11'))
+        temp_code_df['Самозанятые (перешедшие на специальный налоговый режим  - налог на профессио-нальный доход)'] = \
+        temp_code_df[0].apply(lambda x: x.get('Колонка 12'))
+        temp_code_df['Продолжили обучение'] = temp_code_df[0].apply(lambda x: x.get('Колонка 13'))
+        temp_code_df['Проходят службу в армии по призыву'] = temp_code_df[0].apply(lambda x: x.get('Колонка 14'))
+        temp_code_df[
+            'Проходят службу в армии на контрактной основе, в органах внутренних дел, Государственной противопожарной службе, органах по контролю за оборотом наркотических средств и психотропных веществ, учреждениях и органах уголовно-исполнительной системы, войсках национальной гвардии Российской Федерации, органах принудительного исполнения Российской Федерации*'] = \
+        temp_code_df[0].apply(lambda x: x.get('Колонка 15'))
+        temp_code_df['Находятся в отпуске по уходу за ребенком'] = temp_code_df[0].apply(lambda x: x.get('Колонка 16'))
+        temp_code_df['Неформальная занятость (нелегальная)'] = temp_code_df[0].apply(lambda x: x.get('Колонка 17'))
+        temp_code_df[
+            'Зарегистрированы в центрах занятости в качестве безработных (получают пособие по безработице) и не планируют трудоустраиваться'] = \
+        temp_code_df[0].apply(lambda x: x.get('Колонка 18'))
+        temp_code_df[
+            'Не имеют мотивации к трудоустройству (кроме зарегистрированных в качестве безработных) и не планируют трудоустраиваться, в том числе по причинам получения иных социальных льгот '] = \
+        temp_code_df[0].apply(lambda x: x.get('Колонка 19'))
+        temp_code_df['Иные причины нахождения под риском нетрудоустройства'] = temp_code_df[0].apply(
+            lambda x: x.get('Колонка 20'))
+        temp_code_df['Смерть, тяжелое состояние здоровья'] = temp_code_df[0].apply(lambda x: x.get('Колонка 21'))
+        temp_code_df['Находятся под следствием, отбывают наказание'] = temp_code_df[0].apply(
+            lambda x: x.get('Колонка 22'))
+        temp_code_df[
+            'Переезд за пределы Российской Федерации (кроме переезда в иные регионы - по ним регион должен располагать сведениями)'] = \
+        temp_code_df[0].apply(lambda x: x.get('Колонка 23'))
+        temp_code_df[
+            'Не могут трудоустраиваться в связи с уходом за больными родственниками, в связи с иными семейными обстоятельствами'] = \
+        temp_code_df[0].apply(lambda x: x.get('Колонка 24'))
+        temp_code_df['Выпускники из числа иностранных граждан, которые не имеют СНИЛС'] = temp_code_df[0].apply(
+            lambda x: x.get('Колонка 25'))
+        temp_code_df[
+            'Иное (в первую очередь выпускники распределяются по всем остальным графам. Данная графа предназначена для очень редких случаев. Если в нее включено более 1 из 200 выпускников - укажите причины в гр. 33 '] = \
+        temp_code_df[0].apply(lambda x: x.get('Колонка 26'))
+        temp_code_df['будут трудоустроены'] = temp_code_df[0].apply(lambda x: x.get('Колонка 27'))
+        temp_code_df['будут осуществлять предпринимательскую деятельность'] = temp_code_df[0].apply(
+            lambda x: x.get('Колонка 28'))
+        temp_code_df['будут самозанятыми'] = temp_code_df[0].apply(lambda x: x.get('Колонка 29'))
+        temp_code_df['будут призваны в армию'] = temp_code_df[0].apply(lambda x: x.get('Колонка 30'))
+        temp_code_df[
+            'будут в армии на контрактной основе, в органах внутренних дел, Государственной противопожарной службе, органах по контролю за оборотом наркотических средств и психотропных веществ, учреждениях и органах уголовно-исполнительной системы, войсках национальной гвардии Российской Федерации, органах принудительного исполнения Российской Федерации*'] = \
+        temp_code_df[0].apply(lambda x: x.get('Колонка 31'))
+        temp_code_df['будут продолжать обучение'] = temp_code_df[0].apply(lambda x: x.get('Колонка 32'))
+        temp_code_df['Принимаемые меры по содействию занятости (тезисно - вид меры, охват выпускников мерой)'] = \
+        temp_code_df[0].apply(lambda x: x.get('Колонка 33'))
+
+        finish_code_spec_df = temp_code_df.drop([0], axis=1)
+
+        finish_code_spec_df = finish_code_spec_df.reset_index()
+
+        finish_code_spec_df.rename(
+            columns={'level_0': 'Название файла', 'level_1': 'Наименование показателей (категория выпускников)'},
+            inplace=True)
+
+        dct = {'Строка 1': 'Всего (общая численность выпускников)',
+               'Строка 2': 'из общей численности выпускников (из строки 01): лица с ОВЗ',
+               'Строка 3': 'из числа лиц с ОВЗ (из строки 02): инвалиды и дети-инвалиды',
+               'Строка 4': 'Инвалиды и дети-инвалиды (кроме учтенных в строке 03)',
+               'Строка 5': 'Имеют договор о целевом обучении',
+               'Строка 6': 'Автосумма строк 02 и 04 - Всего (общая численность выпускников из числа лиц с ОВЗ, инвалидов и детей-инвалидов) '
+            ,
+               'Строка 7': 'из общей численности выпускников из числа лиц с ОВЗ, инвалидов и детей-инвалидов (из строки 06): с нарушениями: зрения',
+               'Строка 8': 'слуха', 'Строка 9': 'опорно-двигательного аппарата',
+               'Строка 10': 'тяжелыми нарушениями речи', 'Строка 11': 'задержкой психического развития',
+               'Строка 12': 'расстройствами аутистического спектра',
+               'Строка 13': 'с инвалидностью вследствие  других причин',
+               'Строка 14': 'из общей численности выпускников из числа лиц с ОВЗ, инвалидов и детей-инвалидов (из строки 06): имеют договор о целевом обучении',
+               'Строка 15': 'Узнать название ячейки',
+               }
+        finish_code_spec_df['Наименование показателей (категория выпускников)'] = finish_code_spec_df[
+            'Наименование показателей (категория выпускников)'].apply(lambda x: dct[x])
+
+        for r in dataframe_to_rows(finish_code_spec_df, index=False, header=True):
+            wb[code_spec].append(r)
+        wb[code_spec].column_dimensions['A'].width = 20
+        wb[code_spec].column_dimensions['B'].width = 40
+
+    t = time.localtime()
+    current_time = time.strftime('%H_%M_%S', t)
+    wb.save(f'{path_to_end_folder}/Данные для проверки правильности заполнения файлов от {current_time}.xlsx')
+
+
 def processing_data_employment():
     """
     Фугкция для обработки данных
@@ -292,11 +413,56 @@ def processing_data_employment():
             name_file = file.split('.xlsx')[0]
             print(name_file)
             df = pd.read_excel(f'{path_folder_data}/{file}', skiprows=7, dtype=str)
+            # Проверка на размер таблицы, должно бьть кратно 15
             if df.shape[0] % 15 != 0:
-                temp_error_df = pd.DataFrame(data=[[f'{name_file}', '', 'КОЛИЧЕСТВО СТРОК С ДАННЫМИ НЕ КРАТНО 15 !!!']],
-                                             columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки'])
+                temp_error_df = pd.DataFrame(data=[
+                    [f'{name_file}', '', 'КОЛИЧЕСТВО СТРОК С ДАННЫМИ НЕ КРАТНО 15 !!! ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
+                                             columns=['Название файла', 'Строка или колонка с ошибкой',
+                                                      'Описание ошибки'])
                 error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
                 continue
+
+            check_code_lst = df['03'].tolist()  # получаем список кодов специальностей
+            # Проверка на то чтобы в колонке 03 в первой строке не было пустой ячейки
+            if check_code_lst[0] is np.nan or check_code_lst[0] == ' ':
+                temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
+                                                    'В колонке 03 на первой строке не заполнен код специальности. ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!! ']],
+                                             columns=['Название файла', 'Строка или колонка с ошибкой',
+                                                      'Описание ошибки'])
+                error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
+                continue
+            # Проверка на непрерывность кода специальности, то есть на 15 строк должен быть только один код
+            border_check_code = 0  # счетчик обработанных страниц
+            quantity_check_code = len(check_code_lst) // 15  # получаем сколько специальностей в таблице
+            flag_error_code_spec = False  # чекбокс для ошибки несоблюдения расстояния в 15 строк
+            flag_error_space_spec = False  # чекбокс для ошибки заполнения кода специальности пробелом
+            for i in range(quantity_check_code):
+                # получаем множество отбрасывая np.nan
+                temp_set = set([code_spec for code_spec in check_code_lst[border_check_code:border_check_code + 15] if
+                                code_spec is not np.nan])
+
+                if len(temp_set) != 1:
+                    flag_error_code_spec = True
+                if ' ' in temp_set:
+                    flag_error_space_spec = True
+                border_check_code += 15
+
+            if flag_error_space_spec:
+                temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
+                                                    'Обнаружены ячейки заполненные пробелом в колонке 03 !!! ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
+                                             columns=['Название файла', 'Строка или колонка с ошибкой',
+                                                      'Описание ошибки'])
+                error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
+                continue
+
+            if flag_error_code_spec:
+                temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
+                                                    'ДОЛЖЕН БЫТЬ ОДИНАКОВЫЙ КОД СПЕЦИАЛЬНОСТИ НА КАЖДЫЕ 15 СТРОК !!! ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
+                                             columns=['Название файла', 'Строка или колонка с ошибкой',
+                                                      'Описание ошибки'])
+                error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
+                continue
+
             df.columns = list(map(str, df.columns))
             # Заполняем пока пропуски в 15 ячейке для каждой специальности
             df['06'] = df['06'].fillna('15 ячейка')
@@ -332,7 +498,7 @@ def processing_data_employment():
             """
             В итоге получается такая структура
             {БРИТ:{13.01.10:{Строка 1:{Колонка 1:0}}},ТСИГХ:{22.01.10:{Строка 1:{Колонка 1:0}}}}
-    
+
             """
 
             current_code = 'Ошибка проверьте правильность заполнения кодов специальностей'  # чекбокс для проверки заполнения кода специальности
@@ -365,6 +531,8 @@ def processing_data_employment():
 
                 idx_row += 1
 
+        create_check_tables(high_level_dct)
+
         # получаем уникальные специальности
         all_spec_code = set()
         for poo, spec in high_level_dct.items():
@@ -383,6 +551,10 @@ def processing_data_employment():
                         else:
                             itog_df[code_spec][row][col] += value
 
+        # Сортируем получившийся словарь по возрастанию для удобства использования
+        sort_itog_dct = sorted(itog_df.items())
+        itog_df = {dct[0]: dct[1] for dct in sort_itog_dct}
+
         out_df = pd.DataFrame.from_dict(itog_df, orient='index')
 
         stack_df = out_df.stack()
@@ -396,7 +568,8 @@ def processing_data_employment():
         frame[
             'В том числе (из трудоустроенных): в соответствии с освоенной профессией, специальностью (исходя из осуществляемой трудовой функции)'] = \
         frame[0].apply(lambda x: x.get('Колонка 9'))
-        frame['В том числе (из трудоустроенных): работают на протяжении не менее 4-х месяцев на последнем месте работы'] = \
+        frame[
+            'В том числе (из трудоустроенных): работают на протяжении не менее 4-х месяцев на последнем месте работы'] = \
         frame[0].apply(lambda x: x.get('Колонка 10'))
         frame['Индивидуальные предприниматели'] = frame[0].apply(lambda x: x.get('Колонка 11'))
         frame['Самозанятые (перешедшие на специальный налоговый режим  - налог на профессио-нальный доход)'] = frame[
@@ -436,8 +609,8 @@ def processing_data_employment():
             'будут в армии на контрактной основе, в органах внутренних дел, Государственной противопожарной службе, органах по контролю за оборотом наркотических средств и психотропных веществ, учреждениях и органах уголовно-исполнительной системы, войсках национальной гвардии Российской Федерации, органах принудительного исполнения Российской Федерации*'] = \
         frame[0].apply(lambda x: x.get('Колонка 31'))
         frame['будут продолжать обучение'] = frame[0].apply(lambda x: x.get('Колонка 32'))
-        frame['Принимаемые меры по содействию занятости (тезисно - вид меры, охват выпускников мерой)'] = frame[0].apply(
-            lambda x: x.get('Колонка 33'))
+        frame['Принимаемые меры по содействию занятости (тезисно - вид меры, охват выпускников мерой)'] = frame[
+            0].apply(lambda x: x.get('Колонка 33'))
 
         finish_df = frame.drop([0], axis=1)
 
@@ -464,7 +637,6 @@ def processing_data_employment():
                }
         finish_df['Наименование показателей (категория выпускников)'] = finish_df[
             'Наименование показателей (категория выпускников)'].apply(lambda x: dct[x])
-
         # генерируем текущее время
         t = time.localtime()
         current_time = time.strftime('%H_%M_%S', t)
@@ -482,27 +654,27 @@ def processing_data_employment():
         wb.save(f'{path_to_end_folder}/ОШИБКИ от {current_time}.xlsx')
 
     except NameError:
-        messagebox.showerror('ЛИНДИ Подсчет данных по трудоустройству выпускников ver 1.0',
+        messagebox.showerror('ЛИНДИ Подсчет данных по трудоустройству выпускников ver 2.0',
                              f'Выберите файлы с данными и папку куда будет генерироваться файл')
     except KeyError as e:
-        messagebox.showerror('ЛИНДИ Подсчет данных по трудоустройству выпускников ver 1.0',
+        messagebox.showerror('ЛИНДИ Подсчет данных по трудоустройству выпускников ver 2.0',
                              f'Не найдено значение {e.args}')
     except FileNotFoundError:
-        messagebox.showerror('ЛИНДИ Подсчет данных по трудоустройству выпускников ver 1.0',
+        messagebox.showerror('ЛИНДИ Подсчет данных по трудоустройству выпускников ver 2.0',
                              f'Перенесите файлы которые вы хотите обработать в корень диска. Проблема может быть\n '
                              f'в слишком длинном пути к обрабатываемым файлам')
     except PermissionError as e:
-        messagebox.showerror('ЛИНДИ Подсчет данных по трудоустройству выпускников ver 1.0',
+        messagebox.showerror('ЛИНДИ Подсчет данных по трудоустройству выпускников ver 2.0',
                              f'Закройте открытые файлы Excel {e.args}')
 
     else:
-        messagebox.showinfo('ЛИНДИ Подсчет данных по трудоустройству выпускников ver 1.0',
+        messagebox.showinfo('ЛИНДИ Подсчет данных по трудоустройству выпускников ver 2.0',
                             'Данные успешно обработаны')
 
 
 if __name__ == '__main__':
     window = Tk()
-    window.title('ЛИНДИ Подсчет данных по трудоустройству выпускников ver 1.0')
+    window.title('ЛИНДИ Подсчет данных по трудоустройству выпускников ver 2.0')
     window.geometry('700x860')
     window.resizable(False, False)
 
