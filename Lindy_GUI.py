@@ -645,7 +645,19 @@ def processing_data_employment():
         # генерируем текущее время
         t = time.localtime()
         current_time = time.strftime('%H_%M_%S', t)
-        finish_df.to_excel(f'{path_to_end_folder}/Итоговая таблица от {current_time}.xlsx', index=False)
+        finish_df.to_excel(f'{path_to_end_folder}/Полная таблица от {current_time}.xlsx', index=False)
+
+        # Создаем файл с 5 строками
+        small_finish_df = pd.DataFrame(columns=finish_df.columns)
+
+        lst_code_spec = finish_df['Код специальности'].unique()  # получаем список специальностей
+        for code_spec in lst_code_spec:
+            temp_df = finish_df[finish_df['Код специальности'] == code_spec]
+            small_finish_df = pd.concat([small_finish_df, temp_df.iloc[:5, :]], axis=0, ignore_index=True)
+
+        small_finish_df.to_excel(f'{path_to_end_folder}/5 строк таблица от {current_time}.xlsx', index=False)
+
+
 
         # Создаем документ
         wb = openpyxl.Workbook()
@@ -659,27 +671,27 @@ def processing_data_employment():
         wb.save(f'{path_to_end_folder}/ОШИБКИ от {current_time}.xlsx')
 
     except NameError:
-        messagebox.showerror('ЛИНДИ Подсчет данных по трудоустройству выпускников ver 2.1',
+        messagebox.showerror('ЛИНДИ Подсчет данных по трудоустройству выпускников ver 2.2',
                              f'Выберите файлы с данными и папку куда будет генерироваться файл')
     except KeyError as e:
-        messagebox.showerror('ЛИНДИ Подсчет данных по трудоустройству выпускников ver 2.1',
+        messagebox.showerror('ЛИНДИ Подсчет данных по трудоустройству выпускников ver 2.2',
                              f'Не найдено значение {e.args}')
     except FileNotFoundError:
-        messagebox.showerror('ЛИНДИ Подсчет данных по трудоустройству выпускников ver 2.1',
+        messagebox.showerror('ЛИНДИ Подсчет данных по трудоустройству выпускников ver 2.2',
                              f'Перенесите файлы которые вы хотите обработать в корень диска. Проблема может быть\n '
                              f'в слишком длинном пути к обрабатываемым файлам')
     except PermissionError as e:
-        messagebox.showerror('ЛИНДИ Подсчет данных по трудоустройству выпускников ver 2.1',
+        messagebox.showerror('ЛИНДИ Подсчет данных по трудоустройству выпускников ver 2.2',
                              f'Закройте открытые файлы Excel {e.args}')
 
     else:
-        messagebox.showinfo('ЛИНДИ Подсчет данных по трудоустройству выпускников ver 2.1',
+        messagebox.showinfo('ЛИНДИ Подсчет данных по трудоустройству выпускников ver 2.2',
                             'Данные успешно обработаны')
 
 
 if __name__ == '__main__':
     window = Tk()
-    window.title('ЛИНДИ Подсчет данных по трудоустройству выпускников ver 2.1')
+    window.title('ЛИНДИ Подсчет данных по трудоустройству выпускников ver 2.2')
     window.geometry('700x860')
     window.resizable(False, False)
 
