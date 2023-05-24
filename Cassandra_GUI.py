@@ -11,9 +11,11 @@ import time
 # pd.options.mode.chained_assignment = None  # default='warn'
 import warnings
 warnings.filterwarnings('ignore', category=UserWarning, module='openpyxl')
+warnings.filterwarnings('ignore', category=DeprecationWarning)
 import copy
 import openpyxl
 from openpyxl.utils.dataframe import dataframe_to_rows
+
 
 
 def resource_path(relative_path):
