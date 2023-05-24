@@ -319,7 +319,7 @@ def create_check_tables(high_level_dct: dict):
     # Создаем листы
     for idx, code_spec in enumerate(code_spec_dct.keys()):
         wb.create_sheet(title=code_spec, index=idx)
-    del wb['Sheet']  # удаляем лишний лист
+
 
     for code_spec in code_spec_dct.keys():
         temp_code_df = pd.DataFrame.from_dict(code_spec_dct[code_spec], orient='index')
@@ -413,6 +413,7 @@ def create_check_tables(high_level_dct: dict):
 
     t = time.localtime()
     current_time = time.strftime('%H_%M_%S', t)
+    del wb['Sheet']  # удаляем лишний лист
     wb.save(f'{path_to_end_folder}/Данные для проверки правильности заполнения файлов от {current_time}.xlsx')
 
 
@@ -493,6 +494,13 @@ def processing_data_employment():
             # Проводим проверку на корректность данных, отправляем копию датафрейма
             file_error_df = check_error(df.copy(), name_file)
             error_df = pd.concat([error_df, file_error_df], axis=0, ignore_index=True)
+            if file_error_df.shape[0] != 0:
+                temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
+                                                    'В файле обнаружены ошибки!!! ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
+                                             columns=['Название файла', 'Строка или колонка с ошибкой',
+                                                      'Описание ошибки'])
+                error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
+                continue
 
             # очищаем от нан и возможнных пустых пробелов
             code_spec = [spec for spec in df['03'].unique() if spec is not np.nan]
