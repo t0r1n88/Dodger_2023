@@ -529,12 +529,12 @@ def processing_data_employment():
             name_file = file.split('.xlsx')[0]
             print(name_file)
             df = pd.read_excel(f'{path_folder_data}/{file}', skiprows=7, dtype=str)
-            # получаем  часть с данными
-            mask = pd.isna(df).all(axis=1)  # создаем маску для строк с пропущенными значениями
-            # проверяем есть ли строка полностью состоящая из nan
-            if True in mask:
-                df = df.iloc[:mask.idxmax()] # если есть то отсекаем все что ниже такой строки
-                # Проверка на размер таблицы, должно бьть кратно 15
+            # # получаем  часть с данными
+            # mask = pd.isna(df).all(axis=1)  # создаем маску для строк с пропущенными значениями
+            # # проверяем есть ли строка полностью состоящая из nan
+            # if True in mask:
+            #     df = df.iloc[:mask.idxmax()] # если есть то отсекаем все что ниже такой строки
+            #     # Проверка на размер таблицы, должно бьть кратно 15
             count_spec = df.shape[0] // 15  # количество специальностей
             df = df.iloc[:count_spec * 15, :]  # отбрасываем строки проверки
             check_code_lst = df['03'].tolist()  # получаем список кодов специальностей
@@ -801,10 +801,10 @@ def processing_data_employment():
     except PermissionError as e:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 1.2',
                              f'Закройте открытые файлы Excel {e.args}')
-    # except:
-    #     messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 1.2',
-    #                          f'При обработка файла {name_file} возникла ошибка !!!\n'
-    #                          f'Проверьте файл на соответсвие шаблону')
+    except:
+        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 1.2',
+                             f'При обработка файла {name_file} возникла ошибка !!!\n'
+                             f'Проверьте файл на соответсвие шаблону')
 
     else:
         if error_df.shape[0] != 0:
@@ -1354,10 +1354,10 @@ def processing_data_employment_modern():
     except PermissionError as e:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 1.2',
                              f'Закройте открытые файлы Excel {e.args}')
-    # except:
-    #     messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 1.2',
-    #                          f'При обработка файла {name_file} возникла ошибка !!!\n'
-    #                          f'Проверьте файл на соответсвие шаблону')
+    except:
+        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 1.2',
+                             f'При обработка файла {name_file} возникла ошибка !!!\n'
+                             f'Проверьте файл на соответсвие шаблону')
 
     else:
         if error_df.shape[0] != 0:
