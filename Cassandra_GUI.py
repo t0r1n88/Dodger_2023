@@ -414,8 +414,7 @@ def create_check_tables(high_level_dct: dict):
         wb[code_spec].column_dimensions['B'].width = 40
 
     t = time.localtime()
-    current_time = time.strftime('%H_%M_%S', t)
-    del wb['Sheet']  # удаляем лишний лист
+
     wb.save(f'{path_to_end_folder}/Данные для проверки правильности заполнения файлов от {current_time}.xlsx')
 
 
