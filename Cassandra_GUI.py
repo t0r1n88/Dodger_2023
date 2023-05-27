@@ -487,7 +487,8 @@ def processing_data_employment():
             df['06'] = df['06'].fillna('15 ячейка')
 
             # Проводим проверку на корректность данных, отправляем копию датафрейма
-            file_error_df = check_error(df.copy(), name_file)
+            tup_correct = (9, 23)  # создаем кортеж  с поправками
+            file_error_df = check_error(df.copy(), name_file, tup_correct)
             error_df = pd.concat([error_df, file_error_df], axis=0, ignore_index=True)
             if file_error_df.shape[0] != 0:
                 temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
