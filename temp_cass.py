@@ -532,7 +532,7 @@ path_to_end_folder = 'data'
 
 
 
-def processing_data_employment_may():
+def processing_data_employment_modern():
     """
     Фугкция для обработки данных формы №15
     :return:
