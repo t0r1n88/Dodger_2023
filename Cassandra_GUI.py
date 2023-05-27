@@ -439,14 +439,8 @@ def processing_data_employment():
             if True in mask:
                 df = df.iloc[:mask.idxmax()] # если есть то отсекаем все что ниже такой строки
                 # Проверка на размер таблицы, должно бьть кратно 15
-            if df.shape[0] % 15 != 0:
-                temp_error_df = pd.DataFrame(data=[
-                    [f'{name_file}', '', 'КОЛИЧЕСТВО СТРОК С ДАННЫМИ НЕ КРАТНО 15 !!! ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
-                                             columns=['Название файла', 'Строка или колонка с ошибкой',
-                                                      'Описание ошибки'])
-                error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
-                continue
-
+            count_spec = df.shape[0] // 15  # количество специальностей
+            df = df.iloc[:count_spec * 15, :]  # отбрасываем строки проверки
             check_code_lst = df['03'].tolist()  # получаем список кодов специальностей
             # Проверка на то чтобы в колонке 03 в первой строке не было пустой ячейки
             if check_code_lst[0] is np.nan or check_code_lst[0] == ' ':
