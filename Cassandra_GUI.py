@@ -24,6 +24,29 @@ class BadHeader(Exception):
     """
     pass
 
+class CheckBoxException(Exception):
+    """
+    Класс для вызовы исключения в случае если неправильно выставлены чекбоксы
+    """
+    pass
+
+class NotFoundValue(Exception):
+    """
+    Класс для обозначения того что значение не найдено
+    """
+    pass
+
+class ShapeDiffierence(Exception):
+    """
+    Класс для обозначения несовпадения размеров таблицы
+    """
+    pass
+
+class ColumnsDifference(Exception):
+    """
+    Класс для обозначения того что названия колонок не совпадают
+    """
+    pass
 
 
 def resource_path(relative_path):
@@ -110,12 +133,9 @@ def check_first_error(df: pd.DataFrame, name_file,tup_correct):
     """
     # получаем строку диапазона
     first_correct = tup_correct[0]
-    df['Проверка 09'] = df['08'] >= df['09']
-    df['Проверка 10'] = df['08'] >= df['10']
-
 
     # Проводим проверку
-    df['Результат'] = df['Проверка 09'] & df['Проверка 10']
+    df['Результат'] = (df['08'] >= df['09']) & (df['08'] >= df['10'])
     # заменяем булевые значения на понятные
     df['Результат'] = df['Результат'].apply(lambda x: 'Правильно' if x else 'Неправильно')
     # получаем датафрейм с ошибками и извлекаем индекс
@@ -326,9 +346,8 @@ def check_seventh_error(df: pd.DataFrame, name_file, border,tup_correct:tuple):
     foo_df['02'] = df.iloc[1, :]
     foo_df['04'] = df.iloc[3, :]
     foo_df['05'] = df.iloc[4, :]
-    foo_df['Сумма'] = foo_df['02'] + foo_df['04']+foo_df['05']
 
-    foo_df['Результат'] = foo_df['01'] >= foo_df['Сумма']
+    foo_df['Результат'] = (foo_df['01'] >= foo_df['02']) & (foo_df['01'] >= foo_df['04']) & (foo_df['01'] >= foo_df['05'])
     foo_df['Результат'] = foo_df['Результат'].apply(lambda x: 'Правильно' if x else 'Неправильно')
 
     foo_df = foo_df[foo_df['Результат'] == 'Неправильно'].reset_index()
@@ -341,7 +360,7 @@ def check_seventh_error(df: pd.DataFrame, name_file, border,tup_correct:tuple):
 
     temp_error_df['Строка или колонка с ошибкой'] = finish_lst_index
     temp_error_df['Название файла'] = name_file
-    temp_error_df['Описание ошибки'] = 'Не выполняется условие: стр.02 и стр.04 и стр.05 <= стр.01 '
+    temp_error_df['Описание ошибки'] = 'Не выполняется условие: стр.02<= стр.01 или стр.04<= стр.01 или стр.05<= стр.01 '
     return temp_error_df
 
 
@@ -1401,6 +1420,172 @@ def processing_data_employment_modern():
                                 'Данные успешно обработаны')
 
 
+"""
+Функции для нахождения разницы между 2 таблицами
+"""
+def select_first_diffrence():
+    """
+    Функция для файла с данными
+    :return: Путь к файлу с данными
+    """
+    global data_first_diffrence
+    # Получаем путь к файлу
+    data_first_diffrence = filedialog.askopenfilename(filetypes=(('Excel files', '*.xlsx'), ('all files', '*.*')))
+
+def select_second_diffrence():
+    """
+    Функция для файла с данными
+    :return: Путь к файлу с данными
+    """
+    global data_second_diffrence
+    # Получаем путь к файлу
+    data_second_diffrence = filedialog.askopenfilename(filetypes=(('Excel files', '*.xlsx'), ('all files', '*.*')))
+
+
+def select_end_folder_diffrence():
+    """
+    Функия для выбора папки.Определенно вот это когда нибудь я перепишу на ООП
+    :return:
+    """
+    global path_to_end_folder_diffrence
+    path_to_end_folder_diffrence = filedialog.askdirectory()
+
+
+def abs_diff(first_value, second_value):
+    """
+    Функция для подсчета абсолютной разницы между 2 значениями
+    """
+    try:
+        return abs(float(first_value) - float(second_value))
+    except:
+        return None
+
+
+def percent_diff(first_value, second_value):
+    """
+    функция для подсчета относительной разницы значений
+    """
+    try:
+        # округляем до трех
+        value = round(float(second_value) / float(first_value), 4) * 100
+        return value
+    except:
+        return None
+
+
+def change_perc_diff(first_value, second_value):
+    """
+    функция для подсчета процентного ихменения значений
+    """
+    try:
+        value = (float(second_value) - float(first_value)) / float(first_value)
+        return round(value, 4) * 100
+    except:
+        return None
+
+
+def processing_diffrence():
+    """
+    Функция для вычисления разницы между двумя таблицами
+    """
+    # загружаем датафреймы
+    try:
+        dif_first_sheet_name = entry_first_sheet_name_diffrence.get()
+        dif_second_sheet_name = entry_second_sheet_name_diffrence.get()
+
+        df1 = pd.read_excel(data_first_diffrence,sheet_name=dif_first_sheet_name,dtype=str)
+        df2 = pd.read_excel(data_second_diffrence,sheet_name=dif_second_sheet_name,dtype=str)
+
+        # проверяем на соответсвие размеров
+        if df1.shape != df2.shape:
+            raise ShapeDiffierence
+
+        # Проверям на соответсвие колонок
+        if list(df1.columns) != list(df2.columns):
+            diff_columns = set(df1.columns).difference(set(df2.columns)) # получаем отличающиеся элементы
+            raise ColumnsDifference
+
+        df_cols = df1.compare(df2,result_names=('Первая таблица','Вторая таблица')) # датафрейм с разницей по колонкам
+        df_cols.index = list(map(lambda x: x + 2, df_cols.index)) # добавляем к индексу +2 чтобы соответствовать нумерации в экселе
+        df_cols.index.name = '№ строки' # переименовываем индекс
+
+        df_rows = df1.compare(df2, align_axis=0, result_names=('Первая таблица', 'Вторая таблица')) # датафрейм с разницей по строкам
+        lst_mul_ind = list(map(lambda x: (x[0] + 2, x[1]), df_rows.index)) # добавляем к индексу +2 чтобы соответствовать нумерации в экселе
+        index = pd.MultiIndex.from_tuples(lst_mul_ind, names=['№ строки', 'Таблица']) # создаем мультиндекс
+        df_rows.index = index
+
+        # Создаем датафрейм с подсчетом разниц
+        df_diff_cols = df_cols.copy()
+
+        # получаем список колонок первого уровня
+        temp_first_level_column = list(map(lambda x: x[0], df_diff_cols.columns))
+        first_level_column = []
+        [first_level_column.append(value) for value in temp_first_level_column if value not in first_level_column]
+
+        # Добавляем колонки с абсолютной и относительной разницей
+        count_columns = 2
+        for name_column in first_level_column:
+            # высчитываем абсолютную разницу
+            df_diff_cols.insert(count_columns, (name_column, 'Разница между первым и вторым значением'),
+                                df_diff_cols.apply(lambda x: abs_diff(x[name_column]['Первая таблица'],
+                                                                      x[name_column]['Вторая таблица']), axis=1))
+
+
+            # высчитываем отношение второго значения от первого
+            df_diff_cols.insert(count_columns + 1, (name_column, '% второго от первого значения'),
+                                df_diff_cols.apply(lambda x: percent_diff(x[name_column]['Первая таблица'],
+                                                                          x[name_column]['Вторая таблица']), axis=1))
+
+            # высчитываем процентное изменение
+            df_diff_cols.insert(count_columns + 2, (name_column, 'Изменение в процентах'),
+                                df_diff_cols.apply(lambda x: change_perc_diff(x[name_column]['Первая таблица'],
+                                                                              x[name_column]['Вторая таблица']),
+                                                   axis=1))
+
+            count_columns += 5
+
+        # записываем
+        t = time.localtime()
+        current_time = time.strftime('%H_%M_%S', t)
+        # делаем так чтобы записать на разные листы
+        with pd.ExcelWriter(f'{path_to_end_folder_diffrence}/Разница между 2 таблицами {current_time}.xlsx') as writer:
+            df_cols.to_excel(writer,sheet_name='По колонкам')
+            df_rows.to_excel(writer,sheet_name='По строкам')
+            df_diff_cols.to_excel(writer,sheet_name='Значение разницы')
+    except ShapeDiffierence:
+        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 2.1',
+                             f'Не совпадают размеры таблиц, В первой таблице {df1.shape[0]}-стр. и {df1.shape[1]}-кол.\n'
+                             f'Во второй таблице {df2.shape[0]}-стр. и {df2.shape[1]}-кол.')
+
+    except ColumnsDifference:
+        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 2.1',
+                             f'Названия колонок в сравниваемых таблицах отличаются\n'
+                             f'Колонок:{diff_columns}  нет во второй таблице !!!\n'
+                             f'Сделайте названия колонок одинаковыми.')
+
+    except NameError:
+        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 2.1',
+                             f'Выберите файлы с данными и папку куда будет генерироваться файл')
+        logging.exception('AN ERROR HAS OCCURRED')
+    except ValueError:
+        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 2.1',
+                             f'В файлах нет листа с таким названием!\n'
+                             f'Проверьте написание названия листа')
+        logging.exception('AN ERROR HAS OCCURRED')
+    except FileNotFoundError:
+        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 2.1',
+                             f'Перенесите файлы которые вы хотите обработать в корень диска. Проблема может быть\n '
+                             f'в слишком длинном пути к обрабатываемым файлам')
+    # except:
+    #     logging.exception('AN ERROR HAS OCCURRED')
+    #     messagebox.showerror('Веста Обработка таблиц и создание документов ver 1.34',
+    #                          'Возникла ошибка!!! Подробности ошибки в файле error.log')
+    else:
+        messagebox.showinfo('Кассандра Подсчет данных по трудоустройству выпускников ver 2.1', 'Таблицы успешно обработаны')
+
+
+
+
 if __name__ == '__main__':
     window = Tk()
     window.title('Кассандра Подсчет данных по трудоустройству выпускников ver 2.1')
@@ -1537,6 +1722,81 @@ if __name__ == '__main__':
                                   command=processing_data_ck_employment
                                   )
     btn_proccessing_ck_data.grid(column=0, row=4, padx=10, pady=10)
+
+
+    """
+    Разница двух таблиц
+    """
+    tab_diffrence = ttk.Frame(tab_control)
+    tab_control.add(tab_diffrence, text='Разница 2 таблиц')
+    tab_control.pack(expand=1, fill='both')
+
+    # Добавляем виджеты на вкладку разница 2 двух таблиц
+    # Создаем метку для описания назначения программы
+    lbl_hello = Label(tab_diffrence,
+                      text='Центр опережающей профессиональной подготовки Республики Бурятия\n'
+                           'Количество строк и колонок в таблицах должно совпадать\n'
+                           'Названия колонок в таблицах должны совпадать'
+                           '\nДля корректной работы программмы уберите из таблицы объединенные ячейки')
+    lbl_hello.grid(column=0, row=0, padx=10, pady=25)
+
+    # Картинка
+    path_com = resource_path('logo.png')
+    img_diffrence = PhotoImage(file=path_com)
+    Label(tab_diffrence,
+          image=img
+          ).grid(column=1, row=0, padx=10, pady=25)
+
+    # Создаем область для того чтобы поместить туда подготовительные кнопки(выбрать файл,выбрать папку и т.п.)
+    frame_data_for_diffrence = LabelFrame(tab_diffrence, text='Подготовка')
+    frame_data_for_diffrence.grid(column=0, row=2, padx=10)
+
+    # Создаем кнопку Выбрать  первый файл с данными
+    btn_data_first_diffrence = Button(frame_data_for_diffrence, text='1) Выберите файл с первой таблицей',
+                                      font=('Arial Bold', 10),
+                                      command=select_first_diffrence
+                                      )
+    btn_data_first_diffrence.grid(column=0, row=3, padx=10, pady=10)
+
+    # Определяем текстовую переменную
+    entry_first_sheet_name_diffrence = StringVar()
+    # Описание поля
+    label_first_sheet_name_diffrence = Label(frame_data_for_diffrence,
+                                   text='2) Введите название листа, где находится первая таблица')
+    label_first_sheet_name_diffrence.grid(column=0, row=4, padx=10, pady=10)
+    # поле ввода имени листа
+    first_sheet_name_entry_diffrence = Entry(frame_data_for_diffrence, textvariable=entry_first_sheet_name_diffrence, width=30)
+    first_sheet_name_entry_diffrence.grid(column=0, row=5, padx=5, pady=5, ipadx=15, ipady=10)
+
+    # Создаем кнопку Выбрать  второй файл с данными
+    btn_data_second_diffrence = Button(frame_data_for_diffrence, text='3) Выберите файл со второй таблицей',
+                                       font=('Arial Bold', 10),
+                                       command=select_second_diffrence
+                                       )
+    btn_data_second_diffrence.grid(column=0, row=6, padx=10, pady=10)
+
+    # Определяем текстовую переменную
+    entry_second_sheet_name_diffrence = StringVar()
+    # Описание поля
+    label_second_sheet_name_diffrence = Label(frame_data_for_diffrence,
+                                    text='4) Введите название листа, где находится вторая таблица')
+    label_second_sheet_name_diffrence.grid(column=0, row=7, padx=10, pady=10)
+    # поле ввода
+    second__sheet_name_entry_diffrence = Entry(frame_data_for_diffrence, textvariable=entry_second_sheet_name_diffrence, width=30)
+    second__sheet_name_entry_diffrence.grid(column=0, row=8, padx=5, pady=5, ipadx=15, ipady=10)
+
+    # Создаем кнопку выбора папки куда будет генерироваьться файл
+    btn_select_end_diffrence = Button(frame_data_for_diffrence, text='5) Выберите конечную папку',
+                                      font=('Arial Bold', 10),
+                                      command=select_end_folder_diffrence
+                                      )
+    btn_select_end_diffrence.grid(column=0, row=10, padx=10, pady=10)
+
+    # Создаем кнопку Обработать данные
+    btn_data_do_diffrence = Button(tab_diffrence, text='6) Обработать таблицы', font=('Arial Bold', 20),
+                                   command=processing_diffrence
+                                   )
+    btn_data_do_diffrence.grid(column=0, row=11, padx=10, pady=10)
 
 
 
