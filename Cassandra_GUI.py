@@ -800,20 +800,39 @@ def processing_data_employment():
                }
         finish_df['Наименование показателей (категория выпускников)'] = finish_df[
             'Наименование показателей (категория выпускников)'].apply(lambda x: dct[x])
+        # добавляем строки с проверкой
+        count = 0
+        for i in range(15, len(finish_df) + 1, 15):
+            new_row = finish_df.iloc[i - 1 + count, :].to_frame().transpose().copy()
+            new_row.iloc[:, 1] = 'Проверка (строка не редактируется)'
+            new_row.iloc[:, 2:] = 'проверка пройдена'
+
+            # Вставка новой строки через каждые 15 строк
+            finish_df = pd.concat([finish_df.iloc[:i + count], new_row, finish_df.iloc[i + count:]]).reset_index(drop=True)
+            count += 1
+        lst_number_row = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15',
+                          '16']
+        multipler = len(finish_df) // 16  # получаем количество специальностей/профессий
+        # вставляем новую колонку
+        finish_df.insert(1, 'Номер строки', pd.Series(lst_number_row * multipler))
         # генерируем текущее время
         t = time.localtime()
         current_time = time.strftime('%H_%M_%S', t)
-        finish_df.to_excel(f'{path_to_end_folder}/Полная таблица от {current_time}.xlsx', index=False)
+        finish_df.to_excel(f'{path_to_end_folder}/Полная таблица  от {current_time}.xlsx', index=False)
 
         # Создаем файл с 5 строками
         small_finish_df = pd.DataFrame(columns=finish_df.columns)
+        one_finish_df = pd.DataFrame(columns=finish_df.columns)
 
         lst_code_spec = finish_df['Код специальности'].unique()  # получаем список специальностей
         for code_spec in lst_code_spec:
             temp_df = finish_df[finish_df['Код специальности'] == code_spec]
             small_finish_df = pd.concat([small_finish_df, temp_df.iloc[:5, :]], axis=0, ignore_index=True)
+            one_finish_df = pd.concat([one_finish_df, temp_df.iloc[:1, :]], axis=0, ignore_index=True)
 
-        small_finish_df.to_excel(f'{path_to_end_folder}/5 строк таблица от {current_time}.xlsx', index=False)
+        with pd.ExcelWriter(f'{path_to_end_folder}/5 строк Трудоустройство от {current_time}.xlsx') as writer:
+            small_finish_df.to_excel(writer,sheet_name='5 строк',index=False)
+            one_finish_df.to_excel(writer,sheet_name='1 строка (Всего выпускников)',index=False)
 
 
 
@@ -1366,6 +1385,22 @@ def processing_data_employment_modern():
                }
         finish_df['Наименование показателей (категория выпускников)'] = finish_df[
             'Наименование показателей (категория выпускников)'].apply(lambda x: dct[x])
+
+        # добавляем строки с проверкой
+        count = 0
+        for i in range(15, len(finish_df) + 1, 15):
+            new_row = finish_df.iloc[i - 1 + count, :].to_frame().transpose().copy()
+            new_row.iloc[:, 1] = 'Проверка (строка не редактируется)'
+            new_row.iloc[:, 2:] = 'проверка пройдена'
+
+            # Вставка новой строки через каждые 15 строк
+            finish_df = pd.concat([finish_df.iloc[:i + count], new_row, finish_df.iloc[i + count:]]).reset_index(drop=True)
+            count += 1
+        lst_number_row = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15',
+                          '16']
+        multipler = len(finish_df) // 16  # получаем количество специальностей/профессий
+        # вставляем новую колонку
+        finish_df.insert(1, 'Номер строки', pd.Series(lst_number_row * multipler))
         # генерируем текущее время
         t = time.localtime()
         current_time = time.strftime('%H_%M_%S', t)
@@ -1373,13 +1408,20 @@ def processing_data_employment_modern():
 
         # Создаем файл с 5 строками
         small_finish_df = pd.DataFrame(columns=finish_df.columns)
+        one_finish_df = pd.DataFrame(columns=finish_df.columns)
 
         lst_code_spec = finish_df['Код специальности'].unique()  # получаем список специальностей
         for code_spec in lst_code_spec:
             temp_df = finish_df[finish_df['Код специальности'] == code_spec]
             small_finish_df = pd.concat([small_finish_df, temp_df.iloc[:5, :]], axis=0, ignore_index=True)
+            one_finish_df = pd.concat([one_finish_df, temp_df.iloc[:1, :]], axis=0, ignore_index=True)
 
-        small_finish_df.to_excel(f'{path_to_end_folder}/5 строк Форма №15 от {current_time}.xlsx', index=False)
+
+        with pd.ExcelWriter(f'{path_to_end_folder}/5 строк Форма №15 от {current_time}.xlsx') as writer:
+            small_finish_df.to_excel(writer,sheet_name='5 строк',index=False)
+            one_finish_df.to_excel(writer,sheet_name='1 строка (Всего выпускников)',index=False)
+
+        # small_finish_df.to_excel(f'{path_to_end_folder}/5 строк Форма №15 от {current_time}.xlsx', index=False)
 
         # Создаем документ
         wb = openpyxl.Workbook()
