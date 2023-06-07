@@ -17,6 +17,14 @@ import openpyxl
 from openpyxl.utils.dataframe import dataframe_to_rows
 
 
+# Классы для исключений
+class BadHeader(Exception):
+    """
+    Класс для проверки правильности заголовка
+    """
+    pass
+
+
 
 def resource_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller
@@ -529,23 +537,28 @@ def processing_data_employment():
             name_file = file.split('.xlsx')[0]
             print(name_file)
             df = pd.read_excel(f'{path_folder_data}/{file}', skiprows=7, dtype=str)
+            # проверяем корректность заголовка
+            if '05' not in df.columns:
+                raise BadHeader
+            df = df[df['05'] != '16']  # фильтруем строки с проверками
             # # получаем  часть с данными
-            # mask = pd.isna(df).all(axis=1)  # создаем маску для строк с пропущенными значениями
-            # # проверяем есть ли строка полностью состоящая из nan
-            # if True in mask:
-            #     df = df.iloc[:mask.idxmax()] # если есть то отсекаем все что ниже такой строки
+            mask = pd.isna(df).all(axis=1)  # создаем маску для строк с пропущенными значениями
+            # проверяем есть ли строка полностью состоящая из nan
+            if True in mask.tolist():
+                df = df.iloc[:mask.idxmax()] # если есть то отсекаем все что ниже такой строки
             #     # Проверка на размер таблицы, должно бьть кратно 15
             count_spec = df.shape[0] // 15  # количество специальностей
             df = df.iloc[:count_spec * 15, :]  # отбрасываем строки проверки
             check_code_lst = df['03'].tolist()  # получаем список кодов специальностей
             # Проверка на то чтобы в колонке 03 в первой строке не было пустой ячейки
-            if check_code_lst[0] is np.nan or check_code_lst[0] == ' ':
-                temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
-                                                    'В колонке 03 на первой строке не заполнен код специальности. ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!! ']],
-                                             columns=['Название файла', 'Строка или колонка с ошибкой',
-                                                      'Описание ошибки'])
-                error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
-                continue
+            if True in mask.tolist():
+                if check_code_lst[0] is np.nan or check_code_lst[0] == ' ':
+                    temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
+                                                        'В колонке 03 на первой строке не заполнен код специальности. ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!! ']],
+                                                 columns=['Название файла', 'Строка или колонка с ошибкой',
+                                                          'Описание ошибки'])
+                    error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
+                    continue
             # Проверка на непрерывность кода специальности, то есть на 15 строк должен быть только один код
             border_check_code = 0  # счетчик обработанных страниц
             quantity_check_code = len(check_code_lst) // 15  # получаем сколько специальностей в таблице
@@ -791,6 +804,9 @@ def processing_data_employment():
     except NameError:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 2.1',
                              f'Выберите файлы с данными и папку куда будет генерироваться файл')
+    except BadHeader:
+        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 2.1',
+                             f'Проверьте заголовок таблицы в файле: {name_file}. Строка с номерами колонок (01,02,03 и т.д.)\n должна находиться на 8 строке!')
     except KeyError as e:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 2.1',
                              f'Не найдено значение {e.args}')
@@ -801,10 +817,10 @@ def processing_data_employment():
     except PermissionError as e:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 2.1',
                              f'Закройте открытые файлы Excel {e.args}')
-    except:
-        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 2.1',
-                             f'При обработка файла {name_file} возникла ошибка !!!\n'
-                             f'Проверьте файл на соответсвие шаблону')
+    # except:
+    #     messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 2.1',
+    #                          f'При обработка файла {name_file} возникла ошибка !!!\n'
+    #                          f'Проверьте файл на соответсвие шаблону')
 
     else:
         if error_df.shape[0] != 0:
@@ -1084,24 +1100,28 @@ def processing_data_employment_modern():
             name_file = file.split('.xlsx')[0]
             print(name_file)
             df = pd.read_excel(f'{path_folder_data}/{file}', skiprows=4, dtype=str)
+            if '05' not in df.columns:
+                raise BadHeader
+            df = df[df['05'] !='16'] # фильтруем строки с проверками
             # получаем  часть с данными
             mask = pd.isna(df).all(axis=1)  # создаем маску для строк с пропущенными значениями
             # проверяем есть ли строка полностью состоящая из nan
-            if True in mask:
+            if True in mask.tolist():
                 df = df.iloc[:mask.idxmax()] # если есть то отсекаем все что ниже такой строки
-                # Проверка на размер таблицы, должно бьть кратно 15
+            #     # Проверка на размер таблицы, должно бьть кратно 15
             count_spec = df.shape[0] // 15 # количество специальностей
             df = df.iloc[:count_spec*15,:] # отбрасываем строки проверки
 
             check_code_lst = df['03'].tolist()  # получаем список кодов специальностей
             # Проверка на то чтобы в колонке 03 в первой строке не было пустой ячейки
-            if check_code_lst[0] is np.nan or check_code_lst[0] == ' ':
-                temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
-                                                    'В колонке 03 на первой строке не заполнен код специальности. ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!! ']],
-                                             columns=['Название файла', 'Строка или колонка с ошибкой',
-                                                      'Описание ошибки'])
-                error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
-                continue
+            if True in mask.tolist():
+                if check_code_lst[0] is np.nan or check_code_lst[0] == ' ':
+                    temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
+                                                        'В колонке 03 на первой строке не заполнен код специальности. ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!! ']],
+                                                 columns=['Название файла', 'Строка или колонка с ошибкой',
+                                                          'Описание ошибки'])
+                    error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
+                    continue
             # Проверка на непрерывность кода специальности, то есть на 15 строк должен быть только один код
             border_check_code = 0  # счетчик обработанных страниц
             quantity_check_code = len(check_code_lst) // 15  # получаем сколько специальностей в таблице
@@ -1344,6 +1364,9 @@ def processing_data_employment_modern():
     except NameError:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 2.1',
                              f'Выберите файлы с данными и папку куда будет генерироваться файл')
+    except BadHeader:
+        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 2.1',
+                             f'Проверьте заголовок таблицы в файле: {name_file}. Строка с номерами колонок (01,02,03 и т.д.)\n должна находиться на 5 строке!')
     except KeyError as e:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 2.1',
                              f'Не найдено значение {e.args}')
@@ -1354,10 +1377,10 @@ def processing_data_employment_modern():
     except PermissionError as e:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 2.1',
                              f'Закройте открытые файлы Excel {e.args}')
-    except:
-        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 2.1',
-                             f'При обработка файла {name_file} возникла ошибка !!!\n'
-                             f'Проверьте файл на соответсвие шаблону')
+    # except:
+    #     messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 2.1',
+    #                          f'При обработка файла {name_file} возникла ошибка !!!\n'
+    #                          f'Проверьте файл на соответсвие шаблону')
 
     else:
         if error_df.shape[0] != 0:
