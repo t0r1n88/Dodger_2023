@@ -110,10 +110,12 @@ def check_first_error(df: pd.DataFrame, name_file,tup_correct):
     """
     # получаем строку диапазона
     first_correct = tup_correct[0]
+    df['Проверка 09'] = df['08'] >= df['09']
+    df['Проверка 10'] = df['08'] >= df['10']
 
-    df['Сумма'] = df['09'] + df['10']
+
     # Проводим проверку
-    df['Результат'] = df['08'] >= df['Сумма']
+    df['Результат'] = df['Проверка 09'] & df['Проверка 10']
     # заменяем булевые значения на понятные
     df['Результат'] = df['Результат'].apply(lambda x: 'Правильно' if x else 'Неправильно')
     # получаем датафрейм с ошибками и извлекаем индекс
@@ -126,7 +128,7 @@ def check_first_error(df: pd.DataFrame, name_file,tup_correct):
     finish_lst_index = list(map(lambda x: f'Строка {str(x)}', finish_lst_index))
     temp_error_df['Строка или колонка с ошибкой'] = finish_lst_index
     temp_error_df['Название файла'] = name_file
-    temp_error_df['Описание ошибки'] = 'Не выполняется условие: гр. 09 и гр. 10 <= гр. 08 '
+    temp_error_df['Описание ошибки'] = 'Не выполняется условие: гр. 09 <= гр. 08  или гр. 10 <= гр. 08'
     return temp_error_df
 
 
@@ -534,138 +536,144 @@ def processing_data_employment():
 
     try:
         for file in os.listdir(path_folder_data):
-            name_file = file.split('.xlsx')[0]
-            print(name_file)
-            df = pd.read_excel(f'{path_folder_data}/{file}', skiprows=7, dtype=str)
-            # проверяем корректность заголовка
-            if '05' not in df.columns:
-                raise BadHeader
-            df = df[df['05'] != '16']  # фильтруем строки с проверками
-            # # получаем  часть с данными
-            mask = pd.isna(df).all(axis=1)  # создаем маску для строк с пропущенными значениями
-            # проверяем есть ли строка полностью состоящая из nan
-            if True in mask.tolist():
-                df = df.iloc[:mask.idxmax()] # если есть то отсекаем все что ниже такой строки
-            #     # Проверка на размер таблицы, должно бьть кратно 15
-            count_spec = df.shape[0] // 15  # количество специальностей
-            df = df.iloc[:count_spec * 15, :]  # отбрасываем строки проверки
-            check_code_lst = df['03'].tolist()  # получаем список кодов специальностей
-            # Проверка на то чтобы в колонке 03 в первой строке не было пустой ячейки
-            if True in mask.tolist():
-                if check_code_lst[0] is np.nan or check_code_lst[0] == ' ':
+            if not file.startswith('~$') and file.endswith('.xlsx'):
+                name_file = file.split('.xlsx')[0]
+                print(name_file)
+                df = pd.read_excel(f'{path_folder_data}/{file}', skiprows=7, dtype=str)
+                # проверяем корректность заголовка
+                if '05' not in df.columns:
                     temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
-                                                        'В колонке 03 на первой строке не заполнен код специальности. ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!! ']],
+                                                        'Проверьте заголовок таблицы в файле.Строка с номерами колонок (01,02,03 и т.д.)\n должна находиться на 8 строке! ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!! ']],
                                                  columns=['Название файла', 'Строка или колонка с ошибкой',
                                                           'Описание ошибки'])
                     error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
                     continue
-            # Проверка на непрерывность кода специальности, то есть на 15 строк должен быть только один код
-            border_check_code = 0  # счетчик обработанных страниц
-            quantity_check_code = len(check_code_lst) // 15  # получаем сколько специальностей в таблице
-            flag_error_code_spec = False  # чекбокс для ошибки несоблюдения расстояния в 15 строк
-            flag_error_space_spec = False  # чекбокс для ошибки заполнения кода специальности пробелом
-            for i in range(quantity_check_code):
-                # получаем множество отбрасывая np.nan
-                temp_set = set([code_spec for code_spec in check_code_lst[border_check_code:border_check_code + 15] if
-                                code_spec is not np.nan])
+                df = df[df['05'] != '16']  # фильтруем строки с проверками
+                # # получаем  часть с данными
+                mask = pd.isna(df).all(axis=1)  # создаем маску для строк с пропущенными значениями
+                # проверяем есть ли строка полностью состоящая из nan
+                if True in mask.tolist():
+                    df = df.iloc[:mask.idxmax()] # если есть то отсекаем все что ниже такой строки
+                #     # Проверка на размер таблицы, должно бьть кратно 15
+                count_spec = df.shape[0] // 15  # количество специальностей
+                df = df.iloc[:count_spec * 15, :]  # отбрасываем строки проверки
+                check_code_lst = df['03'].tolist()  # получаем список кодов специальностей
+                # Проверка на то чтобы в колонке 03 в первой строке не было пустой ячейки
+                if True in mask.tolist():
+                    if check_code_lst[0] is np.nan or check_code_lst[0] == ' ':
+                        temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
+                                                            'В колонке 03 на первой строке не заполнен код специальности. ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!! ']],
+                                                     columns=['Название файла', 'Строка или колонка с ошибкой',
+                                                              'Описание ошибки'])
+                        error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
+                        continue
+                # Проверка на непрерывность кода специальности, то есть на 15 строк должен быть только один код
+                border_check_code = 0  # счетчик обработанных страниц
+                quantity_check_code = len(check_code_lst) // 15  # получаем сколько специальностей в таблице
+                flag_error_code_spec = False  # чекбокс для ошибки несоблюдения расстояния в 15 строк
+                flag_error_space_spec = False  # чекбокс для ошибки заполнения кода специальности пробелом
+                for i in range(quantity_check_code):
+                    # получаем множество отбрасывая np.nan
+                    temp_set = set([code_spec for code_spec in check_code_lst[border_check_code:border_check_code + 15] if
+                                    code_spec is not np.nan])
 
-                if len(temp_set) != 1:
-                    flag_error_code_spec = True
-                if ' ' in temp_set:
-                    flag_error_space_spec = True
-                border_check_code += 15
+                    if len(temp_set) != 1:
+                        flag_error_code_spec = True
+                    if ' ' in temp_set:
+                        flag_error_space_spec = True
+                    border_check_code += 15
 
-            if flag_error_space_spec:
-                temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
-                                                    'Обнаружены ячейки заполненные пробелом в колонке 03 !!! ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
-                                             columns=['Название файла', 'Строка или колонка с ошибкой',
-                                                      'Описание ошибки'])
-                error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
-                continue
+                if flag_error_space_spec:
+                    temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
+                                                        'Обнаружены ячейки заполненные пробелом в колонке 03 !!! ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
+                                                 columns=['Название файла', 'Строка или колонка с ошибкой',
+                                                          'Описание ошибки'])
+                    error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
+                    continue
 
-            if flag_error_code_spec:
-                temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
-                                                    'ДОЛЖЕН БЫТЬ ОДИНАКОВЫЙ КОД СПЕЦИАЛЬНОСТИ НА КАЖДЫЕ 15 СТРОК !!! ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
-                                             columns=['Название файла', 'Строка или колонка с ошибкой',
-                                                      'Описание ошибки'])
-                error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
-                continue
+                if flag_error_code_spec:
+                    temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
+                                                        'ДОЛЖЕН БЫТЬ ОДИНАКОВЫЙ КОД СПЕЦИАЛЬНОСТИ НА КАЖДЫЕ 15 СТРОК !!! ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
+                                                 columns=['Название файла', 'Строка или колонка с ошибкой',
+                                                          'Описание ошибки'])
+                    error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
+                    continue
 
-            df.columns = list(map(str, df.columns))
-            # Заполняем пока пропуски в 15 ячейке для каждой специальности
-            df['06'] = df['06'].fillna('15 ячейка')
+                df.columns = list(map(str, df.columns))
+                # Заполняем пока пропуски в 15 ячейке для каждой специальности
+                df['06'] = df['06'].fillna('15 ячейка')
 
-            # Проводим проверку на корректность данных, отправляем копию датафрейма
-            tup_correct = (9, 23)  # создаем кортеж  с поправками
-            file_error_df = check_error(df.copy(), name_file, tup_correct)
-            error_df = pd.concat([error_df, file_error_df], axis=0, ignore_index=True)
-            if file_error_df.shape[0] != 0:
-                temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
-                                                    'В файле обнаружены ошибки!!! ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
-                                             columns=['Название файла', 'Строка или колонка с ошибкой',
-                                                      'Описание ошибки'])
-                error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
-                continue
+                # Проводим проверку на корректность данных, отправляем копию датафрейма
+                tup_correct = (9, 23)  # создаем кортеж  с поправками
+                file_error_df = check_error(df.copy(), name_file, tup_correct)
+                error_df = pd.concat([error_df, file_error_df], axis=0, ignore_index=True)
+                if file_error_df.shape[0] != 0:
+                    temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
+                                                        'В файле обнаружены ошибки!!! ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
+                                                 columns=['Название файла', 'Строка или колонка с ошибкой',
+                                                          'Описание ошибки'])
+                    error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
+                    continue
 
-            # очищаем от нан и возможнных пустых пробелов
-            code_spec = [spec for spec in df['03'].unique() if spec is not np.nan]
-            code_spec = [spec for spec in code_spec if spec != ' ']
+                # очищаем от нан и возможнных пустых пробелов
+                code_spec = [spec for spec in df['03'].unique() if spec is not np.nan]
+                code_spec = [spec for spec in code_spec if spec != ' ']
 
-            # Создаем список для строк
-            row_cat = [f'Строка {i}' for i in range(1, 16)]
-            # Создаем список для колонок
-            column_cat = [f'Колонка {i}' for i in range(7, 34)]
+                # Создаем список для строк
+                row_cat = [f'Строка {i}' for i in range(1, 16)]
+                # Создаем список для колонок
+                column_cat = [f'Колонка {i}' for i in range(7, 34)]
 
-            # Создаем словарь нижнего уровня содержащий в себе все данные для каждой специальности
-            spec_dict = {}
-            for row in row_cat:
-                spec_dict[row] = {key: 0 for key in column_cat}
+                # Создаем словарь нижнего уровня содержащий в себе все данные для каждой специальности
+                spec_dict = {}
+                for row in row_cat:
+                    spec_dict[row] = {key: 0 for key in column_cat}
 
-            # Изменяем последний ключ на строковый поскольку там будут хранится примечания
-            for row, value in spec_dict.items():
-                for col, data in value.items():
-                    if col == 'Колонка 33':
-                        spec_dict[row][col] = ''
-            # Создаем словарь среднего уровня содержащй данные по всем специальностям
-            poo_dct = {key: copy.deepcopy(spec_dict) for key in code_spec}
+                # Изменяем последний ключ на строковый поскольку там будут хранится примечания
+                for row, value in spec_dict.items():
+                    for col, data in value.items():
+                        if col == 'Колонка 33':
+                            spec_dict[row][col] = ''
+                # Создаем словарь среднего уровня содержащй данные по всем специальностям
+                poo_dct = {key: copy.deepcopy(spec_dict) for key in code_spec}
 
-            high_level_dct[name_file] = copy.deepcopy(poo_dct)
+                high_level_dct[name_file] = copy.deepcopy(poo_dct)
 
-            """
-            В итоге получается такая структура
-            {БРИТ:{13.01.10:{Строка 1:{Колонка 1:0}}},ТСИГХ:{22.01.10:{Строка 1:{Колонка 1:0}}}}
+                """
+                В итоге получается такая структура
+                {БРИТ:{13.01.10:{Строка 1:{Колонка 1:0}}},ТСИГХ:{22.01.10:{Строка 1:{Колонка 1:0}}}}
+    
+                """
 
-            """
+                current_code = 'Ошибка проверьте правильность заполнения кодов специальностей'  # чекбокс для проверки заполнения кода специальности
 
-            current_code = 'Ошибка проверьте правильность заполнения кодов специальностей'  # чекбокс для проверки заполнения кода специальности
+                idx_row = 1  # счетчик обработанных строк
 
-            idx_row = 1  # счетчик обработанных строк
+                # Итерируемся по полученному датафрейму через itertuples
+                for row in df.itertuples():
+                    # если счетчик колонок больше 15 то уменьшаем его до единицы
+                    if idx_row > 15:
+                        idx_row = 1
 
-            # Итерируемся по полученному датафрейму через itertuples
-            for row in df.itertuples():
-                # если счетчик колонок больше 15 то уменьшаем его до единицы
-                if idx_row > 15:
-                    idx_row = 1
+                    # Проверяем на незаполненные ячейки и ячейки заполненные пробелами
+                    if (row[3] is not np.nan) and (row[3] != ' '):
+                        # если значение ячейки отличается от текущего кода специальности то обновляем значение текущего кода
+                        if row[3] != current_code:
+                            current_code = row[3]
 
-                # Проверяем на незаполненные ячейки и ячейки заполненные пробелами
-                if (row[3] is not np.nan) and (row[3] != ' '):
-                    # если значение ячейки отличается от текущего кода специальности то обновляем значение текущего кода
-                    if row[3] != current_code:
-                        current_code = row[3]
+                    data_row = row[7:34]  # получаем срез с нужными данными
 
-                data_row = row[7:34]  # получаем срез с нужными данными
+                    for idx_col, value in enumerate(data_row, start=1):
+                        if idx_col + 6 == 33:
+                            # сохраняем примечания в строке
+                            high_level_dct[name_file][current_code][f'Строка {idx_row}'][
+                                f'Колонка {idx_col + 6}'] = f'{name_file} {check_data_note(value)};'
 
-                for idx_col, value in enumerate(data_row, start=1):
-                    if idx_col + 6 == 33:
-                        # сохраняем примечания в строке
-                        high_level_dct[name_file][current_code][f'Строка {idx_row}'][
-                            f'Колонка {idx_col + 6}'] = f'{name_file} {check_data_note(value)};'
+                        else:
+                            high_level_dct[name_file][current_code][f'Строка {idx_row}'][
+                                f'Колонка {idx_col + 6}'] += check_data(value)
 
-                    else:
-                        high_level_dct[name_file][current_code][f'Строка {idx_row}'][
-                            f'Колонка {idx_col + 6}'] += check_data(value)
-
-                idx_row += 1
+                    idx_row += 1
 
         create_check_tables(high_level_dct)
 
@@ -804,9 +812,6 @@ def processing_data_employment():
     except NameError:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 2.1',
                              f'Выберите файлы с данными и папку куда будет генерироваться файл')
-    except BadHeader:
-        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 2.1',
-                             f'Проверьте заголовок таблицы в файле: {name_file}. Строка с номерами колонок (01,02,03 и т.д.)\n должна находиться на 8 строке!')
     except KeyError as e:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 2.1',
                              f'Не найдено значение {e.args}')
@@ -1097,138 +1102,144 @@ def processing_data_employment_modern():
 
     try:
         for file in os.listdir(path_folder_data):
-            name_file = file.split('.xlsx')[0]
-            print(name_file)
-            df = pd.read_excel(f'{path_folder_data}/{file}', skiprows=4, dtype=str)
-            if '05' not in df.columns:
-                raise BadHeader
-            df = df[df['05'] !='16'] # фильтруем строки с проверками
-            # получаем  часть с данными
-            mask = pd.isna(df).all(axis=1)  # создаем маску для строк с пропущенными значениями
-            # проверяем есть ли строка полностью состоящая из nan
-            if True in mask.tolist():
-                df = df.iloc[:mask.idxmax()] # если есть то отсекаем все что ниже такой строки
-            #     # Проверка на размер таблицы, должно бьть кратно 15
-            count_spec = df.shape[0] // 15 # количество специальностей
-            df = df.iloc[:count_spec*15,:] # отбрасываем строки проверки
-
-            check_code_lst = df['03'].tolist()  # получаем список кодов специальностей
-            # Проверка на то чтобы в колонке 03 в первой строке не было пустой ячейки
-            if True in mask.tolist():
-                if check_code_lst[0] is np.nan or check_code_lst[0] == ' ':
+            if not file.startswith('~$') and file.endswith('.xlsx'):
+                name_file = file.split('.xlsx')[0]
+                print(name_file)
+                df = pd.read_excel(f'{path_folder_data}/{file}', skiprows=4, dtype=str)
+                if '05' not in df.columns:
                     temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
-                                                        'В колонке 03 на первой строке не заполнен код специальности. ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!! ']],
+                                                        'Проверьте заголовок таблицы в файле.Строка с номерами колонок (01,02,03 и т.д.)\n должна находиться на 5 строке! ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!! ']],
                                                  columns=['Название файла', 'Строка или колонка с ошибкой',
                                                           'Описание ошибки'])
                     error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
                     continue
-            # Проверка на непрерывность кода специальности, то есть на 15 строк должен быть только один код
-            border_check_code = 0  # счетчик обработанных страниц
-            quantity_check_code = len(check_code_lst) // 15  # получаем сколько специальностей в таблице
-            flag_error_code_spec = False  # чекбокс для ошибки несоблюдения расстояния в 15 строк
-            flag_error_space_spec = False  # чекбокс для ошибки заполнения кода специальности пробелом
-            for i in range(quantity_check_code):
-                # получаем множество отбрасывая np.nan
-                temp_set = set([code_spec for code_spec in check_code_lst[border_check_code:border_check_code + 15] if
-                                code_spec is not np.nan])
+                df = df[df['05'] !='16'] # фильтруем строки с проверками
+                # получаем  часть с данными
+                mask = pd.isna(df).all(axis=1)  # создаем маску для строк с пропущенными значениями
+                # проверяем есть ли строка полностью состоящая из nan
+                if True in mask.tolist():
+                    df = df.iloc[:mask.idxmax()] # если есть то отсекаем все что ниже такой строки
+                #     # Проверка на размер таблицы, должно бьть кратно 15
+                count_spec = df.shape[0] // 15 # количество специальностей
+                df = df.iloc[:count_spec*15,:] # отбрасываем строки проверки
 
-                if len(temp_set) != 1:
-                    flag_error_code_spec = True
-                if ' ' in temp_set:
-                    flag_error_space_spec = True
-                border_check_code += 15
+                check_code_lst = df['03'].tolist()  # получаем список кодов специальностей
+                # Проверка на то чтобы в колонке 03 в первой строке не было пустой ячейки
+                if True in mask.tolist():
+                    if check_code_lst[0] is np.nan or check_code_lst[0] == ' ':
+                        temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
+                                                            'В колонке 03 на первой строке не заполнен код специальности. ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!! ']],
+                                                     columns=['Название файла', 'Строка или колонка с ошибкой',
+                                                              'Описание ошибки'])
+                        error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
+                        continue
+                # Проверка на непрерывность кода специальности, то есть на 15 строк должен быть только один код
+                border_check_code = 0  # счетчик обработанных страниц
+                quantity_check_code = len(check_code_lst) // 15  # получаем сколько специальностей в таблице
+                flag_error_code_spec = False  # чекбокс для ошибки несоблюдения расстояния в 15 строк
+                flag_error_space_spec = False  # чекбокс для ошибки заполнения кода специальности пробелом
+                for i in range(quantity_check_code):
+                    # получаем множество отбрасывая np.nan
+                    temp_set = set([code_spec for code_spec in check_code_lst[border_check_code:border_check_code + 15] if
+                                    code_spec is not np.nan])
 
-            if flag_error_space_spec:
-                temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
-                                                    'Обнаружены ячейки заполненные пробелом в колонке 03 !!! ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
-                                             columns=['Название файла', 'Строка или колонка с ошибкой',
-                                                      'Описание ошибки'])
-                error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
-                continue
+                    if len(temp_set) != 1:
+                        flag_error_code_spec = True
+                    if ' ' in temp_set:
+                        flag_error_space_spec = True
+                    border_check_code += 15
 
-            if flag_error_code_spec:
-                temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
-                                                    'ДОЛЖЕН БЫТЬ ОДИНАКОВЫЙ КОД СПЕЦИАЛЬНОСТИ НА КАЖДЫЕ 15 СТРОК !!! ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
-                                             columns=['Название файла', 'Строка или колонка с ошибкой',
-                                                      'Описание ошибки'])
-                error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
-                continue
+                if flag_error_space_spec:
+                    temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
+                                                        'Обнаружены ячейки заполненные пробелом в колонке 03 !!! ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
+                                                 columns=['Название файла', 'Строка или колонка с ошибкой',
+                                                          'Описание ошибки'])
+                    error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
+                    continue
 
-            df.columns = list(map(str, df.columns))
-            # Заполняем пока пропуски в 15 ячейке для каждой специальности
-            df['06'] = df['06'].fillna('15 ячейка')
+                if flag_error_code_spec:
+                    temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
+                                                        'ДОЛЖЕН БЫТЬ ОДИНАКОВЫЙ КОД СПЕЦИАЛЬНОСТИ НА КАЖДЫЕ 15 СТРОК !!! ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
+                                                 columns=['Название файла', 'Строка или колонка с ошибкой',
+                                                          'Описание ошибки'])
+                    error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
+                    continue
 
-            # Проводим проверку на корректность данных, отправляем копию датафрейма
-            tup_correct = (6,20) # создаем кортеж  с поправками
-            file_error_df = check_error(df.copy(), name_file,tup_correct)
-            error_df = pd.concat([error_df, file_error_df], axis=0, ignore_index=True)
-            if file_error_df.shape[0] != 0:
-                temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
-                                                    'В файле обнаружены ошибки!!! ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
-                                             columns=['Название файла', 'Строка или колонка с ошибкой',
-                                                      'Описание ошибки'])
-                error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
-                continue
+                df.columns = list(map(str, df.columns))
+                # Заполняем пока пропуски в 15 ячейке для каждой специальности
+                df['06'] = df['06'].fillna('15 ячейка')
 
-            # очищаем от нан и возможнных пустых пробелов
-            code_spec = [spec for spec in df['03'].unique() if spec is not np.nan]
-            code_spec = [spec for spec in code_spec if spec != ' ']
+                # Проводим проверку на корректность данных, отправляем копию датафрейма
+                tup_correct = (6,20) # создаем кортеж  с поправками
+                file_error_df = check_error(df.copy(), name_file,tup_correct)
+                error_df = pd.concat([error_df, file_error_df], axis=0, ignore_index=True)
+                if file_error_df.shape[0] != 0:
+                    temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
+                                                        'В файле обнаружены ошибки!!! ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
+                                                 columns=['Название файла', 'Строка или колонка с ошибкой',
+                                                          'Описание ошибки'])
+                    error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
+                    continue
 
-            # Создаем список для строк
-            row_cat = [f'Строка {i}' for i in range(1, 16)]
-            # Создаем список для колонок
-            column_cat = [f'Колонка {i}' for i in range(7, 34)]
+                # очищаем от нан и возможнных пустых пробелов
+                code_spec = [spec for spec in df['03'].unique() if spec is not np.nan]
+                code_spec = [spec for spec in code_spec if spec != ' ']
 
-            # Создаем словарь нижнего уровня содержащий в себе все данные для каждой специальности
-            spec_dict = {}
-            for row in row_cat:
-                spec_dict[row] = {key: 0 for key in column_cat}
+                # Создаем список для строк
+                row_cat = [f'Строка {i}' for i in range(1, 16)]
+                # Создаем список для колонок
+                column_cat = [f'Колонка {i}' for i in range(7, 34)]
 
-            # Изменяем последний ключ на строковый поскольку там будут хранится примечания
-            for row, value in spec_dict.items():
-                for col, data in value.items():
-                    if col == 'Колонка 33':
-                        spec_dict[row][col] = ''
-            # Создаем словарь среднего уровня содержащй данные по всем специальностям
-            poo_dct = {key: copy.deepcopy(spec_dict) for key in code_spec}
+                # Создаем словарь нижнего уровня содержащий в себе все данные для каждой специальности
+                spec_dict = {}
+                for row in row_cat:
+                    spec_dict[row] = {key: 0 for key in column_cat}
 
-            high_level_dct[name_file] = copy.deepcopy(poo_dct)
+                # Изменяем последний ключ на строковый поскольку там будут хранится примечания
+                for row, value in spec_dict.items():
+                    for col, data in value.items():
+                        if col == 'Колонка 33':
+                            spec_dict[row][col] = ''
+                # Создаем словарь среднего уровня содержащй данные по всем специальностям
+                poo_dct = {key: copy.deepcopy(spec_dict) for key in code_spec}
 
-            """
-            В итоге получается такая структура
-            {БРИТ:{13.01.10:{Строка 1:{Колонка 1:0}}},ТСИГХ:{22.01.10:{Строка 1:{Колонка 1:0}}}}
-    
-            """
+                high_level_dct[name_file] = copy.deepcopy(poo_dct)
 
-            current_code = 'Ошибка проверьте правильность заполнения кодов специальностей'  # чекбокс для проверки заполнения кода специальности
+                """
+                В итоге получается такая структура
+                {БРИТ:{13.01.10:{Строка 1:{Колонка 1:0}}},ТСИГХ:{22.01.10:{Строка 1:{Колонка 1:0}}}}
+        
+                """
 
-            idx_row = 1  # счетчик обработанных строк
+                current_code = 'Ошибка проверьте правильность заполнения кодов специальностей'  # чекбокс для проверки заполнения кода специальности
 
-            # Итерируемся по полученному датафрейму через itertuples
-            for row in df.itertuples():
-                # если счетчик колонок больше 15 то уменьшаем его до единицы
-                if idx_row > 15:
-                    idx_row = 1
+                idx_row = 1  # счетчик обработанных строк
 
-                # Проверяем на незаполненные ячейки и ячейки заполненные пробелами
-                if (row[3] is not np.nan) and (row[3] != ' '):
-                    # если значение ячейки отличается от текущего кода специальности то обновляем значение текущего кода
-                    if row[3] != current_code:
-                        current_code = row[3]
+                # Итерируемся по полученному датафрейму через itertuples
+                for row in df.itertuples():
+                    # если счетчик колонок больше 15 то уменьшаем его до единицы
+                    if idx_row > 15:
+                        idx_row = 1
 
-                data_row = row[7:34]  # получаем срез с нужными данными
+                    # Проверяем на незаполненные ячейки и ячейки заполненные пробелами
+                    if (row[3] is not np.nan) and (row[3] != ' '):
+                        # если значение ячейки отличается от текущего кода специальности то обновляем значение текущего кода
+                        if row[3] != current_code:
+                            current_code = row[3]
 
-                for idx_col, value in enumerate(data_row, start=1):
-                    if idx_col + 6 == 33:
-                        # сохраняем примечания в строке
-                        high_level_dct[name_file][current_code][f'Строка {idx_row}'][
-                            f'Колонка {idx_col + 6}'] = f'{name_file} {check_data_note(value)};'
+                    data_row = row[7:34]  # получаем срез с нужными данными
 
-                    else:
-                        high_level_dct[name_file][current_code][f'Строка {idx_row}'][
-                            f'Колонка {idx_col + 6}'] += check_data(value)
+                    for idx_col, value in enumerate(data_row, start=1):
+                        if idx_col + 6 == 33:
+                            # сохраняем примечания в строке
+                            high_level_dct[name_file][current_code][f'Строка {idx_row}'][
+                                f'Колонка {idx_col + 6}'] = f'{name_file} {check_data_note(value)};'
 
-                idx_row += 1
+                        else:
+                            high_level_dct[name_file][current_code][f'Строка {idx_row}'][
+                                f'Колонка {idx_col + 6}'] += check_data(value)
+
+                    idx_row += 1
 
         create_check_tables(high_level_dct)
 
@@ -1364,9 +1375,6 @@ def processing_data_employment_modern():
     except NameError:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 2.1',
                              f'Выберите файлы с данными и папку куда будет генерироваться файл')
-    except BadHeader:
-        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 2.1',
-                             f'Проверьте заголовок таблицы в файле: {name_file}. Строка с номерами колонок (01,02,03 и т.д.)\n должна находиться на 5 строке!')
     except KeyError as e:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 2.1',
                              f'Не найдено значение {e.args}')
@@ -1387,7 +1395,7 @@ def processing_data_employment_modern():
             messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 2.1',
                                  'Обнаружены ошибки в обрабатываемых файлах.\n'
                                  'Названия файлов с ошибками и ошибки вы можете найти в файле Ошибки.\n'
-                                 'Исправьте ошибки и запустите повторную обработку для того чтобы получить правильный результат')
+                                 'Исправьте ошибки и запустите повторную обработку для того чтобы получить правильный результат.')
         else:
             messagebox.showinfo('Кассандра Подсчет данных по трудоустройству выпускников ver 2.1',
                                 'Данные успешно обработаны')
