@@ -634,7 +634,7 @@ def processing_data_employment():
 
                 if flag_error_code_spec:
                     temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
-                                                        'ДОЛЖЕН БЫТЬ ОДИНАКОВЫЙ КОД СПЕЦИАЛЬНОСТИ НА КАЖДЫЕ 15 СТРОК !!! ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
+                                                        'ДОЛЖЕН БЫТЬ ОДИНАКОВЫЙ КОД СПЕЦИАЛЬНОСТИ НА КАЖДЫЕ 15 СТРОК (не считая строки с проверкой) !!! ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
                                                  columns=['Название файла', 'Строка или колонка с ошибкой',
                                                           'Описание ошибки'])
                     error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
@@ -1225,7 +1225,7 @@ def processing_data_employment_modern():
 
                 if flag_error_code_spec:
                     temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
-                                                        'ДОЛЖЕН БЫТЬ ОДИНАКОВЫЙ КОД СПЕЦИАЛЬНОСТИ НА КАЖДЫЕ 15 СТРОК !!! ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
+                                                        'ДОЛЖЕН БЫТЬ ОДИНАКОВЫЙ КОД СПЕЦИАЛЬНОСТИ НА КАЖДЫЕ 15 СТРОК (не считая строки с проверкой)!!! ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
                                                  columns=['Название файла', 'Строка или колонка с ошибкой',
                                                           'Описание ошибки'])
                     error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
