@@ -12,6 +12,7 @@ import time
 import warnings
 warnings.filterwarnings('ignore', category=UserWarning, module='openpyxl')
 warnings.filterwarnings('ignore', category=DeprecationWarning)
+warnings.filterwarnings('ignore', category=FutureWarning)
 import copy
 import openpyxl
 from openpyxl.utils.dataframe import dataframe_to_rows
@@ -426,12 +427,13 @@ def extract_code(value):
     """
     Функция для извлечения кода специальности
     """
-    re_code = re.compile('\d+?[.]\d+?[.]\d+')  # создаем выражение для поиска кода специальности
-    result = re.search(re_code,str(value))
+    value = str(value)
+    re_code = re.compile('\d{2}?[.]\d{2}?[.]\d{2}$')  # создаем выражение для поиска кода специальности
+    result = re.search(re_code,value)
     if result:
         return result.group()
     else:
-        return str(value)
+        return 'error'
 
 def create_check_tables(high_level_dct: dict):
     """
@@ -614,10 +616,7 @@ def processing_data_employment():
                 flag_error_code_spec = False  # чекбокс для ошибки несоблюдения расстояния в 15 строк
                 flag_error_space_spec = False  # чекбокс для ошибки заполнения кода специальности пробелом
                 for i in range(quantity_check_code):
-                    # получаем множество отбрасывая np.nan
-                    temp_set = set([code_spec for code_spec in check_code_lst[border_check_code:border_check_code + 15] if
-                                    code_spec is not np.nan])
-
+                    temp_set = set([code_spec for code_spec in check_code_lst[border_check_code:border_check_code + 15]])
                     if len(temp_set) != 1:
                         flag_error_code_spec = True
                     if ' ' in temp_set:
@@ -657,11 +656,16 @@ def processing_data_employment():
                     continue
 
                 df['03'] = df['03'].apply(extract_code)  # очищаем от текста в кодах
-                # очищаем от нан и возможнных пустых пробелов
-                code_spec = [spec for spec in df['03'].unique() if spec is not np.nan]
-                code_spec = [spec for spec in code_spec if spec != ' ']
+                # Проверяем на наличие слова error что означает что там есть некорректные значения кодов специальности
+                if 'error' in df['03'].values:
+                    temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
+                                                        'Некорректные значения в колонке 03 Код специальности.Вместо кода присутствует дата, вместе с кодом есть название и т.п.!!!']],
+                                                 columns=['Название файла', 'Строка или колонка с ошибкой',
+                                                          'Описание ошибки'])
+                    error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
+                    continue
 
-
+                code_spec = [spec for spec in df['03'].unique()]
 
                 # Создаем список для строк
                 row_cat = [f'Строка {i}' for i in range(1, 16)]
@@ -886,10 +890,10 @@ def processing_data_employment():
     except PermissionError as e:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 3.1',
                              f'Закройте открытые файлы Excel {e.args}')
-    except:
-        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 3.1',
-                             f'При обработка файла {name_file} возникла ошибка !!!\n'
-                             f'Проверьте файл на соответствие шаблону')
+    # except:
+    #     messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 3.1',
+    #                          f'При обработка файла {name_file} возникла ошибка !!!\n'
+    #                          f'Проверьте файл на соответствие шаблону')
 
     else:
         if error_df.shape[0] != 0:
@@ -1206,9 +1210,9 @@ def processing_data_employment_modern():
                 flag_error_space_spec = False  # чекбокс для ошибки заполнения кода специальности пробелом
                 for i in range(quantity_check_code):
                     # получаем множество отбрасывая np.nan
-                    temp_set = set([code_spec for code_spec in check_code_lst[border_check_code:border_check_code + 15] if
-                                    code_spec is not np.nan])
-
+                    # temp_set = set([code_spec for code_spec in check_code_lst[border_check_code:border_check_code + 15] if
+                    #                 code_spec is not np.nan])
+                    temp_set = set([code_spec for code_spec in check_code_lst[border_check_code:border_check_code + 15]])
                     if len(temp_set) != 1:
                         flag_error_code_spec = True
                     if ' ' in temp_set:
@@ -1247,9 +1251,17 @@ def processing_data_employment_modern():
                     error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
                     continue
                 df['03'] = df['03'].apply(extract_code)  # очищаем от текста в кодах
-                # очищаем от нан и возможнных пустых пробелов
-                code_spec = [spec for spec in df['03'].unique() if spec is not np.nan]
-                code_spec = [spec for spec in code_spec if spec != ' ']
+
+                # Проверяем на наличие слова error что означает что там есть некорректные значения кодов специальности
+                if 'error' in df['03'].values:
+                    temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
+                                                        'Некорректные значения в колонке 03 Код специальности.Вместо кода присутствует дата, вместе с кодом есть название и т.п.!!!']],
+                                                 columns=['Название файла', 'Строка или колонка с ошибкой',
+                                                          'Описание ошибки'])
+                    error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
+                    continue
+
+                code_spec = [spec for spec in df['03'].unique()]
 
                 # Создаем список для строк
                 row_cat = [f'Строка {i}' for i in range(1, 16)]
@@ -1475,10 +1487,10 @@ def processing_data_employment_modern():
     except PermissionError as e:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 3.1',
                              f'Закройте открытые файлы Excel {e.args}')
-    except:
-        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 3.1',
-                             f'При обработка файла {name_file} возникла ошибка !!!\n'
-                             f'Проверьте файл на соответсвие шаблону')
+    # except:
+    #     messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 3.1',
+    #                          f'При обработка файла {name_file} возникла ошибка !!!\n'
+    #                          f'Проверьте файл на соответсвие шаблону')
 
     else:
         if error_df.shape[0] != 0:
