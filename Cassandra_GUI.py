@@ -598,8 +598,10 @@ def processing_data_employment():
                 # # получаем  часть с данными
                 mask = pd.isna(df).all(axis=1)  # создаем маску для строк с пропущенными значениями
                 # проверяем есть ли строка полностью состоящая из nan
-                if True in mask.tolist():
-                    df = df.iloc[:mask.idxmax()] # если есть то отсекаем все что ниже такой строки
+                empty_row_index = np.where(df.isna().all(axis=1))
+                if empty_row_index[0].tolist():
+                    row_index = empty_row_index[0][0]
+                    df = df.iloc[:row_index]
                 #     # Проверка на размер таблицы, должно бьть кратно 15
                 count_spec = df.shape[0] // 15  # количество специальностей
                 df = df.iloc[:count_spec * 15, :]  # отбрасываем строки проверки
@@ -1193,8 +1195,10 @@ def processing_data_employment_modern():
                 # получаем  часть с данными
                 mask = pd.isna(df).all(axis=1)  # создаем маску для строк с пропущенными значениями
                 # проверяем есть ли строка полностью состоящая из nan
-                if True in mask.tolist():
-                    df = df.iloc[:mask.idxmax()] # если есть то отсекаем все что ниже такой строки
+                empty_row_index = np.where(df.isna().all(axis=1))
+                if empty_row_index[0].tolist():
+                    row_index = empty_row_index[0][0]
+                    df = df.iloc[:row_index]
                 #     # Проверка на размер таблицы, должно бьть кратно 15
                 count_spec = df.shape[0] // 15 # количество специальностей
                 df = df.iloc[:count_spec*15,:] # отбрасываем строки проверки
