@@ -53,6 +53,40 @@ def extract_code_full(value):
     else:
         return 'Не найден код специальности'
 
+"""
+Проверка ошибок
+"""
+def check_error_opk(df1,df2, name_file, tup_correct):
+    """
+    Функция для проверки таблиц по ОПК
+    :param df1: датафрейм форма 1
+    :param df2: датафрейм форма 2
+    :param name_file: название обрабатываемого файла
+    :param tup_correct: значаение корректировки
+    :return: датафрейм с найденными ошибками
+    """
+    # создаем датафрейм для регистрации ошибок
+    error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки'])
+
+    # Проверяем корректность заполнения формы 1
+    first_error_opk = check_horizont_sum_opk_all(df1.copy(),name_file,tup_correct) # проверяем сумму по строкам
+    error_df = pd.concat([error_df, first_error_opk], axis=0, ignore_index=True)
+
+
+
+
+
+    return error_df
+
+
+def check_horizont_sum_opk_all()
+
+
+
+
+
+
+
 def create_check_tables_opk(high_level_dct: dict):
     """
         Функция для создания файла с данными по каждой специальности
@@ -406,6 +440,18 @@ for file in os.listdir(path_folder_data):
         в том числе проверка кода специальности
 
         """
+        tup_correct = (9, 23)  # создаем кортеж  с поправками
+        file_error_df = check_error_opk(df_form1.copy(),form2_df.copy(), name_file, tup_correct)
+        error_df = pd.concat([error_df, file_error_df], axis=0, ignore_index=True)
+        if file_error_df.shape[0] != 0:
+            temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
+                                                'В файле обнаружены ошибки!!! ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
+                                         columns=['Название файла', 'Строка или колонка с ошибкой',
+                                                  'Описание ошибки'])
+            error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
+            continue
+
+
         df_form1['03'] = df_form1['03'].apply(extract_code_full)  # очищаем от текста в кодах
         if 'Не найден код специальности' in df_form1['03'].values:
             temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
