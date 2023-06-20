@@ -79,7 +79,8 @@ def check_error_opk(df1,df2, name_file, tup_correct):
     return error_df
 
 
-def check_horizont_sum_opk_all()
+def check_horizont_sum_opk_all():
+    pass
 
 
 
@@ -314,10 +315,7 @@ def create_check_tables_opk(high_level_dct: dict):
     wb.save(f'{path_to_end_folder}/Данные для проверки правильности заполнения файлов от {current_time}.xlsx')
 
 
-
-
-
-path_folder_data = 'data/ОПК трудоустройство'
+path_folder_data = 'data/ОПК Воронеж'
 path_to_end_folder = 'data'
 
 # создаем словарь верхнего уровня для каждого поо
@@ -343,7 +341,16 @@ for file in os.listdir(path_folder_data):
 
         df_form1 = pd.read_excel(f'{path_folder_data}/{file}', skiprows=8, dtype=str,
                                  sheet_name='Форма 1')  # общие данные
-        form2_df = pd.read_excel(f'{path_folder_data}/{file}', skiprows=4, dtype=str,
+
+        # Находим строку с номерами колонок, так как вполне возможно в файле остались примеры
+        temp_wb = openpyxl.load_workbook(f'{path_folder_data}/{file}',read_only=True) # открываем файл в режиме чтения
+        temp_ws = temp_wb['Форма 2']
+        threshold_form2 = 5
+        for row in temp_ws.iter_rows(0): # перебираем значения в первой колонке
+            for cell in row:
+                if cell.value == '01':
+                    threshold_form2 = cell.row
+        form2_df = pd.read_excel(f'{path_folder_data}/{file}', skiprows=threshold_form2-1, dtype=str,
                                  sheet_name='Форма 2')  # подробные данные по ОПК
         # создаем множество колонок наличие которых мы проверяем
         check_cols = {'01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16',
@@ -373,12 +380,16 @@ for file in os.listdir(path_folder_data):
             error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
             continue
         df_form1 = df_form1[df_form1['04'] != '03']  # фильтруем строки с проверкой
+        form2_df.dropna(axis=0,inplace=True,how='all') # убираем все пустые строки
         form2_df = form2_df[
             ~form2_df['01'].str.contains('Проверка', case=False)]  # фильруем строки с проверкой на листе 2
 
         df_form1 = df_form1.loc[:, '01':'78']  # отсекаем возможную первую колонку и колонки с примечаниями
         # получаем  часть с данными
         mask = pd.isna(df_form1).all(axis=1)  # создаем маску для строк с пропущенными значениями
+        if mask[0]:# если пустая строка идет первой то удаляем ее и обновляем маску
+            df_form1.drop(axis=0,index=0,inplace=True)
+            mask = pd.isna(df_form1).all(axis=1)  # создаем маску для строк с пропущенными значениями
         # Находим индекс первой пустой строки, если он есть,получаем список с значениями где есть пустые строки
         empty_row_index = np.where(df_form1.isna().all(axis=1))
         if empty_row_index[0].tolist():
