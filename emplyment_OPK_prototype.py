@@ -66,12 +66,25 @@ def check_error_opk(df1,df2, name_file, tup_correct):
     :return: датафрейм с найденными ошибками
     """
     # создаем датафрейм для регистрации ошибок
-    error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки'])
+    error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
+    df1 = df1.iloc[:, 5:77]
+    df1 = df1.applymap(check_data)
 
+    # получаем количество датафреймов
+    quantity = df1.shape[0] // 2
+    # счетчик для обработанных строк
+    border = 0
+    for i in range(1, quantity + 1):
+        temp_df = df1.iloc[border:border + 2, :]
     # Проверяем корректность заполнения формы 1
-    first_error_opk = check_horizont_sum_opk_all(df1.copy(),name_file,tup_correct) # проверяем сумму по строкам
-    error_df = pd.concat([error_df, first_error_opk], axis=0, ignore_index=True)
+        first_error_opk = check_horizont_sum_opk_all(temp_df.copy(),name_file,tup_correct) # проверяем сумму по строкам
+        error_df = pd.concat([error_df, first_error_opk], axis=0, ignore_index=True)
 
+
+
+
+
+        border += 2
 
 
 
@@ -79,9 +92,43 @@ def check_error_opk(df1,df2, name_file, tup_correct):
     return error_df
 
 
-def check_horizont_sum_opk_all():
-    pass
+def check_horizont_sum_opk_all(df:pd.DataFrame,name_file,tup_correct):
+    """
+    Функция для проверки простой горизонтальной суммы 06 = 07 +32,33,34,35,36,37,38,63,64,65,66:77
+    :param df:
+    :param name_file:
+    :param tup_correct:
+    :return:
+    """
+    # получаем строку диапазона
+    first_correct = tup_correct[0]
+    # конвертируем в инт
+    drop_lst = ['08','09','10','11','12','13','14','15','16','17','18','19','20',
+                '21','22','23','24','25','26','27','28','29','30','31','39','40',
+                '41','42','43','44','45','46','47','48','49','50','51','52','53',
+                '54','55','56','57','58','59','60','61','62']
 
+    # удаляем колонки лишние колонки
+    df.drop(columns=drop_lst,inplace=True)
+
+    # # получаем сумму колонок
+    df['Сумма'] = df.iloc[:,1:].sum(axis=1)
+    # # Проводим проверку
+    df['Результат'] = df['06'] == df['Сумма']
+    # # заменяем булевые значения на понятные
+    df['Результат'] = df['Результат'].apply(lambda x: 'Правильно' if x else 'Неправильно')
+    # # получаем датафрейм с ошибками и извлекаем индекс
+    df = df[df['Результат'] == 'Неправильно'].reset_index()
+    # # создаем датафрейм дял добавления в ошибки
+    temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
+    # # обрабатываем индексы строк с ошибками чтобы строки совпадали с файлом excel
+    raw_lst_index = df['index'].tolist()  # делаем список
+    finish_lst_index = list(map(lambda x: x + first_correct, raw_lst_index))
+    finish_lst_index = list(map(lambda x: f'Строка {str(x)}', finish_lst_index))
+    temp_error_df['Строка или колонка с ошибкой'] = finish_lst_index
+    temp_error_df['Название файла'] = name_file
+    temp_error_df['Описание ошибки'] = 'Не выполняется условие: гр. 06 = гр.07 + сумма(всех колонок за исключением распределения по отраслям)'
+    return temp_error_df
 
 
 
@@ -396,11 +443,12 @@ for file in os.listdir(path_folder_data):
             row_index = empty_row_index[0][0]
             df_form1 = df_form1.iloc[:row_index]
         quantity_spec = df_form1.shape[0] // 2  # получаем количество специальностей в файле
+
         check_two_rows_spec = df_form1['04'].tolist() == ['01',
                                                           '02'] * quantity_spec  # проверяем чтобы колонка 04 состояла только из 01 и 02
         if not check_two_rows_spec:
             temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
-                                                'Проверьте правильность заполнения колонки 04. Для каждой спец./проф. должны быть  только строки 01 и 02 не считая строки с проверкой ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!! ']],
+                                                'Проверьте правильность заполнения колонки 04. Для каждой спец./проф. должны быть  только строки 01 и 02 не считая строки с проверкой. Также возможно под таблицей есть суммирующая строка ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!! ']],
                                          columns=['Название файла', 'Строка или колонка с ошибкой',
                                                   'Описание ошибки'])
             error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
@@ -451,7 +499,7 @@ for file in os.listdir(path_folder_data):
         в том числе проверка кода специальности
 
         """
-        tup_correct = (9, 23)  # создаем кортеж  с поправками
+        tup_correct = (10, 5)  # создаем кортеж  с поправками
         file_error_df = check_error_opk(df_form1.copy(),form2_df.copy(), name_file, tup_correct)
         error_df = pd.concat([error_df, file_error_df], axis=0, ignore_index=True)
         if file_error_df.shape[0] != 0:
@@ -769,6 +817,6 @@ finish_df.insert(1, 'Номер строки', pd.Series(lst_number_row * multip
 
 finish_df = finish_df[finish_df['Код специальности'] != 'nan']  # отбрасываем nan
 finish_df.to_excel(f'{path_to_end_folder}/Полная таблица Трудоустройство ОПК от {current_time}.xlsx', index=False)
+error_df.to_excel(f'{path_to_end_folder}/Ошибки ОПК от {current_time}.xlsx',index=False)
 
-
-print(error_df)
+print(error_df['Строка или колонка с ошибкой'])
