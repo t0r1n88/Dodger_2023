@@ -80,6 +80,10 @@ def check_error_opk(df1,df2, name_file, tup_correct):
         first_error_opk = check_horizont_sum_opk_all(temp_df.copy(),name_file,tup_correct) # проверяем сумму по строкам
         error_df = pd.concat([error_df, first_error_opk], axis=0, ignore_index=True)
 
+        # проверяем условие  по колонкам строка 02 не должна быть больше строки 01
+        second_error_opk = check_vertical_opk_all(temp_df.copy(),border,name_file,tup_correct)
+        error_df = pd.concat([error_df, second_error_opk], axis=0, ignore_index=True)
+
 
 
 
@@ -129,6 +133,39 @@ def check_horizont_sum_opk_all(df:pd.DataFrame,name_file,tup_correct):
     temp_error_df['Название файла'] = name_file
     temp_error_df['Описание ошибки'] = 'Не выполняется условие: гр. 06 = гр.07 + сумма(всех колонок за исключением распределения по отраслям)'
     return temp_error_df
+
+
+def check_vertical_opk_all(df:pd.DataFrame,border,name_file,tup_correct):
+    """
+    Функция для проверки условия Количество целевиков не должно быть больше чем количество выпускников
+    :param df:
+    :param name_file:
+    :param tup_correct:
+    :return:
+    """
+    first_correct = tup_correct[0]
+    second_correct = tup_correct[1]
+    foo_df = pd.DataFrame(columns=['01', '02'])
+
+    # Добавляем данные в датафрейм
+    foo_df['01'] = df.iloc[0, :]
+    foo_df['02'] = df.iloc[1, :]
+    foo_df['Результат'] = foo_df['02'] <= foo_df['01']
+    foo_df['Результат'] = foo_df['Результат'].apply(lambda x: 'Правильно' if x else 'Неправильно')
+
+    foo_df = foo_df[foo_df['Результат'] == 'Неправильно'].reset_index()
+    temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
+    # обрабатываем индексы строк с ошибками чтобы строки совпадали с файлом excel
+    raw_lst_index = foo_df['index'].tolist()  # делаем список
+    finish_lst_index = list(
+        map(lambda x: f'Диапазон строк {border + first_correct} - {border + second_correct}, колонка {str(x)}', raw_lst_index))
+
+    temp_error_df['Строка или колонка с ошибкой'] = finish_lst_index
+    temp_error_df['Название файла'] = name_file
+    temp_error_df['Описание ошибки'] = 'Не выполняется условие: стр. 02 <= стр. 01 '
+    return temp_error_df
+
+
 
 
 
@@ -499,7 +536,7 @@ for file in os.listdir(path_folder_data):
         в том числе проверка кода специальности
 
         """
-        tup_correct = (10, 5)  # создаем кортеж  с поправками
+        tup_correct = (10, 12)  # создаем кортеж  с поправками
         file_error_df = check_error_opk(df_form1.copy(),form2_df.copy(), name_file, tup_correct)
         error_df = pd.concat([error_df, file_error_df], axis=0, ignore_index=True)
         if file_error_df.shape[0] != 0:
