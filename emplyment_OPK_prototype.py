@@ -20,6 +20,7 @@ import openpyxl
 from openpyxl.utils.dataframe import dataframe_to_rows
 import re
 import random
+pd.options.display.width = 0
 
 
 def check_data(cell):
@@ -127,7 +128,7 @@ def check_cross_error_opk(df1:pd.DataFrame,df2:pd.DataFrame, name_file, tup_corr
         error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
         return error_df
 
-    cross_first_error_df =check_cross_first_error_df(group_df1.copy(),df2.copy(),name_file,)
+    cross_first_error_df =check_cross_first_error_df(df1.copy(),df2.copy(),name_file,)
     error_df = pd.concat([error_df, cross_first_error_df], axis=0, ignore_index=True)
 
 
@@ -147,6 +148,14 @@ def check_cross_first_error_df(df1:pd.DataFrame,df2:pd.DataFrame, name_file):
     """
     error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
     # проверяем наличие незаполненных ячеек в колонках 05 06
+    # отбираем значения первой строки
+    df1 = df1[df1['04'] == '01']
+    df1 = df1.groupby(['03']).agg({'08':sum,'39':sum}) # группируем
+    df1 = df1.reset_index() # переносим индексы
+    df1.columns = ['Специальность','Трудоустроено в ОПК','Будут трудоустроены в ОПК']
+
+
+
     etalon_05 = {'уже трудоустроены','будут трудоустроены'} # эталонный состав колонки 05
     etalon_06 = {'заключили договор о целевом обучении','нет'} # эталонный состав колонки 05
     # получаем состав колонок
@@ -198,9 +207,34 @@ def check_cross_first_error_df(df1:pd.DataFrame,df2:pd.DataFrame, name_file):
         error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
 
 
+    #обрабатываем датафрейм с уже трудоустроенными
+    df1_now = df1[df1['Трудоустроено в ОПК'] != 0]  # отбираем в форме 2 специальности по которым есть будущие трудоустроены выпускники
+    check_df_now = empl_now_df_group.merge(df1_now, how='outer', left_on='02', right_on='Специальность')
 
+    # находим строки где есть хотя бы один nan ,это значит что в формах есть разночтения по специальностям
+    row_with_nan_now = check_df_now[check_df_now.isna().any(axis=1)]
+    for row in row_with_nan_now.itertuples():
+        temp_error_df = pd.DataFrame(data=[[f'{name_file}',
+                                            f'{row[2]} не совпадают данные !!! Отсутствуют данные по этой специальности либо в форме 1 либо в форме 2',
+                                            'В форме 1 для этой специальности указаны выпускники которые уже трудоустроены, но в форме 2 такой специальности не найдено или наоборот. ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
+                                     columns=['Название файла', 'Строка или колонка с ошибкой',
+                                              'Описание ошибки'])
+        error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
 
+    # отбираем все строки где нет нан
+    check_df_now = check_df_now[~check_df_now.isna().any(axis=1)]
 
+    check_df_now['Результат'] = check_df_now['04'] == check_df_now['Трудоустроено в ОПК']
+    check_df_now = check_df_now[~check_df_now['Результат']]
+
+    # записываем где есть ошибки
+    for row in check_df_now.itertuples():
+        temp_error_df = pd.DataFrame(data=[[f'{name_file}', f'{row[2]} не совпадают данные !!! по форме 1 для этой специальности трудоустроено {row[4]} чел.'
+                                                            f' в форме 2 по этой специальности найдено {int(row[1])} чел.',
+                                            'Несовпадает количество выпускников которые трудоустроены в форме 1 и в форме 2. ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
+                                     columns=['Название файла', 'Строка или колонка с ошибкой',
+                                              'Описание ошибки'])
+        error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
 
 
 
@@ -530,6 +564,16 @@ high_level_dct = {}
 error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
 
 for file in os.listdir(path_folder_data):
+    if not file.startswith('~$') and file.endswith('.xls'):
+        name_file = file.split('.xls')[0]
+        temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
+                                            'Файл с расширением XLS (СТАРЫЙ ФОРМАТ EXCEL)!!! ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!! ']],
+                                     columns=['Название файла', 'Строка или колонка с ошибкой',
+                                              'Описание ошибки'])
+        error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
+        continue
+
+
     if not file.startswith('~$') and file.endswith('.xlsx'):
         name_file = file.split('.xlsx')[0]
         print(name_file)
@@ -672,13 +716,22 @@ for file in os.listdir(path_folder_data):
         file_cross_error_df = check_cross_error_opk(df_form1.copy(),form2_df.copy(), name_file, tup_correct)
         error_df = pd.concat([error_df, file_cross_error_df], axis=0, ignore_index=True)
 
-        if error_df.shape[0] != 0:
+        if file_error_df.shape[0] != 0:
             temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
                                                 'В файле обнаружены ошибки!!! ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
                                          columns=['Название файла', 'Строка или колонка с ошибкой',
                                                   'Описание ошибки'])
             error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
             continue
+
+        if file_cross_error_df.shape[0] != 0:
+            temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
+                                                'В файле обнаружены ошибки связанные с сравнением данных из формы 1 и формы 2!!! ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
+                                         columns=['Название файла', 'Строка или колонка с ошибкой',
+                                                  'Описание ошибки'])
+            error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
+            continue
+
 
 
         df_form1['03'] = df_form1['03'].apply(extract_code_full)  # очищаем от текста в кодах
