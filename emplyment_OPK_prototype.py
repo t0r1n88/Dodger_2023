@@ -128,10 +128,13 @@ def check_cross_error_opk(df1:pd.DataFrame,df2:pd.DataFrame, name_file, tup_corr
         error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
         return error_df
 
-    cross_first_error_df =check_cross_first_error_df(df1.copy(),df2.copy(),name_file,)
+    # проверка по трудоустроенным и трудоустроенным в будущем
+    cross_first_error_df =check_cross_first_error_df(df1.copy(),df2.copy(),name_file)
     error_df = pd.concat([error_df, cross_first_error_df], axis=0, ignore_index=True)
 
-
+    # проверка по целевикам
+    check_cross_second_error_df = check_cross_second_error(df1.copy(),df2.copy(),name_file)
+    error_df = pd.concat([error_df, check_cross_second_error_df], axis=0, ignore_index=True)
 
 
     return error_df
@@ -153,8 +156,6 @@ def check_cross_first_error_df(df1:pd.DataFrame,df2:pd.DataFrame, name_file):
     df1 = df1.groupby(['03']).agg({'08':sum,'39':sum}) # группируем
     df1 = df1.reset_index() # переносим индексы
     df1.columns = ['Специальность','Трудоустроено в ОПК','Будут трудоустроены в ОПК']
-
-
 
     etalon_05 = {'уже трудоустроены','будут трудоустроены'} # эталонный состав колонки 05
     etalon_06 = {'заключили договор о целевом обучении','нет'} # эталонный состав колонки 05
@@ -244,17 +245,61 @@ def check_cross_first_error_df(df1:pd.DataFrame,df2:pd.DataFrame, name_file):
     return error_df
 
 
+def check_cross_second_error(df1:pd.DataFrame,df2:pd.DataFrame, name_file):
+    """
+    Функция для проверки  корректности заполнения показателей по целевому приему.
+    :param df1:
+    :param df2:
+    :param name_file:
+    :return:
+    """
+    error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
+    # проверяем наличие незаполненных ячеек в колонках 05 06
+    # отбираем значения первой строки
+    df1 = df1[df1['04'] == '02']
+    df1 = df1.groupby(['03']).agg({'08':sum,'39':sum}) # группируем
+    df1 = df1.reset_index() # переносим индексы
+    df1.columns = ['Специальность','Трудоустроено в ОПК','Будут трудоустроены в ОПК']
+
+  # создаем датафрейм, по колонке 06 заключили договор о целевом обучении и нет
+    target_df  = df2[df2['06'] =='заключили договор о целевом обучении'] # целевики
+
+    # проводим группировку
+    target_df_group = target_df.groupby(['02']).agg({'04':sum})
 
 
+    # # создаем датафрейм с колонкой уже трудоустроены
+    df1_now = df1[['Специальность','Трудоустроено в ОПК']]
+    print(df1_now)
+    df1_now = df1_now[df1_now['Трудоустроено в ОПК'] != 0]  # отбираем в форме 2 специальности по которым есть будущие трудоустроены выпускники
+    check_df_now = target_df_group.merge(df1_now, how='outer', left_on='02', right_on='Специальность')
+
+    # находим строки где есть хотя бы один nan ,это значит что в формах есть разночтения по специальностям
+    row_with_nan = check_df_now[check_df_now.isna().any(axis=1)]
+    for row in row_with_nan.itertuples():
+        temp_error_df = pd.DataFrame(data=[[f'{name_file}',
+                                            f'{row[2]} не совпадают данные !!! Отсутствуют данные по этой специальности либо в форме 1 либо в форме 2',
+                                            'В форме 1 для этой специальности указаны выпускники которые будут трудоустроены, но в форме 2 такой специальности не найдено или наоборот. ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
+                                     columns=['Название файла', 'Строка или колонка с ошибкой',
+                                              'Описание ошибки'])
+        error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
 
 
+    # отбираем все строки где нет нан
+    check_df_now = check_df_now[~check_df_now.isna().any(axis=1)]
+    print(check_df_now)
 
+    check_df_now['Результат'] = check_df_now['04'] == check_df_now['Трудоустроено в ОПК']
+    check_df_now = check_df_now[~check_df_now['Результат']]
 
-
-
-
-
-
+    # записываем где есть ошибки
+    for row in check_df_now.itertuples():
+        temp_error_df = pd.DataFrame(data=[[f'{name_file}', f'{row[2]} не совпадают данные !!! по форме 1 для этой специальности трудоустроено {row[4]} чел.'
+                                                            f' в форме 2 по этой специальности найдено {int(row[1])} чел.',
+                                            'Несовпадает количество выпускников которые трудоустроены в форме 1 и в форме 2. ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
+                                     columns=['Название файла', 'Строка или колонка с ошибкой',
+                                              'Описание ошибки'])
+        error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
 
 def check_horizont_sum_opk_all(df:pd.DataFrame,name_file,tup_correct):
     """
