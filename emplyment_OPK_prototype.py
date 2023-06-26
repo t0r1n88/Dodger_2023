@@ -197,7 +197,8 @@ def check_cross_first_error_df(df1:pd.DataFrame,df2:pd.DataFrame, name_file):
                                               'Описание ошибки'])
         error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
 
-    #check_df.to_excel('trs.xlsx',index=False)
+
+
 
 
 
@@ -536,7 +537,7 @@ for file in os.listdir(path_folder_data):
         wb_1 = openpyxl.load_workbook(f'{path_folder_data}/{file}')
         if not {'Форма 1','Форма 2'}.issubset(set(wb_1.sheetnames)):
             temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
-                                                'Проверьте наличие листов с названием Форма 1 и Форма 2! ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!! ']],
+                                                'Проверьте наличие листов с названием Форма 1 и Форма 2! Не должно быть пробелов в начале и в конце названия ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!! ']],
                                          columns=['Название файла', 'Строка или колонка с ошибкой',
                                                   'Описание ошибки'])
             error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
@@ -587,8 +588,13 @@ for file in os.listdir(path_folder_data):
             continue
         df_form1 = df_form1[df_form1['04'] != '03']  # фильтруем строки с проверкой
         form2_df.dropna(axis=0,inplace=True,how='all') # убираем все пустые строки
+        # заполняем пустые строки в колонке 01
+        form2_df['01'] =form2_df['01'].fillna('Не заполнено')
         form2_df = form2_df[
             ~form2_df['01'].str.contains('Проверка', case=False)]  # фильруем строки с проверкой на листе 2
+        form2_df = form2_df[
+            ~form2_df['01'].str.contains('Не заполнено', case=False)]  # фильруем строки с проверкой на листе 2
+
 
         df_form1 = df_form1.loc[:, '01':'78']  # отсекаем возможную первую колонку и колонки с примечаниями
         # получаем  часть с данными
@@ -607,7 +613,7 @@ for file in os.listdir(path_folder_data):
                                                           '02'] * quantity_spec  # проверяем чтобы колонка 04 состояла только из 01 и 02
         if not check_two_rows_spec:
             temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
-                                                'Проверьте правильность заполнения колонки 04. Для каждой спец./проф. должны быть  только строки 01 и 02 не считая строки с проверкой. Также возможно под таблицей есть суммирующая строка ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!! ']],
+                                                'Проверьте правильность заполнения колонки 04. Для каждой спец./проф. должны быть  только строки 01 и 02 не считая строки с проверкой. Возможно удалена пустая строка после данных,также возможно под таблицей есть суммирующая строка ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!! ']],
                                          columns=['Название файла', 'Строка или колонка с ошибкой',
                                                   'Описание ошибки'])
             error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
@@ -648,7 +654,7 @@ for file in os.listdir(path_folder_data):
 
         if flag_error_code_spec:
             temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
-                                                'ДОЛЖЕН БЫТЬ ОДИНАКОВЫЙ КОД СПЕЦИАЛЬНОСТИ НА КАЖДЫЕ 2 СТРОКИ (не считая строки с проверкой)!!! ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
+                                                'ДОЛЖЕН БЫТЬ ОДИНАКОВЫЙ КОД и Название СПЕЦИАЛЬНОСТИ/ПРОФЕССИИ НА КАЖДЫЕ 2 СТРОКИ (не считая строки с проверкой)!!! ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
                                          columns=['Название файла', 'Строка или колонка с ошибкой',
                                                   'Описание ошибки'])
             error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
