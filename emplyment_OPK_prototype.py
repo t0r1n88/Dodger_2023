@@ -56,7 +56,7 @@ def extract_code_full(value):
 """
 Проверка ошибок
 """
-def check_error_opk(df1,df2, name_file, tup_correct):
+def check_error_opk(df1:pd.DataFrame, name_file, tup_correct):
     """
     Функция для проверки таблиц по ОПК
     :param df1: датафрейм форма 1
@@ -67,6 +67,7 @@ def check_error_opk(df1,df2, name_file, tup_correct):
     """
     # создаем датафрейм для регистрации ошибок
     error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
+    # делаем датафреймы для простых проверок
     df1 = df1.iloc[:, 5:77]
     df1 = df1.applymap(check_data)
 
@@ -84,16 +85,128 @@ def check_error_opk(df1,df2, name_file, tup_correct):
         second_error_opk = check_vertical_opk_all(temp_df.copy(),border,name_file,tup_correct)
         error_df = pd.concat([error_df, second_error_opk], axis=0, ignore_index=True)
 
-
-
-
-
         border += 2
 
 
 
 
     return error_df
+
+def check_cross_error_opk(df1:pd.DataFrame,df2:pd.DataFrame, name_file, tup_correct):
+    """
+    Функция для проверки значений между формой 1 и формой 2
+    :param df1:
+    :param df2:
+    :param name_file:
+    :param tup_correct:
+    :return:
+    """
+    # создаем датафрейм для регистрации ошибок
+    error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
+
+    df1['08'] = df1['08'].apply(check_data)
+    df1['39'] = df1['39'].apply(check_data) # приводим к инту
+
+    group_df1 = df1.groupby(['03']).agg({'08':sum,'39':sum}) # группируем
+    group_df1 = group_df1.reset_index() # переносим индексы
+    group_df1.columns = ['Специальность','Трудоустроено в ОПК','Будут трудоустроены в ОПК']
+
+    # приводим колонку 2 формы с числов выпускников к инту
+    df2['04'] = df2['04'].apply(check_data)
+
+    # Проверяем заполенение 2 формы, есть ли там вообще хоть что то
+    quantity_now = group_df1['Трудоустроено в ОПК'].sum() # сколько трудоустроено сейчас
+    quantity_future = group_df1['Будут трудоустроены в ОПК'].sum() # сколько будут трудоустроены
+    # проверяем заполнение формы 2
+    if (quantity_now != 0 or quantity_future !=0) and df2.shape[0] == 0:
+        temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
+                                            'В форме 1 есть выпускники трудоустроенные или которые будут трудоустроены в ОПК,\n'
+                                            ' при этом форма 2 не заполнена. ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!! ']],
+                                     columns=['Название файла', 'Строка или колонка с ошибкой',
+                                              'Описание ошибки'])
+        error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
+        return error_df
+
+    cross_first_error_df =check_cross_first_error_df(group_df1.copy(),df2.copy(),name_file,)
+    error_df = pd.concat([error_df, cross_first_error_df], axis=0, ignore_index=True)
+
+
+
+
+    return error_df
+
+def check_cross_first_error_df(df1:pd.DataFrame,df2:pd.DataFrame, name_file):
+    """
+    Функция для првоерки соответствия количества указанных в форме 1 трудоустроенных и списка в форме 2
+    проверки 1 и 2
+
+    :param df1:
+    :param df2:
+    :param name_file:
+    :return:
+    """
+    error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
+    # проверяем наличие незаполненных ячеек в колонках 05 06
+    etalon_05 = {'уже трудоустроены','будут трудоустроены'} # эталонный состав колонки 05
+    etalon_06 = {'заключили договор о целевом обучении','нет'} # эталонный состав колонки 05
+    # получаем состав колонок
+    st_05 = set(df2['05'].unique())
+    st_06 = set(df2['06'].unique())
+    if not (st_05.issubset(etalon_05) or st_06.issubset(etalon_06)):
+        temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
+                                            'В колонках 05 или 06 формы 2 есть незаполненные ячейки,\n'
+                                            ' или значения отличающиеся от требуемых. ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!! ']],
+                                     columns=['Название файла', 'Строка или колонка с ошибкой',
+                                              'Описание ошибки'])
+        error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
+
+    # Проверяем
+
+    # создаем 2 датафрейма, по колонке 05 трудоустроены и будут трудоустроены
+    empl_now_df = df2[df2['05'] =='уже трудоустроены'] # те что уже трудоустроены
+    empl_future_df = df2[df2['05'] =='будут трудоустроены'] # те что будут трудоустроены
+
+    # проводим группировку
+    empl_now_df_group = empl_now_df.groupby(['02']).agg({'04':sum})
+    empl_future_df_group = empl_future_df.groupby(['02']).agg({'04':sum})
+
+    df1_future = df1[df1['Будут трудоустроены в ОПК'] !=0] # отбираем в форме 2 специальности по которым есть будущие трудоустроены выпускники
+    check_df = empl_future_df_group.merge(df1_future,how='outer',left_on='02',right_on='Специальность')
+    check_df['Результат'] = check_df['04'] == check_df['Будут трудоустроены в ОПК']
+    check_df = check_df[~check_df['Результат']]
+
+    print(check_df)
+    # записываем где есть ошибки
+    for row in check_df.itertuples():
+        temp_error_df = pd.DataFrame(data=[[f'{name_file}', f'{row[2]} не совпадают данные !!! по форме 1 для этой специальности будут трудоустроено {int(row[4])}'
+                                                            f' в форме 2 по этой специальности найдено {int(row[1])}',
+                                            'Несовпадает количество выпускников которые будут трудоустроены в форме 1 и в форме 2. ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
+                                     columns=['Название файла', 'Строка или колонка с ошибкой',
+                                              'Описание ошибки'])
+        error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
+
+    #check_df.to_excel('trs.xlsx',index=False)
+
+
+
+
+
+
+
+
+    return error_df
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 def check_horizont_sum_opk_all(df:pd.DataFrame,name_file,tup_correct):
@@ -164,10 +277,6 @@ def check_vertical_opk_all(df:pd.DataFrame,border,name_file,tup_correct):
     temp_error_df['Название файла'] = name_file
     temp_error_df['Описание ошибки'] = 'Не выполняется условие: стр. 02 <= стр. 01 '
     return temp_error_df
-
-
-
-
 
 
 
@@ -434,6 +543,7 @@ for file in os.listdir(path_folder_data):
             for cell in row:
                 if cell.value == '01':
                     threshold_form2 = cell.row
+        temp_wb.close() # закрываем файл чтобы потом не было ошибок
         form2_df = pd.read_excel(f'{path_folder_data}/{file}', skiprows=threshold_form2-1, dtype=str,
                                  sheet_name='Форма 2')  # подробные данные по ОПК
         # создаем множество колонок наличие которых мы проверяем
@@ -537,8 +647,13 @@ for file in os.listdir(path_folder_data):
 
         """
         tup_correct = (10, 12)  # создаем кортеж  с поправками
-        file_error_df = check_error_opk(df_form1.copy(),form2_df.copy(), name_file, tup_correct)
+        file_error_df = check_error_opk(df_form1.copy(), name_file, tup_correct)
         error_df = pd.concat([error_df, file_error_df], axis=0, ignore_index=True)
+
+        # проводим кросс проверки между 2 формами
+        file_cross_error_df = check_cross_error_opk(df_form1.copy(),form2_df.copy(), name_file, tup_correct)
+        error_df = pd.concat([error_df, file_cross_error_df], axis=0, ignore_index=True)
+
         if file_error_df.shape[0] != 0:
             temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
                                                 'В файле обнаружены ошибки!!! ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
@@ -856,4 +971,4 @@ finish_df = finish_df[finish_df['Код специальности'] != 'nan']  
 finish_df.to_excel(f'{path_to_end_folder}/Полная таблица Трудоустройство ОПК от {current_time}.xlsx', index=False)
 error_df.to_excel(f'{path_to_end_folder}/Ошибки ОПК от {current_time}.xlsx',index=False)
 
-print(error_df['Строка или колонка с ошибкой'])
+print(error_df)
