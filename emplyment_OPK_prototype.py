@@ -160,7 +160,7 @@ def check_cross_first_error_df(df1:pd.DataFrame,df2:pd.DataFrame, name_file):
                                               'Описание ошибки'])
         error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
 
-    # Проверяем
+
 
     # создаем 2 датафрейма, по колонке 05 трудоустроены и будут трудоустроены
     empl_now_df = df2[df2['05'] =='уже трудоустроены'] # те что уже трудоустроены
@@ -172,14 +172,26 @@ def check_cross_first_error_df(df1:pd.DataFrame,df2:pd.DataFrame, name_file):
 
     df1_future = df1[df1['Будут трудоустроены в ОПК'] !=0] # отбираем в форме 2 специальности по которым есть будущие трудоустроены выпускники
     check_df = empl_future_df_group.merge(df1_future,how='outer',left_on='02',right_on='Специальность')
+
+    # находим строки где есть хотя бы один nan ,это значит что в формах есть разночтения по специальностям
+    row_with_nan = check_df[check_df.isna().any(axis=1)]
+    for row in row_with_nan.itertuples():
+        temp_error_df = pd.DataFrame(data=[[f'{name_file}', f'{row[2]} не совпадают данные !!! Отсутствуют данные по этой специальности либо в форме 1 либо в форме 2',
+                                            'В форме 1 для этой специальности указаны выпускники которые будут трудоустроены, но в форме 2 такой специальности не найдено или наоборот. ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
+                                     columns=['Название файла', 'Строка или колонка с ошибкой',
+                                              'Описание ошибки'])
+        error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
+
+    # отбираем все строки где нет нан
+    check_df = check_df[~check_df.isna().any(axis=1)]
+
     check_df['Результат'] = check_df['04'] == check_df['Будут трудоустроены в ОПК']
     check_df = check_df[~check_df['Результат']]
 
-    print(check_df)
     # записываем где есть ошибки
     for row in check_df.itertuples():
-        temp_error_df = pd.DataFrame(data=[[f'{name_file}', f'{row[2]} не совпадают данные !!! по форме 1 для этой специальности будут трудоустроено {int(row[4])}'
-                                                            f' в форме 2 по этой специальности найдено {int(row[1])}',
+        temp_error_df = pd.DataFrame(data=[[f'{name_file}', f'{row[2]} не совпадают данные !!! по форме 1 для этой специальности будут трудоустроено {row[4]} чел.'
+                                                            f' в форме 2 по этой специальности найдено {int(row[1])} чел.',
                                             'Несовпадает количество выпускников которые будут трудоустроены в форме 1 и в форме 2. ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
                                      columns=['Название файла', 'Строка или колонка с ошибкой',
                                               'Описание ошибки'])
@@ -654,7 +666,7 @@ for file in os.listdir(path_folder_data):
         file_cross_error_df = check_cross_error_opk(df_form1.copy(),form2_df.copy(), name_file, tup_correct)
         error_df = pd.concat([error_df, file_cross_error_df], axis=0, ignore_index=True)
 
-        if file_error_df.shape[0] != 0:
+        if error_df.shape[0] != 0:
             temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
                                                 'В файле обнаружены ошибки!!! ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
                                          columns=['Название файла', 'Строка или колонка с ошибкой',
