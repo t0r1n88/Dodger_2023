@@ -15,6 +15,7 @@ import warnings
 warnings.filterwarnings('ignore', category=UserWarning, module='openpyxl')
 warnings.filterwarnings('ignore', category=DeprecationWarning)
 warnings.filterwarnings('ignore', category=FutureWarning)
+pd.options.mode.chained_assignment = None
 import copy
 import openpyxl
 from openpyxl.utils.dataframe import dataframe_to_rows
@@ -133,8 +134,8 @@ def check_cross_error_opk(df1:pd.DataFrame,df2:pd.DataFrame, name_file, tup_corr
     error_df = pd.concat([error_df, cross_first_error_df], axis=0, ignore_index=True)
 
     # # проверка по целевикам
-    # check_cross_second_error_df = check_cross_second_error(df1.copy(),df2.copy(),name_file)
-    # error_df = pd.concat([error_df, check_cross_second_error_df], axis=0, ignore_index=True)
+    check_cross_second_error_df = check_cross_second_error(df1.copy(),df2.copy(),name_file)
+    error_df = pd.concat([error_df, check_cross_second_error_df], axis=0, ignore_index=True)
 
 
     return error_df
@@ -216,7 +217,7 @@ def check_cross_first_error_df(df1:pd.DataFrame,df2:pd.DataFrame, name_file):
     row_with_nan_now = check_df_now[check_df_now.isna().any(axis=1)]
     for row in row_with_nan_now.itertuples():
         temp_error_df = pd.DataFrame(data=[[f'{name_file}',
-                                            f'{row[2]} не совпадают данные !!! Отсутствуют данные по этой специальности либо в форме 1 либо в форме 2',
+                                            f'Перекрестная проверка трудоустроен/будет трудоустроен: {row[2]} не совпадают данные !!! Отсутствуют данные по этой специальности либо в форме 1 либо в форме 2',
                                             'В форме 1 для этой специальности указаны выпускники которые уже трудоустроены, но в форме 2 такой специальности не найдено или наоборот. ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
                                      columns=['Название файла', 'Строка или колонка с ошибкой',
                                               'Описание ошибки'])
@@ -230,7 +231,7 @@ def check_cross_first_error_df(df1:pd.DataFrame,df2:pd.DataFrame, name_file):
 
     # записываем где есть ошибки
     for row in check_df_now.itertuples():
-        temp_error_df = pd.DataFrame(data=[[f'{name_file}', f'{row[2]} не совпадают данные !!! по форме 1 для этой специальности трудоустроено {row[4]} чел.'
+        temp_error_df = pd.DataFrame(data=[[f'{name_file}', f'Перекрестная проверка трудоустроен/будет трудоустроен: {row[2]} не совпадают данные !!! по форме 1 для этой специальности трудоустроено {row[4]} чел.'
                                                             f' в форме 2 по этой специальности найдено {int(row[1])} чел.',
                                             'Несовпадает количество выпускников которые трудоустроены в форме 1 и в форме 2. ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
                                      columns=['Название файла', 'Строка или колонка с ошибкой',
@@ -255,41 +256,98 @@ def check_cross_second_error(df1:pd.DataFrame,df2:pd.DataFrame, name_file):
     df1 = df1.groupby(['03']).agg({'08':sum,'39':sum}) # группируем
     df1 = df1.reset_index() # переносим индексы
     df1.columns = ['Специальность','Трудоустроено в ОПК','Будут трудоустроены в ОПК']
+    # Создаем 2 датафрейма из формы 1 целевики будущие и настоящие
+    df1_now = df1[['Специальность','Трудоустроено в ОПК']] # целевики трудоустроенные форма 1
+    df1_now = df1_now[df1_now['Трудоустроено в ОПК'] !=0]
+    df1_future = df1[['Специальность','Будут трудоустроены в ОПК']] # целевики трудоустроенные форма 1
+    df1_future = df1_future[df1_future['Будут трудоустроены в ОПК'] !=0]
 
-  # создаем датафрейм, по колонке 06 заключили договор о целевом обучении и нет
-    target_df  = df2[df2['06'] =='заключили договор о целевом обучении'] # целевики
+    # создаем 2 датафрейма целевики уже трудоустроенные и целевики в будущем трудоустроенные
+  # создаем датафрейм, по колонке 06 заключили договор о целевом обучении и уже трудоустроенные
+    target_df_now  = df2[df2['06'] =='заключили договор о целевом обучении'] # целевики
+    target_df_now  = target_df_now[target_df_now['05'] == 'уже трудоустроены'] # целевики
+
+
 
     # проводим группировку
-    target_df_group = target_df.groupby(['02']).agg({'04':sum})
+    target_df_now = target_df_now.groupby(['02']).agg({'04':sum})
+    target_df_now = target_df_now.reset_index()
 
-
-    # # создаем датафрейм с колонкой уже трудоустроены
-    df1_now = df1[['Специальность','Трудоустроено в ОПК']]
-    df1_now = df1_now[df1_now['Трудоустроено в ОПК'] != 0]  # отбираем в форме 2 специальности по которым есть  трудоустроены выпускники
-    check_df_now = target_df_group.merge(df1_now, how='outer', left_on='02', right_on='Специальность')
-
-    # находим строки где есть хотя бы один nan ,это значит что в формах есть разночтения по специальностям
-    row_with_nan = check_df_now[check_df_now.isna().any(axis=1)]
+    union_df_now = df1_now.merge(target_df_now, how='outer', left_on='Специальность', right_on='02')
+    #
+    #
+    # # находим строки где есть хотя бы один nan ,это значит что в формах есть разночтения по специальностям
+    row_with_nan = union_df_now[union_df_now.isna().any(axis=1)]
     for row in row_with_nan.itertuples():
         temp_error_df = pd.DataFrame(data=[[f'{name_file}',
-                                            f'{row[2]} не совпадают данные !!! Отсутствуют данные по этой специальности либо в форме 1 либо в форме 2',
-                                            'В форме 1 для этой специальности указаны выпускники целевики которые  трудоустроены, но в форме 2 такой специальности не найдено или наоборот. ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
+                                            f'Перекрестная проверка целевиков (трудоустроен/будет трудоустроен): в форме 1 нйадено {row[1]} а в форме 2 {row[3]} не совпадают данные !!! Отсутствуют данные по этой специальности либо в форме 1 либо в форме 2',
+                                            'В форме 1 для специальности указаны выпускники целевики которые  трудоустроены, но в форме 2 такой специальности не найдено или наоборот. ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
                                      columns=['Название файла', 'Строка или колонка с ошибкой',
                                               'Описание ошибки'])
         error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
-    # отбираем все строки где нет нан
-    check_df_now = check_df_now[~check_df_now.isna().any(axis=1)]
+    # # отбираем все строки где нет нан
+    check_df_now = union_df_now[~union_df_now.isna().any(axis=1)]
 
     check_df_now['Результат'] = check_df_now['04'] == check_df_now['Трудоустроено в ОПК']
     check_df_now = check_df_now[~check_df_now['Результат']]
     # записываем где есть ошибки
     for row in check_df_now.itertuples():
-        temp_error_df = pd.DataFrame(data=[[f'{name_file}', f'{row[2]} не совпадают данные !!! по форме 1 для этой специальности трудоустроено {row[4]} чел.'
-                                                            f' в форме 2 по этой специальности найдено {int(row[1])} чел.',
+        temp_error_df = pd.DataFrame(data=[[f'{name_file}', f'Перекрестная проверка целевиков (трудоустроен/будет трудоустроен):В форме 1 {row[1]} не совпадают данные !!! по форме 1 для этой специальности трудоустроено {row[2]} чел.'
+                                                            f' в форме 2 по этой специальности найдено {int(row[4])} чел.',
                                             'Несовпадает количество выпускников целевиков которые трудоустроены в форме 1 и в форме 2. ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
                                      columns=['Название файла', 'Строка или колонка с ошибкой',
                                               'Описание ошибки'])
         error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
+    # создаем 2 датафрейма целевики уже трудоустроенные и целевики в будущем трудоустроенные
+    # создаем датафрейм, по колонке 06 заключили договор о целевом обучении и уже трудоустроенные
+    target_df_future = df2[df2['06'] == 'заключили договор о целевом обучении']  # целевики
+    target_df_future = target_df_future[target_df_future['05'] == 'будут трудоустроены']  # целевики
+
+    # проводим группировку
+    target_df_future = target_df_future.groupby(['02']).agg({'04': sum})
+    target_df_future = target_df_future.reset_index()
+
+    union_df_future = df1_future.merge(target_df_future, how='outer', left_on='Специальность', right_on='02')
+    #
+    #
+    # # находим строки где есть хотя бы один nan ,это значит что в формах есть разночтения по специальностям
+    row_with_nan = union_df_future[union_df_future.isna().any(axis=1)]
+    for row in row_with_nan.itertuples():
+        temp_error_df = pd.DataFrame(data=[[f'{name_file}',
+                                            f'Перекрестная проверка целевиков (трудоустроен/будет трудоустроен): В форме 1 {row[1]} а в форме 2 {row[3]} не совпадают данные !!! Отсутствуют данные по этой специальности либо в форме 1 либо в форме 2',
+                                            'В форме 1 для специальности указаны выпускники целевики которые БУДУТ трудоустроены, но в форме 2 такой специальности не найдено или наоборот. ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
+                                     columns=['Название файла', 'Строка или колонка с ошибкой',
+                                              'Описание ошибки'])
+        error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
+    # # отбираем все строки где нет нан
+    check_df_future = union_df_future[~union_df_future.isna().any(axis=1)]
+
+    check_df_future['Результат'] = check_df_future['04'] == check_df_future['Будут трудоустроены в ОПК']
+    check_df_future = check_df_future[~check_df_future['Результат']]
+    # записываем где есть ошибки
+    for row in check_df_future.itertuples():
+        temp_error_df = pd.DataFrame(data=[[f'{name_file}',
+                                            f'{row[1]} не совпадают данные !!! по форме 1 для этой специальности трудоустроено {row[2]} чел.'
+                                            f' в форме 2 по этой специальности найдено {int(row[4])} чел.',
+                                            'Несовпадает количество выпускников целевиков которые БУДУТ трудоустроены в форме 1 и в форме 2. ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
+                                     columns=['Название файла', 'Строка или колонка с ошибкой',
+                                              'Описание ошибки'])
+        error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    return error_df
 
 
 
@@ -696,7 +754,7 @@ for file in os.listdir(path_folder_data):
                                                           '02'] * quantity_spec  # проверяем чтобы колонка 04 состояла только из 01 и 02
         if not check_two_rows_spec:
             temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
-                                                'Проверьте правильность заполнения колонки 04. Для каждой спец./проф. должны быть  только строки 01 и 02 не считая строки с проверкой. Возможно удалена пустая строка после данных,также возможно под таблицей есть суммирующая строка ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!! ']],
+                                                'Проверьте правильность заполнения колонки 04. Для каждой спец./проф. должны быть  только строки 01 и 02 не считая строки с проверкой. Проверьте наличие ПУСТОЙ строки после таблицы! Последняя строка проверки должна быть заполнена полностью! ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!! ']],
                                          columns=['Название файла', 'Строка или колонка с ошибкой',
                                                   'Описание ошибки'])
             error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
@@ -1057,12 +1115,10 @@ opk_df = finish_df[['Суммарный выпуск 2023 г.','Трудоуст
                     'Будут трудоустроены на предприятия оборонно-промышленного комплекса* ']]
 opk_df = opk_df.sum(axis=0).to_frame() # суммируем данные
 opk_df = opk_df.transpose() # разворачиваем из колонки в строку
-#opk_df.to_excel(f'{path_to_end_folder}/Итог по ОПК {current_time}.xlsx', index=False)
 
 #Создаем сумму по всем колонкам
 all_sum_df = finish_df.iloc[:,2:].sum(axis=0).to_frame() # суммируем данные
 all_sum_df = all_sum_df.transpose() # разворачиваем из колонки в строку
-#all_sum_df.to_excel(f'{path_to_end_folder}/Сумма по всем категориям {current_time}.xlsx', index=False)
 # сохраняем результирующие датафреймы в один файл
 with pd.ExcelWriter(f'{path_to_end_folder}/Итоги по ОПК и всем колонкам {current_time}.xlsx',engine='openpyxl') as writer:
     opk_df.to_excel(writer,sheet_name='Итог по ОПК')
