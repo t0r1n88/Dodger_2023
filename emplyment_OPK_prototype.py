@@ -1057,12 +1057,17 @@ opk_df = finish_df[['Суммарный выпуск 2023 г.','Трудоуст
                     'Будут трудоустроены на предприятия оборонно-промышленного комплекса* ']]
 opk_df = opk_df.sum(axis=0).to_frame() # суммируем данные
 opk_df = opk_df.transpose() # разворачиваем из колонки в строку
-opk_df.to_excel(f'{path_to_end_folder}/Итог по ОПК {current_time}.xlsx', index=False)
+#opk_df.to_excel(f'{path_to_end_folder}/Итог по ОПК {current_time}.xlsx', index=False)
 
 #Создаем сумму по всем колонкам
 all_sum_df = finish_df.iloc[:,2:].sum(axis=0).to_frame() # суммируем данные
 all_sum_df = all_sum_df.transpose() # разворачиваем из колонки в строку
-all_sum_df.to_excel(f'{path_to_end_folder}/Сумма по всем категориям {current_time}.xlsx', index=False)
+#all_sum_df.to_excel(f'{path_to_end_folder}/Сумма по всем категориям {current_time}.xlsx', index=False)
+# сохраняем результирующие датафреймы в один файл
+with pd.ExcelWriter(f'{path_to_end_folder}/Итоги по ОПК и всем колонкам {current_time}.xlsx',engine='openpyxl') as writer:
+    opk_df.to_excel(writer,sheet_name='Итог по ОПК')
+    all_sum_df.to_excel(writer,sheet_name='Итог по всем колонкам')
+
 
 # добавляем строки с проверкой
 count = 0
