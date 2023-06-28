@@ -99,6 +99,23 @@ def select_end_folder_ck():
     path_to_end_folder_ck = filedialog.askdirectory()
 
 
+def select_folder_data_opk():
+    """
+    Функция для выбора папки c данными
+    :return:
+    """
+    global path_folder_data_opk
+    path_folder_data_opk = filedialog.askdirectory()
+
+def select_end_folder_opk():
+    """
+    Функция для выбора конечной папки куда будут складываться итоговые файлы
+    :return:
+    """
+    global path_to_end_folder_opk
+    path_to_end_folder_opk = filedialog.askdirectory()
+
+
 
 def select_files_data_xlsx():
     """
@@ -1512,6 +1529,18 @@ def processing_data_employment_modern():
             messagebox.showinfo('Кассандра Подсчет данных по трудоустройству выпускников ver 3.3',
                                 'Данные успешно обработаны.')
 
+"""
+Функция для ОПК
+"""
+def processing_data_opk_employment():
+    """
+    Функция для обработки полной таблицы занятости выпускников в ОПК
+    """
+    pass
+
+
+
+
 
 """
 Функции для нахождения разницы между 2 таблицами
@@ -1680,7 +1709,7 @@ def processing_diffrence():
 if __name__ == '__main__':
     window = Tk()
     window.title('Кассандра Подсчет данных по трудоустройству выпускников ver 3.3')
-    window.geometry('700x860')
+    window.geometry('750x860')
     window.resizable(False, False)
 
 
@@ -1814,6 +1843,52 @@ if __name__ == '__main__':
                                   )
     btn_proccessing_ck_data.grid(column=0, row=4, padx=10, pady=10)
 
+    """
+    Подсчет данных по трудоустройству ОПК
+    """
+    # Создаем вкладку обработки отчетов центров карьеры
+    tab_opk_employment = ttk.Frame(tab_control)
+    tab_control.add(tab_opk_employment, text='Отчет ОПК с отраслями')
+    tab_control.pack(expand=1, fill='both')
+    # Добавляем виджеты на вкладку
+    # Создаем метку для описания назначения программы
+    lbl_hello_opk = Label(tab_opk_employment,
+                         text='Центр опережающей профессиональной подготовки Республики Бурятия\n'
+                              'Обработка данных по трудоустройству ОПК (по отраслям)\n'
+                              'В обрабатываемых файлах должны быть листы Форма 1 и Форма 2,\n'
+                              'В Форме 1 должно быть 80 колонок включая 2 колонки проверки\n'
+                              ', после окончания таблицы должна быть пустая строка.\n'
+                              ' На 9 строке должна быть строка с номерами колонок.'
+                              'В форме 2 должно быть 10 колонок')
+    lbl_hello_opk.grid(column=0, row=0, padx=10, pady=25)
+
+    # Картинка
+    path_to_img_opk = resource_path('logo.png')
+
+    img_opk = PhotoImage(file=path_to_img_opk)
+    Label(tab_opk_employment,
+          image=img_opk
+          ).grid(column=1, row=0, padx=10, pady=25)
+
+    # Создаем кнопку Выбрать файл с данными
+    btn_choose_opk_data = Button(tab_opk_employment, text='1) Выберите папку с данными', font=('Arial Bold', 20),
+                                command=select_folder_data_opk
+                                )
+    btn_choose_opk_data.grid(column=0, row=2, padx=10, pady=10)
+
+    # Создаем кнопку для выбора папки куда будут генерироваться файлы
+
+    btn_choose_end_opk_folder = Button(tab_opk_employment, text='2) Выберите конечную папку', font=('Arial Bold', 20),
+                                      command=select_end_folder_opk
+                                      )
+    btn_choose_end_opk_folder.grid(column=0, row=3, padx=10, pady=10)
+
+    # Создаем кнопку обработки данных
+
+    btn_proccessing_opk_data = Button(tab_opk_employment, text='3) Обработать данные', font=('Arial Bold', 20),
+                                     command=processing_data_opk_employment
+                                     )
+    btn_proccessing_opk_data.grid(column=0, row=4, padx=10, pady=10)
 
     """
     Разница двух таблиц
