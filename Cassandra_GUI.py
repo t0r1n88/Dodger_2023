@@ -9,8 +9,10 @@ from tkinter import filedialog
 from tkinter import messagebox
 from tkinter import ttk
 import time
+
 pd.options.mode.chained_assignment = None  # default='warn'
 import warnings
+
 warnings.filterwarnings('ignore', category=UserWarning, module='openpyxl')
 warnings.filterwarnings('ignore', category=DeprecationWarning)
 warnings.filterwarnings('ignore', category=FutureWarning)
@@ -28,11 +30,13 @@ class BadHeader(Exception):
     """
     pass
 
+
 class CheckBoxException(Exception):
     """
     Класс для вызовы исключения в случае если неправильно выставлены чекбоксы
     """
     pass
+
 
 class NotFoundValue(Exception):
     """
@@ -40,11 +44,13 @@ class NotFoundValue(Exception):
     """
     pass
 
+
 class ShapeDiffierence(Exception):
     """
     Класс для обозначения несовпадения размеров таблицы
     """
     pass
+
 
 class ColumnsDifference(Exception):
     """
@@ -73,6 +79,7 @@ def select_folder_data():
     global path_folder_data
     path_folder_data = filedialog.askdirectory()
 
+
 def select_end_folder():
     """
     Функция для выбора конечной папки куда будут складываться итоговые файлы
@@ -91,6 +98,7 @@ def select_folder_data_ck():
     global path_folder_data_ck
     path_folder_data_ck = filedialog.askdirectory()
 
+
 def select_end_folder_ck():
     """
     Функция для выбора конечной папки куда будут складываться итоговые файлы
@@ -108,6 +116,7 @@ def select_folder_data_opk():
     global path_folder_data_opk
     path_folder_data_opk = filedialog.askdirectory()
 
+
 def select_end_folder_opk():
     """
     Функция для выбора конечной папки куда будут складываться итоговые файлы
@@ -115,7 +124,6 @@ def select_end_folder_opk():
     """
     global path_to_end_folder_opk
     path_to_end_folder_opk = filedialog.askdirectory()
-
 
 
 def select_files_data_xlsx():
@@ -148,7 +156,7 @@ def check_data_note(cell):
     return str(cell)
 
 
-def check_first_error(df: pd.DataFrame, name_file,tup_correct):
+def check_first_error(df: pd.DataFrame, name_file, tup_correct):
     """
     Функция для проверки гр. 09 и гр. 10 < гр. 08
     """
@@ -173,7 +181,7 @@ def check_first_error(df: pd.DataFrame, name_file,tup_correct):
     return temp_error_df
 
 
-def check_second_error(df: pd.DataFrame, name_file,tup_correct):
+def check_second_error(df: pd.DataFrame, name_file, tup_correct):
     """
     Функция для проверки правильности введеденных данных
     (гр. 07= гр.08 + сумма(с гр.11 по гр.32))
@@ -208,7 +216,7 @@ def check_second_error(df: pd.DataFrame, name_file,tup_correct):
     return temp_error_df
 
 
-def check_third_error(df: pd.DataFrame, name_file, border,tup_correct):
+def check_third_error(df: pd.DataFrame, name_file, border, tup_correct):
     """
     Функция для проверки правильности введеденных данных
     стр. 06 = стр. 02 + стр. 04
@@ -233,7 +241,8 @@ def check_third_error(df: pd.DataFrame, name_file, border,tup_correct):
     # обрабатываем индексы строк с ошибками чтобы строки совпадали с файлом excel
     raw_lst_index = foo_df['index'].tolist()  # делаем список
     finish_lst_index = list(
-        map(lambda x: f'Диапазон строк {border + first_correct} - {border + second_correct}, колонка {str(x)}', raw_lst_index))
+        map(lambda x: f'Диапазон строк {border + first_correct} - {border + second_correct}, колонка {str(x)}',
+            raw_lst_index))
 
     temp_error_df['Строка или колонка с ошибкой'] = finish_lst_index
     temp_error_df['Название файла'] = name_file
@@ -241,7 +250,7 @@ def check_third_error(df: pd.DataFrame, name_file, border,tup_correct):
     return temp_error_df
 
 
-def check_fourth_error(df: pd.DataFrame, name_file, border,tup_correct):
+def check_fourth_error(df: pd.DataFrame, name_file, border, tup_correct):
     """
     Функция для проверки правильности введеденных данных
     стр. 06 = стр.07 + стр.08 + стр.09 + стр.10 + стр.11 + стр.12 + стр. 13
@@ -252,7 +261,6 @@ def check_fourth_error(df: pd.DataFrame, name_file, border,tup_correct):
     # получаем поправки на диапазон
     first_correct = tup_correct[0]
     second_correct = tup_correct[1]
-
 
     foo_df = pd.DataFrame(columns=['06', '07', '08', '09', '10', '11', '12', '13'])
 
@@ -276,7 +284,8 @@ def check_fourth_error(df: pd.DataFrame, name_file, border,tup_correct):
     # обрабатываем индексы строк с ошибками чтобы строки совпадали с файлом excel
     raw_lst_index = foo_df['index'].tolist()  # делаем список
     finish_lst_index = list(
-        map(lambda x: f'Диапазон строк {border + first_correct} - {border + second_correct}, колонка {str(x)}', raw_lst_index))
+        map(lambda x: f'Диапазон строк {border + first_correct} - {border + second_correct}, колонка {str(x)}',
+            raw_lst_index))
     temp_error_df['Строка или колонка с ошибкой'] = finish_lst_index
     temp_error_df['Название файла'] = name_file
     temp_error_df[
@@ -285,7 +294,7 @@ def check_fourth_error(df: pd.DataFrame, name_file, border,tup_correct):
     return temp_error_df
 
 
-def check_fifth_error(df: pd.DataFrame, name_file, border,tup_correct):
+def check_fifth_error(df: pd.DataFrame, name_file, border, tup_correct):
     """
     Функция для проверки правильности введеденных данных
     стр. 14<=стр. 06, стр. 14<=стр 05 (<= означает "меньше или равно")
@@ -312,13 +321,15 @@ def check_fifth_error(df: pd.DataFrame, name_file, border,tup_correct):
     raw_lst_index = foo_df[
         'index'].tolist()  # делаем список, прибавляем для того чтобы номера строк совпадали с строками в файле
     finish_lst_index = list(
-        map(lambda x: f'Диапазон строк  {border + first_correct} - {border + second_correct}, колонка {str(x)}', raw_lst_index))
+        map(lambda x: f'Диапазон строк  {border + first_correct} - {border + second_correct}, колонка {str(x)}',
+            raw_lst_index))
     temp_error_df['Строка или колонка с ошибкой'] = finish_lst_index
     temp_error_df['Название файла'] = name_file
     temp_error_df['Описание ошибки'] = 'Не выполняется условие: стр. 14<=стр. 06, стр. 14<=стр 05'
     return temp_error_df
 
-def check_sixth_error(df: pd.DataFrame, name_file, border,tup_correct:tuple):
+
+def check_sixth_error(df: pd.DataFrame, name_file, border, tup_correct: tuple):
     """
     Функция для проверки правильности введеденных данных
     стр 03 <= стр 02 (<= означает "меньше или равно")
@@ -326,7 +337,7 @@ def check_sixth_error(df: pd.DataFrame, name_file, border,tup_correct:tuple):
     : param tup_correction кортеж с поправочными границами для того чтобы диапазон строки с ошибкой корректно считался
     :return:датафрейм с ошибками
     """
-    #получаем поправки на диапазон
+    # получаем поправки на диапазон
     first_correct = tup_correct[0]
     second_correct = tup_correct[1]
     foo_df = pd.DataFrame(columns=['02', '03'])
@@ -342,14 +353,16 @@ def check_sixth_error(df: pd.DataFrame, name_file, border,tup_correct:tuple):
     # обрабатываем индексы строк с ошибками чтобы строки совпадали с файлом excel
     raw_lst_index = foo_df['index'].tolist()  # делаем список
     finish_lst_index = list(
-        map(lambda x: f'Диапазон строк {border + first_correct} - {border + second_correct}, колонка {str(x)}', raw_lst_index))
+        map(lambda x: f'Диапазон строк {border + first_correct} - {border + second_correct}, колонка {str(x)}',
+            raw_lst_index))
 
     temp_error_df['Строка или колонка с ошибкой'] = finish_lst_index
     temp_error_df['Название файла'] = name_file
     temp_error_df['Описание ошибки'] = 'Не выполняется условие: стр. 03 <= стр. 02 '
     return temp_error_df
 
-def check_seventh_error(df: pd.DataFrame, name_file, border,tup_correct:tuple):
+
+def check_seventh_error(df: pd.DataFrame, name_file, border, tup_correct: tuple):
     """
     Функция для проверки правильности введеденных данных
     стр.02 и стр.04 и стр.05 < стр.01
@@ -360,7 +373,7 @@ def check_seventh_error(df: pd.DataFrame, name_file, border,tup_correct:tuple):
     # получаем поправки на диапазон
     first_correct = tup_correct[0]
     second_correct = tup_correct[1]
-    foo_df = pd.DataFrame(columns=['02', '04','05','01'])
+    foo_df = pd.DataFrame(columns=['02', '04', '05', '01'])
 
     # Добавляем данные в датафрейм
     foo_df['01'] = df.iloc[0, :]
@@ -368,7 +381,8 @@ def check_seventh_error(df: pd.DataFrame, name_file, border,tup_correct:tuple):
     foo_df['04'] = df.iloc[3, :]
     foo_df['05'] = df.iloc[4, :]
 
-    foo_df['Результат'] = (foo_df['01'] >= foo_df['02']) & (foo_df['01'] >= foo_df['04']) & (foo_df['01'] >= foo_df['05'])
+    foo_df['Результат'] = (foo_df['01'] >= foo_df['02']) & (foo_df['01'] >= foo_df['04']) & (
+                foo_df['01'] >= foo_df['05'])
     foo_df['Результат'] = foo_df['Результат'].apply(lambda x: 'Правильно' if x else 'Неправильно')
 
     foo_df = foo_df[foo_df['Результат'] == 'Неправильно'].reset_index()
@@ -381,11 +395,12 @@ def check_seventh_error(df: pd.DataFrame, name_file, border,tup_correct:tuple):
 
     temp_error_df['Строка или колонка с ошибкой'] = finish_lst_index
     temp_error_df['Название файла'] = name_file
-    temp_error_df['Описание ошибки'] = 'Не выполняется условие: стр.02<= стр.01 или стр.04<= стр.01 или стр.05<= стр.01 '
+    temp_error_df[
+        'Описание ошибки'] = 'Не выполняется условие: стр.02<= стр.01 или стр.04<= стр.01 или стр.05<= стр.01 '
     return temp_error_df
 
 
-def check_error(df: pd.DataFrame,name_file,tup_correct:tuple):
+def check_error(df: pd.DataFrame, name_file, tup_correct: tuple):
     """
     Функция для проверки данных
     tup_correct - кортеж  с поправками для того чтобы диапазон строк с ошибкой корректно отображался
@@ -402,36 +417,36 @@ def check_error(df: pd.DataFrame,name_file,tup_correct:tuple):
     for i in range(1, quantity + 1):
         temp_df = df.iloc[border:border + 15, :]
         # Проводим проверку гр. 09 и гр. 10 <= гр. 08
-        first_error_df = check_first_error(temp_df.copy(), name_file,tup_correct)
+        first_error_df = check_first_error(temp_df.copy(), name_file, tup_correct)
         # добавляем результат проверки в датафрейм
         error_df = pd.concat([error_df, first_error_df], axis=0, ignore_index=True)
 
         # Проводим проверку гр. 07= гр.08 + сумма(с гр.11 по гр.32)
-        second_error_df = check_second_error(temp_df.copy(), name_file,tup_correct)
+        second_error_df = check_second_error(temp_df.copy(), name_file, tup_correct)
         # добавляем результат проверки в датафрейм
         error_df = pd.concat([error_df, second_error_df], axis=0, ignore_index=True)
 
         # Проводим проверку стр. 06 = стр. 02 + стр. 04
-        third_error_df = check_third_error(temp_df.copy(), name_file, border,tup_correct)
+        third_error_df = check_third_error(temp_df.copy(), name_file, border, tup_correct)
         # добавляем результат проверки в датафрейм
         error_df = pd.concat([error_df, third_error_df], axis=0, ignore_index=True)
 
         # Проводим проверку стр. 06 = стр.07 + стр.08 + стр.09 + стр.10 + стр.11 + стр.12 + стр. 13
-        fourth_error_df = check_fourth_error(temp_df.copy(), name_file, border,tup_correct)
+        fourth_error_df = check_fourth_error(temp_df.copy(), name_file, border, tup_correct)
         # добавляем результат проверки в датафрейм
         error_df = pd.concat([error_df, fourth_error_df], axis=0, ignore_index=True)
 
         # Проводим проверку стр. 14<=стр. 06, стр. 14<=стр 05 (<= означает "меньше или равно")
-        fifth_error_df = check_fifth_error(temp_df.copy(), name_file, border,tup_correct)
+        fifth_error_df = check_fifth_error(temp_df.copy(), name_file, border, tup_correct)
         # добавляем результат проверки в датафрейм
         error_df = pd.concat([error_df, fifth_error_df], axis=0, ignore_index=True)
 
         # Проводим проверку стр.03 <= стр.02
-        sixth_error_df = check_sixth_error(temp_df.copy(), name_file, border,tup_correct)
+        sixth_error_df = check_sixth_error(temp_df.copy(), name_file, border, tup_correct)
         error_df = pd.concat([error_df, sixth_error_df], axis=0, ignore_index=True)
 
         # Проводим проверку стр.02 и стр.04 и стр.05 < стр.01
-        seventh_error_df = check_seventh_error(temp_df.copy(), name_file, border,tup_correct)
+        seventh_error_df = check_seventh_error(temp_df.copy(), name_file, border, tup_correct)
         error_df = pd.concat([error_df, seventh_error_df], axis=0, ignore_index=True)
 
         # прибавляем border
@@ -447,11 +462,12 @@ def extract_code(value):
     """
     value = str(value)
     re_code = re.compile('^\d{2}?[.]\d{2}?[.]\d{2}$')  # создаем выражение для поиска кода специальности
-    result = re.search(re_code,value)
+    result = re.search(re_code, value)
     if result:
         return result.group()
     else:
         return 'error'
+
 
 def create_check_tables(high_level_dct: dict):
     """
@@ -468,22 +484,16 @@ def create_check_tables(high_level_dct: dict):
             else:
                 code_spec_dct[code_spec].update({f'{poo}': high_level_dct[poo][code_spec]})
 
-
-
     # Сортируем получившийся словарь по возрастанию для удобства использования
     sort_code_spec_dct = sorted(code_spec_dct.items())
     code_spec_dct = {dct[0]: dct[1] for dct in sort_code_spec_dct}
-
-
-
 
     # Создаем файл
     wb = openpyxl.Workbook()
     # Создаем листы
     for idx, code_spec in enumerate(code_spec_dct.keys()):
-        if code_spec !='nan':
+        if code_spec != 'nan':
             wb.create_sheet(title=code_spec, index=idx)
-
 
     for code_spec in code_spec_dct.keys():
         if code_spec != 'nan':
@@ -494,29 +504,31 @@ def create_check_tables(high_level_dct: dict):
             temp_code_df['Всего'] = temp_code_df[0].apply(lambda x: x.get('Колонка 7'))
             temp_code_df[
                 'Трудоустроены (по трудовому договору, договору ГПХ в соответствии с трудовым законодательством, законодательством  об обязательном пенсионном страховании)'] = \
-            temp_code_df[0].apply(lambda x: x.get('Колонка 8'))
+                temp_code_df[0].apply(lambda x: x.get('Колонка 8'))
             temp_code_df[
                 'В том числе (из трудоустроенных): в соответствии с освоенной профессией, специальностью (исходя из осуществляемой трудовой функции)'] = \
-            temp_code_df[0].apply(lambda x: x.get('Колонка 9'))
+                temp_code_df[0].apply(lambda x: x.get('Колонка 9'))
             temp_code_df[
                 'В том числе (из трудоустроенных): работают на протяжении не менее 4-х месяцев на последнем месте работы'] = \
-            temp_code_df[0].apply(lambda x: x.get('Колонка 10'))
+                temp_code_df[0].apply(lambda x: x.get('Колонка 10'))
             temp_code_df['Индивидуальные предприниматели'] = temp_code_df[0].apply(lambda x: x.get('Колонка 11'))
-            temp_code_df['Самозанятые (перешедшие на специальный налоговый режим  - налог на профессио-нальный доход)'] = \
-            temp_code_df[0].apply(lambda x: x.get('Колонка 12'))
+            temp_code_df[
+                'Самозанятые (перешедшие на специальный налоговый режим  - налог на профессио-нальный доход)'] = \
+                temp_code_df[0].apply(lambda x: x.get('Колонка 12'))
             temp_code_df['Продолжили обучение'] = temp_code_df[0].apply(lambda x: x.get('Колонка 13'))
             temp_code_df['Проходят службу в армии по призыву'] = temp_code_df[0].apply(lambda x: x.get('Колонка 14'))
             temp_code_df[
                 'Проходят службу в армии на контрактной основе, в органах внутренних дел, Государственной противопожарной службе, органах по контролю за оборотом наркотических средств и психотропных веществ, учреждениях и органах уголовно-исполнительной системы, войсках национальной гвардии Российской Федерации, органах принудительного исполнения Российской Федерации*'] = \
-            temp_code_df[0].apply(lambda x: x.get('Колонка 15'))
-            temp_code_df['Находятся в отпуске по уходу за ребенком'] = temp_code_df[0].apply(lambda x: x.get('Колонка 16'))
+                temp_code_df[0].apply(lambda x: x.get('Колонка 15'))
+            temp_code_df['Находятся в отпуске по уходу за ребенком'] = temp_code_df[0].apply(
+                lambda x: x.get('Колонка 16'))
             temp_code_df['Неформальная занятость (нелегальная)'] = temp_code_df[0].apply(lambda x: x.get('Колонка 17'))
             temp_code_df[
                 'Зарегистрированы в центрах занятости в качестве безработных (получают пособие по безработице) и не планируют трудоустраиваться'] = \
-            temp_code_df[0].apply(lambda x: x.get('Колонка 18'))
+                temp_code_df[0].apply(lambda x: x.get('Колонка 18'))
             temp_code_df[
                 'Не имеют мотивации к трудоустройству (кроме зарегистрированных в качестве безработных) и не планируют трудоустраиваться, в том числе по причинам получения иных социальных льгот '] = \
-            temp_code_df[0].apply(lambda x: x.get('Колонка 19'))
+                temp_code_df[0].apply(lambda x: x.get('Колонка 19'))
             temp_code_df['Иные причины нахождения под риском нетрудоустройства'] = temp_code_df[0].apply(
                 lambda x: x.get('Колонка 20'))
             temp_code_df['Смерть, тяжелое состояние здоровья'] = temp_code_df[0].apply(lambda x: x.get('Колонка 21'))
@@ -524,15 +536,15 @@ def create_check_tables(high_level_dct: dict):
                 lambda x: x.get('Колонка 22'))
             temp_code_df[
                 'Переезд за пределы Российской Федерации (кроме переезда в иные регионы - по ним регион должен располагать сведениями)'] = \
-            temp_code_df[0].apply(lambda x: x.get('Колонка 23'))
+                temp_code_df[0].apply(lambda x: x.get('Колонка 23'))
             temp_code_df[
                 'Не могут трудоустраиваться в связи с уходом за больными родственниками, в связи с иными семейными обстоятельствами'] = \
-            temp_code_df[0].apply(lambda x: x.get('Колонка 24'))
+                temp_code_df[0].apply(lambda x: x.get('Колонка 24'))
             temp_code_df['Выпускники из числа иностранных граждан, которые не имеют СНИЛС'] = temp_code_df[0].apply(
                 lambda x: x.get('Колонка 25'))
             temp_code_df[
                 'Иное (в первую очередь выпускники распределяются по всем остальным графам. Данная графа предназначена для очень редких случаев. Если в нее включено более 1 из 200 выпускников - укажите причины в гр. 33 '] = \
-            temp_code_df[0].apply(lambda x: x.get('Колонка 26'))
+                temp_code_df[0].apply(lambda x: x.get('Колонка 26'))
             temp_code_df['будут трудоустроены'] = temp_code_df[0].apply(lambda x: x.get('Колонка 27'))
             temp_code_df['будут осуществлять предпринимательскую деятельность'] = temp_code_df[0].apply(
                 lambda x: x.get('Колонка 28'))
@@ -540,10 +552,10 @@ def create_check_tables(high_level_dct: dict):
             temp_code_df['будут призваны в армию'] = temp_code_df[0].apply(lambda x: x.get('Колонка 30'))
             temp_code_df[
                 'будут в армии на контрактной основе, в органах внутренних дел, Государственной противопожарной службе, органах по контролю за оборотом наркотических средств и психотропных веществ, учреждениях и органах уголовно-исполнительной системы, войсках национальной гвардии Российской Федерации, органах принудительного исполнения Российской Федерации*'] = \
-            temp_code_df[0].apply(lambda x: x.get('Колонка 31'))
+                temp_code_df[0].apply(lambda x: x.get('Колонка 31'))
             temp_code_df['будут продолжать обучение'] = temp_code_df[0].apply(lambda x: x.get('Колонка 32'))
             temp_code_df['Принимаемые меры по содействию занятости (тезисно - вид меры, охват выпускников мерой)'] = \
-            temp_code_df[0].apply(lambda x: x.get('Колонка 33'))
+                temp_code_df[0].apply(lambda x: x.get('Колонка 33'))
 
             finish_code_spec_df = temp_code_df.drop([0], axis=1)
 
@@ -600,8 +612,10 @@ def processing_data_employment():
                 df = pd.read_excel(f'{path_folder_data}/{file}', skiprows=7, dtype=str)
                 # проверяем корректность заголовка
                 # создаем множество колонок наличие которых мы проверяем
-                check_cols = {'01','02','03','04','05','06','07','08','09','10','11','12','13','14','15','16','17',
-                              '18','19','20','21','22','23','24','25','26','27','28','29','30','31','32','33'}
+                check_cols = {'01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15',
+                              '16', '17',
+                              '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31', '32',
+                              '33'}
                 if not check_cols.issubset(set(df.columns)):
                     temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
                                                         'Проверьте заголовок таблицы в файле.Строка с номерами колонок (01,02,03 и т.д. как в исходной форме)\n должна находиться на 8 строке! ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!! ']],
@@ -610,8 +624,8 @@ def processing_data_employment():
                     error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
                     continue
                 df = df[df['05'] != '16']  # фильтруем строки с проверками
-                #отсекаем возможный первый столбец с данными ПОО,начинаем датафрейм с колонки 01 и отсекаем колонки с примечаниями
-                df = df.loc[:,'01':'33']
+                # отсекаем возможный первый столбец с данными ПОО,начинаем датафрейм с колонки 01 и отсекаем колонки с примечаниями
+                df = df.loc[:, '01':'33']
 
                 # # получаем  часть с данными
                 mask = pd.isna(df).all(axis=1)  # создаем маску для строк с пропущенными значениями
@@ -639,7 +653,8 @@ def processing_data_employment():
                 flag_error_code_spec = False  # чекбокс для ошибки несоблюдения расстояния в 15 строк
                 flag_error_space_spec = False  # чекбокс для ошибки заполнения кода специальности пробелом
                 for i in range(quantity_check_code):
-                    temp_set = set([code_spec for code_spec in check_code_lst[border_check_code:border_check_code + 15]])
+                    temp_set = set(
+                        [code_spec for code_spec in check_code_lst[border_check_code:border_check_code + 15]])
                     if len(temp_set) != 1:
                         flag_error_code_spec = True
                     if ' ' in temp_set:
@@ -713,7 +728,7 @@ def processing_data_employment():
                 """
                 В итоге получается такая структура
                 {БРИТ:{13.01.10:{Строка 1:{Колонка 1:0}}},ТСИГХ:{22.01.10:{Строка 1:{Колонка 1:0}}}}
-    
+
                 """
 
                 current_code = 'Ошибка проверьте правильность заполнения кодов специальностей'  # чекбокс для проверки заполнения кода специальности
@@ -779,13 +794,13 @@ def processing_data_employment():
         frame['Всего'] = frame[0].apply(lambda x: x.get('Колонка 7'))
         frame[
             'Трудоустроены (по трудовому договору, договору ГПХ в соответствии с трудовым законодательством, законодательством  об обязательном пенсионном страховании)'] = \
-        frame[0].apply(lambda x: x.get('Колонка 8'))
+            frame[0].apply(lambda x: x.get('Колонка 8'))
         frame[
             'В том числе (из трудоустроенных): в соответствии с освоенной профессией, специальностью (исходя из осуществляемой трудовой функции)'] = \
-        frame[0].apply(lambda x: x.get('Колонка 9'))
+            frame[0].apply(lambda x: x.get('Колонка 9'))
         frame[
             'В том числе (из трудоустроенных): работают на протяжении не менее 4-х месяцев на последнем месте работы'] = \
-        frame[0].apply(lambda x: x.get('Колонка 10'))
+            frame[0].apply(lambda x: x.get('Колонка 10'))
         frame['Индивидуальные предприниматели'] = frame[0].apply(lambda x: x.get('Колонка 11'))
         frame['Самозанятые (перешедшие на специальный налоговый режим  - налог на профессио-нальный доход)'] = frame[
             0].apply(lambda x: x.get('Колонка 12'))
@@ -793,36 +808,36 @@ def processing_data_employment():
         frame['Проходят службу в армии по призыву'] = frame[0].apply(lambda x: x.get('Колонка 14'))
         frame[
             'Проходят службу в армии на контрактной основе, в органах внутренних дел, Государственной противопожарной службе, органах по контролю за оборотом наркотических средств и психотропных веществ, учреждениях и органах уголовно-исполнительной системы, войсках национальной гвардии Российской Федерации, органах принудительного исполнения Российской Федерации*'] = \
-        frame[0].apply(lambda x: x.get('Колонка 15'))
+            frame[0].apply(lambda x: x.get('Колонка 15'))
         frame['Находятся в отпуске по уходу за ребенком'] = frame[0].apply(lambda x: x.get('Колонка 16'))
         frame['Неформальная занятость (нелегальная)'] = frame[0].apply(lambda x: x.get('Колонка 17'))
         frame[
             'Зарегистрированы в центрах занятости в качестве безработных (получают пособие по безработице) и не планируют трудоустраиваться'] = \
-        frame[0].apply(lambda x: x.get('Колонка 18'))
+            frame[0].apply(lambda x: x.get('Колонка 18'))
         frame[
             'Не имеют мотивации к трудоустройству (кроме зарегистрированных в качестве безработных) и не планируют трудоустраиваться, в том числе по причинам получения иных социальных льгот '] = \
-        frame[0].apply(lambda x: x.get('Колонка 19'))
+            frame[0].apply(lambda x: x.get('Колонка 19'))
         frame['Иные причины нахождения под риском нетрудоустройства'] = frame[0].apply(lambda x: x.get('Колонка 20'))
         frame['Смерть, тяжелое состояние здоровья'] = frame[0].apply(lambda x: x.get('Колонка 21'))
         frame['Находятся под следствием, отбывают наказание'] = frame[0].apply(lambda x: x.get('Колонка 22'))
         frame[
             'Переезд за пределы Российской Федерации (кроме переезда в иные регионы - по ним регион должен располагать сведениями)'] = \
-        frame[0].apply(lambda x: x.get('Колонка 23'))
+            frame[0].apply(lambda x: x.get('Колонка 23'))
         frame[
             'Не могут трудоустраиваться в связи с уходом за больными родственниками, в связи с иными семейными обстоятельствами'] = \
-        frame[0].apply(lambda x: x.get('Колонка 24'))
+            frame[0].apply(lambda x: x.get('Колонка 24'))
         frame['Выпускники из числа иностранных граждан, которые не имеют СНИЛС'] = frame[0].apply(
             lambda x: x.get('Колонка 25'))
         frame[
             'Иное (в первую очередь выпускники распределяются по всем остальным графам. Данная графа предназначена для очень редких случаев. Если в нее включено более 1 из 200 выпускников - укажите причины в гр. 33 '] = \
-        frame[0].apply(lambda x: x.get('Колонка 26'))
+            frame[0].apply(lambda x: x.get('Колонка 26'))
         frame['будут трудоустроены'] = frame[0].apply(lambda x: x.get('Колонка 27'))
         frame['будут осуществлять предпринимательскую деятельность'] = frame[0].apply(lambda x: x.get('Колонка 28'))
         frame['будут самозанятыми'] = frame[0].apply(lambda x: x.get('Колонка 29'))
         frame['будут призваны в армию'] = frame[0].apply(lambda x: x.get('Колонка 30'))
         frame[
             'будут в армии на контрактной основе, в органах внутренних дел, Государственной противопожарной службе, органах по контролю за оборотом наркотических средств и психотропных веществ, учреждениях и органах уголовно-исполнительной системы, войсках национальной гвардии Российской Федерации, органах принудительного исполнения Российской Федерации*'] = \
-        frame[0].apply(lambda x: x.get('Колонка 31'))
+            frame[0].apply(lambda x: x.get('Колонка 31'))
         frame['будут продолжать обучение'] = frame[0].apply(lambda x: x.get('Колонка 32'))
         frame['Принимаемые меры по содействию занятости (тезисно - вид меры, охват выпускников мерой)'] = frame[
             0].apply(lambda x: x.get('Колонка 33'))
@@ -860,7 +875,8 @@ def processing_data_employment():
             new_row.iloc[:, 2:] = 'проверка пройдена'
 
             # Вставка новой строки через каждые 15 строк
-            finish_df = pd.concat([finish_df.iloc[:i + count], new_row, finish_df.iloc[i + count:]]).reset_index(drop=True)
+            finish_df = pd.concat([finish_df.iloc[:i + count], new_row, finish_df.iloc[i + count:]]).reset_index(
+                drop=True)
             count += 1
         lst_number_row = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15',
                           '16']
@@ -870,7 +886,7 @@ def processing_data_employment():
         # генерируем текущее время
         t = time.localtime()
         current_time = time.strftime('%H_%M_%S', t)
-        finish_df = finish_df[finish_df['Код специальности'] != 'nan'] # отбрасываем nan
+        finish_df = finish_df[finish_df['Код специальности'] != 'nan']  # отбрасываем nan
         finish_df.to_excel(f'{path_to_end_folder}/Полная таблица  от {current_time}.xlsx', index=False)
 
         # Создаем файл с 5 строками
@@ -884,10 +900,8 @@ def processing_data_employment():
             one_finish_df = pd.concat([one_finish_df, temp_df.iloc[:1, :]], axis=0, ignore_index=True)
 
         with pd.ExcelWriter(f'{path_to_end_folder}/5 строк Трудоустройство от {current_time}.xlsx') as writer:
-            small_finish_df.to_excel(writer,sheet_name='5 строк',index=False)
-            one_finish_df.to_excel(writer,sheet_name='1 строка (Всего выпускников)',index=False)
-
-
+            small_finish_df.to_excel(writer, sheet_name='5 строк', index=False)
+            one_finish_df.to_excel(writer, sheet_name='1 строка (Всего выпускников)', index=False)
 
         # Создаем документ
         wb = openpyxl.Workbook()
@@ -921,12 +935,13 @@ def processing_data_employment():
     else:
         if error_df.shape[0] != 0:
             messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 3.4',
-                                'Обнаружены ошибки в обрабатываемых файлах.\n'
-                                'Названия файлов с ошибками и ошибки вы можете найти в файле Ошибки.\n'
-                                'Исправьте ошибки и запустите повторную обработку для того чтобы получить полный результат.')
+                                 'Обнаружены ошибки в обрабатываемых файлах.\n'
+                                 'Названия файлов с ошибками и ошибки вы можете найти в файле Ошибки.\n'
+                                 'Исправьте ошибки и запустите повторную обработку для того чтобы получить полный результат.')
         else:
             messagebox.showinfo('Кассандра Подсчет данных по трудоустройству выпускников ver 3.4',
                                 'Данные успешно обработаны.')
+
 
 """
 Функции для обработки отчетов ЦК
@@ -1121,7 +1136,8 @@ def processing_data_ck_employment():
                     general_table = pd.concat([general_table, temp_add_df], axis=0,
                                               ignore_index=True)  # сохраняем в общую таблицу
                     # Добаввляем принимаемые меры
-                    str_df = pd.concat([str_df, temp_df_ck.iloc[:, 29].to_frame().fillna('_')], axis=1, ignore_index=True)
+                    str_df = pd.concat([str_df, temp_df_ck.iloc[:, 29].to_frame().fillna('_')], axis=1,
+                                       ignore_index=True)
 
                 else:
                     continue
@@ -1129,7 +1145,8 @@ def processing_data_ck_employment():
 
         base_df['32'] = str_df.apply(lambda x: ';'.join(x), axis=1)
         # Добавляем колонки
-        fourth = ['Всего (общая численность выпускников)', 'из общей численности выпускников (из строки 01): лица с ОВЗ',
+        fourth = ['Всего (общая численность выпускников)',
+                  'из общей численности выпускников (из строки 01): лица с ОВЗ',
                   'из числа лиц с ОВЗ (из строки 02): инвалиды и дети-инвалиды',
                   'Инвалиды и дети-инвалиды (кроме учтенных в строке 03)',
                   'Имеют договор о целевом обучении']
@@ -1170,9 +1187,9 @@ def processing_data_ck_employment():
     else:
         if base_error_df.shape[0] != 0:
             messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 3.4',
-                                'Обнаружены ошибки в обрабатываемых файлах.\n'
-                                'Названия файлов с ошибками и ошибки вы можете найти в файле Отчет ЦК ошибки.\n'
-                                'Исправьте ошибки и запустите повторную обработку чтбы получить полный результат.')
+                                 'Обнаружены ошибки в обрабатываемых файлах.\n'
+                                 'Названия файлов с ошибками и ошибки вы можете найти в файле Отчет ЦК ошибки.\n'
+                                 'Исправьте ошибки и запустите повторную обработку чтбы получить полный результат.')
         else:
             messagebox.showinfo('Кассандра Подсчет данных по трудоустройству выпускников ver 3.4',
                                 'Данные успешно обработаны')
@@ -1181,6 +1198,8 @@ def processing_data_ck_employment():
 """
 обработка модерновой таблицы
 """
+
+
 def processing_data_employment_modern():
     """
     Фугкция для обработки данных формы №15
@@ -1198,8 +1217,10 @@ def processing_data_employment_modern():
                 print(name_file)
                 df = pd.read_excel(f'{path_folder_data}/{file}', skiprows=4, dtype=str)
                 # создаем множество колонок наличие которых мы проверяем
-                check_cols = {'01','02','03','04','05','06','07','08','09','10','11','12','13','14','15','16','17',
-                              '18','19','20','21','22','23','24','25','26','27','28','29','30','31','32','33'}
+                check_cols = {'01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15',
+                              '16', '17',
+                              '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31', '32',
+                              '33'}
                 if not check_cols.issubset(set(df.columns)):
                     temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
                                                         'Проверьте заголовок таблицы в файле.Строка с номерами колонок (01,02,03 и т.д. как в исходной форме)\n должна находиться на 5 строке! ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!! ']],
@@ -1207,9 +1228,9 @@ def processing_data_employment_modern():
                                                           'Описание ошибки'])
                     error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
                     continue
-                df = df[df['05'] !='16'] # фильтруем строки с проверками
-                #отсекаем возможный первый столбец с данными ПОО,начинаем датафрейм с колонки 01 и отсекаем колонки с примечаниями
-                df = df.loc[:,'01':'33']
+                df = df[df['05'] != '16']  # фильтруем строки с проверками
+                # отсекаем возможный первый столбец с данными ПОО,начинаем датафрейм с колонки 01 и отсекаем колонки с примечаниями
+                df = df.loc[:, '01':'33']
                 # получаем  часть с данными
                 mask = pd.isna(df).all(axis=1)  # создаем маску для строк с пропущенными значениями
                 # проверяем есть ли строка полностью состоящая из nan
@@ -1218,8 +1239,8 @@ def processing_data_employment_modern():
                     row_index = empty_row_index[0][0]
                     df = df.iloc[:row_index]
                 #     # Проверка на размер таблицы, должно бьть кратно 15
-                count_spec = df.shape[0] // 15 # количество специальностей
-                df = df.iloc[:count_spec*15,:] # отбрасываем строки проверки
+                count_spec = df.shape[0] // 15  # количество специальностей
+                df = df.iloc[:count_spec * 15, :]  # отбрасываем строки проверки
 
                 check_code_lst = df['03'].tolist()  # получаем список кодов специальностей
                 # Проверка на то чтобы в колонке 03 в первой строке не было пустой ячейки
@@ -1240,7 +1261,8 @@ def processing_data_employment_modern():
                     # получаем множество отбрасывая np.nan
                     # temp_set = set([code_spec for code_spec in check_code_lst[border_check_code:border_check_code + 15] if
                     #                 code_spec is not np.nan])
-                    temp_set = set([code_spec for code_spec in check_code_lst[border_check_code:border_check_code + 15]])
+                    temp_set = set(
+                        [code_spec for code_spec in check_code_lst[border_check_code:border_check_code + 15]])
                     if len(temp_set) != 1:
                         flag_error_code_spec = True
                     if ' ' in temp_set:
@@ -1268,8 +1290,8 @@ def processing_data_employment_modern():
                 df['06'] = df['06'].fillna('15 ячейка')
 
                 # Проводим проверку на корректность данных, отправляем копию датафрейма
-                tup_correct = (6,20) # создаем кортеж  с поправками
-                file_error_df = check_error(df.copy(), name_file,tup_correct)
+                tup_correct = (6, 20)  # создаем кортеж  с поправками
+                file_error_df = check_error(df.copy(), name_file, tup_correct)
                 error_df = pd.concat([error_df, file_error_df], axis=0, ignore_index=True)
                 if file_error_df.shape[0] != 0:
                     temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
@@ -1314,7 +1336,7 @@ def processing_data_employment_modern():
                 """
                 В итоге получается такая структура
                 {БРИТ:{13.01.10:{Строка 1:{Колонка 1:0}}},ТСИГХ:{22.01.10:{Строка 1:{Колонка 1:0}}}}
-        
+
                 """
 
                 current_code = 'Ошибка проверьте правильность заполнения кодов специальностей'  # чекбокс для проверки заполнения кода специальности
@@ -1380,13 +1402,13 @@ def processing_data_employment_modern():
         frame['Всего'] = frame[0].apply(lambda x: x.get('Колонка 7'))
         frame[
             'Трудоустроены (по трудовому договору, договору ГПХ в соответствии с трудовым законодательством, законодательством  об обязательном пенсионном страховании)'] = \
-        frame[0].apply(lambda x: x.get('Колонка 8'))
+            frame[0].apply(lambda x: x.get('Колонка 8'))
         frame[
             'В том числе (из трудоустроенных): в соответствии с освоенной профессией, специальностью (исходя из осуществляемой трудовой функции)'] = \
-        frame[0].apply(lambda x: x.get('Колонка 9'))
+            frame[0].apply(lambda x: x.get('Колонка 9'))
         frame[
             'В том числе (из трудоустроенных): работают на протяжении не менее 4-х месяцев на последнем месте работы'] = \
-        frame[0].apply(lambda x: x.get('Колонка 10'))
+            frame[0].apply(lambda x: x.get('Колонка 10'))
         frame['Индивидуальные предприниматели'] = frame[0].apply(lambda x: x.get('Колонка 11'))
         frame['Самозанятые (перешедшие на специальный налоговый режим  - налог на профессио-нальный доход)'] = frame[
             0].apply(lambda x: x.get('Колонка 12'))
@@ -1394,36 +1416,36 @@ def processing_data_employment_modern():
         frame['Проходят службу в армии по призыву'] = frame[0].apply(lambda x: x.get('Колонка 14'))
         frame[
             'Проходят службу в армии на контрактной основе, в органах внутренних дел, Государственной противопожарной службе, органах по контролю за оборотом наркотических средств и психотропных веществ, учреждениях и органах уголовно-исполнительной системы, войсках национальной гвардии Российской Федерации, органах принудительного исполнения Российской Федерации*'] = \
-        frame[0].apply(lambda x: x.get('Колонка 15'))
+            frame[0].apply(lambda x: x.get('Колонка 15'))
         frame['Находятся в отпуске по уходу за ребенком'] = frame[0].apply(lambda x: x.get('Колонка 16'))
         frame['Неформальная занятость (нелегальная)'] = frame[0].apply(lambda x: x.get('Колонка 17'))
         frame[
             'Зарегистрированы в центрах занятости в качестве безработных (получают пособие по безработице) и не планируют трудоустраиваться'] = \
-        frame[0].apply(lambda x: x.get('Колонка 18'))
+            frame[0].apply(lambda x: x.get('Колонка 18'))
         frame[
             'Не имеют мотивации к трудоустройству (кроме зарегистрированных в качестве безработных) и не планируют трудоустраиваться, в том числе по причинам получения иных социальных льгот '] = \
-        frame[0].apply(lambda x: x.get('Колонка 19'))
+            frame[0].apply(lambda x: x.get('Колонка 19'))
         frame['Иные причины нахождения под риском нетрудоустройства'] = frame[0].apply(lambda x: x.get('Колонка 20'))
         frame['Смерть, тяжелое состояние здоровья'] = frame[0].apply(lambda x: x.get('Колонка 21'))
         frame['Находятся под следствием, отбывают наказание'] = frame[0].apply(lambda x: x.get('Колонка 22'))
         frame[
             'Переезд за пределы Российской Федерации (кроме переезда в иные регионы - по ним регион должен располагать сведениями)'] = \
-        frame[0].apply(lambda x: x.get('Колонка 23'))
+            frame[0].apply(lambda x: x.get('Колонка 23'))
         frame[
             'Не могут трудоустраиваться в связи с уходом за больными родственниками, в связи с иными семейными обстоятельствами'] = \
-        frame[0].apply(lambda x: x.get('Колонка 24'))
+            frame[0].apply(lambda x: x.get('Колонка 24'))
         frame['Выпускники из числа иностранных граждан, которые не имеют СНИЛС'] = frame[0].apply(
             lambda x: x.get('Колонка 25'))
         frame[
             'Иное (в первую очередь выпускники распределяются по всем остальным графам. Данная графа предназначена для очень редких случаев. Если в нее включено более 1 из 200 выпускников - укажите причины в гр. 33 '] = \
-        frame[0].apply(lambda x: x.get('Колонка 26'))
+            frame[0].apply(lambda x: x.get('Колонка 26'))
         frame['будут трудоустроены'] = frame[0].apply(lambda x: x.get('Колонка 27'))
         frame['будут осуществлять предпринимательскую деятельность'] = frame[0].apply(lambda x: x.get('Колонка 28'))
         frame['будут самозанятыми'] = frame[0].apply(lambda x: x.get('Колонка 29'))
         frame['будут призваны в армию'] = frame[0].apply(lambda x: x.get('Колонка 30'))
         frame[
             'будут в армии на контрактной основе, в органах внутренних дел, Государственной противопожарной службе, органах по контролю за оборотом наркотических средств и психотропных веществ, учреждениях и органах уголовно-исполнительной системы, войсках национальной гвардии Российской Федерации, органах принудительного исполнения Российской Федерации*'] = \
-        frame[0].apply(lambda x: x.get('Колонка 31'))
+            frame[0].apply(lambda x: x.get('Колонка 31'))
         frame['будут продолжать обучение'] = frame[0].apply(lambda x: x.get('Колонка 32'))
         frame['Принимаемые меры по содействию занятости (тезисно - вид меры, охват выпускников мерой)'] = frame[
             0].apply(lambda x: x.get('Колонка 33'))
@@ -1462,7 +1484,8 @@ def processing_data_employment_modern():
             new_row.iloc[:, 2:] = 'проверка пройдена'
 
             # Вставка новой строки через каждые 15 строк
-            finish_df = pd.concat([finish_df.iloc[:i + count], new_row, finish_df.iloc[i + count:]]).reset_index(drop=True)
+            finish_df = pd.concat([finish_df.iloc[:i + count], new_row, finish_df.iloc[i + count:]]).reset_index(
+                drop=True)
             count += 1
         lst_number_row = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15',
                           '16']
@@ -1485,10 +1508,9 @@ def processing_data_employment_modern():
             small_finish_df = pd.concat([small_finish_df, temp_df.iloc[:5, :]], axis=0, ignore_index=True)
             one_finish_df = pd.concat([one_finish_df, temp_df.iloc[:1, :]], axis=0, ignore_index=True)
 
-
         with pd.ExcelWriter(f'{path_to_end_folder}/5 строк Форма №15 от {current_time}.xlsx') as writer:
-            small_finish_df.to_excel(writer,sheet_name='5 строк',index=False)
-            one_finish_df.to_excel(writer,sheet_name='1 строка (Всего выпускников)',index=False)
+            small_finish_df.to_excel(writer, sheet_name='5 строк', index=False)
+            one_finish_df.to_excel(writer, sheet_name='1 строка (Всего выпускников)', index=False)
 
         # small_finish_df.to_excel(f'{path_to_end_folder}/5 строк Форма №15 от {current_time}.xlsx', index=False)
 
@@ -1530,25 +1552,31 @@ def processing_data_employment_modern():
             messagebox.showinfo('Кассандра Подсчет данных по трудоустройству выпускников ver 3.4',
                                 'Данные успешно обработаны.')
 
+
 """
 Функция для ОПК
 """
+
+
 def extract_code_full(value):
     """
     Функция для извлечения кода специальности из ячейки в которой соединены и код и название специалньости
     """
     value = str(value)
     re_code = re.compile('\d{2}?[.]\d{2}?[.]\d{2}')  # создаем выражение для поиска кода специальности
-    result = re.search(re_code,value)
+    result = re.search(re_code, value)
     if result:
         return result.group()
     else:
         return 'Не найден код специальности'
 
+
 """
 Проверка ошибок
 """
-def check_error_opk(df1:pd.DataFrame, name_file, tup_correct):
+
+
+def check_error_opk(df1: pd.DataFrame, name_file, tup_correct):
     """
     Функция для проверки таблиц по ОПК
     :param df1: датафрейм форма 1
@@ -1569,22 +1597,21 @@ def check_error_opk(df1:pd.DataFrame, name_file, tup_correct):
     border = 0
     for i in range(1, quantity + 1):
         temp_df = df1.iloc[border:border + 2, :]
-    # Проверяем корректность заполнения формы 1
-        first_error_opk = check_horizont_sum_opk_all(temp_df.copy(),name_file,tup_correct) # проверяем сумму по строкам
+        # Проверяем корректность заполнения формы 1
+        first_error_opk = check_horizont_sum_opk_all(temp_df.copy(), name_file,
+                                                     tup_correct)  # проверяем сумму по строкам
         error_df = pd.concat([error_df, first_error_opk], axis=0, ignore_index=True)
 
         # проверяем условие  по колонкам строка 02 не должна быть больше строки 01
-        second_error_opk = check_vertical_opk_all(temp_df.copy(),border,name_file,tup_correct)
+        second_error_opk = check_vertical_opk_all(temp_df.copy(), border, name_file, tup_correct)
         error_df = pd.concat([error_df, second_error_opk], axis=0, ignore_index=True)
 
         border += 2
 
-
-
-
     return error_df
 
-def check_cross_error_opk(df1:pd.DataFrame,df2:pd.DataFrame, name_file, tup_correct):
+
+def check_cross_error_opk(df1: pd.DataFrame, df2: pd.DataFrame, name_file, tup_correct):
     """
     Функция для проверки значений между формой 1 и формой 2
     :param df1:
@@ -1597,20 +1624,20 @@ def check_cross_error_opk(df1:pd.DataFrame,df2:pd.DataFrame, name_file, tup_corr
     error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
 
     df1['08'] = df1['08'].apply(check_data)
-    df1['39'] = df1['39'].apply(check_data) # приводим к инту
+    df1['39'] = df1['39'].apply(check_data)  # приводим к инту
 
-    group_df1 = df1.groupby(['03']).agg({'08':sum,'39':sum}) # группируем
-    group_df1 = group_df1.reset_index() # переносим индексы
-    group_df1.columns = ['Специальность','Трудоустроено в ОПК','Будут трудоустроены в ОПК']
+    group_df1 = df1.groupby(['03']).agg({'08': sum, '39': sum})  # группируем
+    group_df1 = group_df1.reset_index()  # переносим индексы
+    group_df1.columns = ['Специальность', 'Трудоустроено в ОПК', 'Будут трудоустроены в ОПК']
 
     # приводим колонку 2 формы с числов выпускников к инту
     df2['04'] = df2['04'].apply(check_data)
 
     # Проверяем заполенение 2 формы, есть ли там вообще хоть что то
-    quantity_now = group_df1['Трудоустроено в ОПК'].sum() # сколько трудоустроено сейчас
-    quantity_future = group_df1['Будут трудоустроены в ОПК'].sum() # сколько будут трудоустроены
+    quantity_now = group_df1['Трудоустроено в ОПК'].sum()  # сколько трудоустроено сейчас
+    quantity_future = group_df1['Будут трудоустроены в ОПК'].sum()  # сколько будут трудоустроены
     # проверяем заполнение формы 2
-    if (quantity_now != 0 or quantity_future !=0) and df2.shape[0] == 0:
+    if (quantity_now != 0 or quantity_future != 0) and df2.shape[0] == 0:
         temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
                                             'В форме 1 есть выпускники трудоустроенные или которые будут трудоустроены в ОПК,\n'
                                             ' при этом форма 2 не заполнена. ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!! ']],
@@ -1620,17 +1647,17 @@ def check_cross_error_opk(df1:pd.DataFrame,df2:pd.DataFrame, name_file, tup_corr
         return error_df
 
     # проверка по трудоустроенным и трудоустроенным в будущем
-    cross_first_error_df =check_cross_first_error_df(df1.copy(),df2.copy(),name_file)
+    cross_first_error_df = check_cross_first_error_df(df1.copy(), df2.copy(), name_file)
     error_df = pd.concat([error_df, cross_first_error_df], axis=0, ignore_index=True)
 
     # # проверка по целевикам
-    check_cross_second_error_df = check_cross_second_error(df1.copy(),df2.copy(),name_file)
+    check_cross_second_error_df = check_cross_second_error(df1.copy(), df2.copy(), name_file)
     error_df = pd.concat([error_df, check_cross_second_error_df], axis=0, ignore_index=True)
-
 
     return error_df
 
-def check_cross_first_error_df(df1:pd.DataFrame,df2:pd.DataFrame, name_file):
+
+def check_cross_first_error_df(df1: pd.DataFrame, df2: pd.DataFrame, name_file):
     """
     Функция для првоерки соответствия количества указанных в форме 1 трудоустроенных и списка в форме 2
     проверки 1 и 2
@@ -1644,12 +1671,12 @@ def check_cross_first_error_df(df1:pd.DataFrame,df2:pd.DataFrame, name_file):
     # проверяем наличие незаполненных ячеек в колонках 05 06
     # отбираем значения первой строки
     df1 = df1[df1['04'] == '01']
-    df1 = df1.groupby(['03']).agg({'08':sum,'39':sum}) # группируем
-    df1 = df1.reset_index() # переносим индексы
-    df1.columns = ['Специальность','Трудоустроено в ОПК','Будут трудоустроены в ОПК']
+    df1 = df1.groupby(['03']).agg({'08': sum, '39': sum})  # группируем
+    df1 = df1.reset_index()  # переносим индексы
+    df1.columns = ['Специальность', 'Трудоустроено в ОПК', 'Будут трудоустроены в ОПК']
 
-    etalon_05 = {'уже трудоустроены','будут трудоустроены'} # эталонный состав колонки 05
-    etalon_06 = {'заключили договор о целевом обучении','нет'} # эталонный состав колонки 05
+    etalon_05 = {'уже трудоустроены', 'будут трудоустроены'}  # эталонный состав колонки 05
+    etalon_06 = {'заключили договор о целевом обучении', 'нет'}  # эталонный состав колонки 05
     # получаем состав колонок
     st_05 = set(df2['05'].unique())
     st_06 = set(df2['06'].unique())
@@ -1661,24 +1688,24 @@ def check_cross_first_error_df(df1:pd.DataFrame,df2:pd.DataFrame, name_file):
                                               'Описание ошибки'])
         error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
 
-
-
     # создаем 2 датафрейма, по колонке 05 трудоустроены и будут трудоустроены
-    empl_now_df = df2[df2['05'] =='уже трудоустроены'] # те что уже трудоустроены
-    empl_future_df = df2[df2['05'] =='будут трудоустроены'] # те что будут трудоустроены
+    empl_now_df = df2[df2['05'] == 'уже трудоустроены']  # те что уже трудоустроены
+    empl_future_df = df2[df2['05'] == 'будут трудоустроены']  # те что будут трудоустроены
 
     # проводим группировку
-    empl_now_df_group = empl_now_df.groupby(['02']).agg({'04':sum})
-    empl_future_df_group = empl_future_df.groupby(['02']).agg({'04':sum})
+    empl_now_df_group = empl_now_df.groupby(['02']).agg({'04': sum})
+    empl_future_df_group = empl_future_df.groupby(['02']).agg({'04': sum})
 
-    df1_future = df1[df1['Будут трудоустроены в ОПК'] !=0] # отбираем в форме 2 специальности по которым есть будущие трудоустроены выпускники
-    check_df = empl_future_df_group.merge(df1_future,how='outer',left_on='02',right_on='Специальность')
+    df1_future = df1[df1[
+                         'Будут трудоустроены в ОПК'] != 0]  # отбираем в форме 2 специальности по которым есть будущие трудоустроены выпускники
+    check_df = empl_future_df_group.merge(df1_future, how='outer', left_on='02', right_on='Специальность')
 
     # находим строки где есть хотя бы один nan ,это значит что в формах есть разночтения по специальностям
     row_with_nan = check_df[check_df.isna().any(axis=1)]
     row_with_nan.fillna('Специальность не найдена', inplace=True)
     for row in row_with_nan.itertuples():
-        temp_error_df = pd.DataFrame(data=[[f'{name_file}', f'{row[2]} не совпадают данные !!! Отсутствуют данные по этой специальности либо в форме 1 либо в форме 2',
+        temp_error_df = pd.DataFrame(data=[[f'{name_file}',
+                                            f'{row[2]} не совпадают данные !!! Отсутствуют данные по этой специальности либо в форме 1 либо в форме 2',
                                             'В форме 1 для этой специальности указаны выпускники которые будут трудоустроены, но в форме 2 такой специальности не найдено или наоборот. ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
                                      columns=['Название файла', 'Строка или колонка с ошибкой',
                                               'Описание ошибки'])
@@ -1692,16 +1719,17 @@ def check_cross_first_error_df(df1:pd.DataFrame,df2:pd.DataFrame, name_file):
 
     # записываем где есть ошибки
     for row in check_df.itertuples():
-        temp_error_df = pd.DataFrame(data=[[f'{name_file}', f'{row[2]} не совпадают данные !!! по форме 1 для этой специальности будут трудоустроено {row[4]} чел.'
-                                                            f' в форме 2 по этой специальности найдено {int(row[1])} чел.',
+        temp_error_df = pd.DataFrame(data=[[f'{name_file}',
+                                            f'{row[2]} не совпадают данные !!! по форме 1 для этой специальности будут трудоустроено {row[4]} чел.'
+                                            f' в форме 2 по этой специальности найдено {int(row[1])} чел.',
                                             'Несовпадает количество выпускников которые будут трудоустроены в форме 1 и в форме 2. ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
                                      columns=['Название файла', 'Строка или колонка с ошибкой',
                                               'Описание ошибки'])
         error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
 
-
-    #обрабатываем датафрейм с уже трудоустроенными
-    df1_now = df1[df1['Трудоустроено в ОПК'] != 0]  # отбираем в форме 2 специальности по которым есть будущие трудоустроены выпускники
+    # обрабатываем датафрейм с уже трудоустроенными
+    df1_now = df1[df1[
+                      'Трудоустроено в ОПК'] != 0]  # отбираем в форме 2 специальности по которым есть будущие трудоустроены выпускники
     check_df_now = empl_now_df_group.merge(df1_now, how='outer', left_on='02', right_on='Специальность')
 
     # находим строки где есть хотя бы один nan ,это значит что в формах есть разночтения по специальностям
@@ -1723,8 +1751,9 @@ def check_cross_first_error_df(df1:pd.DataFrame,df2:pd.DataFrame, name_file):
 
     # записываем где есть ошибки
     for row in check_df_now.itertuples():
-        temp_error_df = pd.DataFrame(data=[[f'{name_file}', f'Перекрестная проверка трудоустроен/будет трудоустроен: {row[2]} не совпадают данные !!! по форме 1 для этой специальности трудоустроено {row[3]} чел.'
-                                                            f' в форме 2 по этой специальности найдено {int(row[1])} чел.',
+        temp_error_df = pd.DataFrame(data=[[f'{name_file}',
+                                            f'Перекрестная проверка трудоустроен/будет трудоустроен: {row[2]} не совпадают данные !!! по форме 1 для этой специальности трудоустроено {row[3]} чел.'
+                                            f' в форме 2 по этой специальности найдено {int(row[1])} чел.',
                                             'Несовпадает количество выпускников которые трудоустроены в форме 1 и в форме 2. ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
                                      columns=['Название файла', 'Строка или колонка с ошибкой',
                                               'Описание ошибки'])
@@ -1733,7 +1762,7 @@ def check_cross_first_error_df(df1:pd.DataFrame,df2:pd.DataFrame, name_file):
     return error_df
 
 
-def check_cross_second_error(df1:pd.DataFrame,df2:pd.DataFrame, name_file):
+def check_cross_second_error(df1: pd.DataFrame, df2: pd.DataFrame, name_file):
     """
     Функция для проверки  корректности заполнения показателей по целевому приему.
     :param df1:
@@ -1745,24 +1774,22 @@ def check_cross_second_error(df1:pd.DataFrame,df2:pd.DataFrame, name_file):
     # проверяем наличие незаполненных ячеек в колонках 05 06
     # отбираем значения первой строки
     df1 = df1[df1['04'] == '02']
-    df1 = df1.groupby(['03']).agg({'08':sum,'39':sum}) # группируем
-    df1 = df1.reset_index() # переносим индексы
-    df1.columns = ['Специальность','Трудоустроено в ОПК','Будут трудоустроены в ОПК']
+    df1 = df1.groupby(['03']).agg({'08': sum, '39': sum})  # группируем
+    df1 = df1.reset_index()  # переносим индексы
+    df1.columns = ['Специальность', 'Трудоустроено в ОПК', 'Будут трудоустроены в ОПК']
     # Создаем 2 датафрейма из формы 1 целевики будущие и настоящие
-    df1_now = df1[['Специальность','Трудоустроено в ОПК']] # целевики трудоустроенные форма 1
-    df1_now = df1_now[df1_now['Трудоустроено в ОПК'] !=0]
-    df1_future = df1[['Специальность','Будут трудоустроены в ОПК']] # целевики трудоустроенные форма 1
-    df1_future = df1_future[df1_future['Будут трудоустроены в ОПК'] !=0]
+    df1_now = df1[['Специальность', 'Трудоустроено в ОПК']]  # целевики трудоустроенные форма 1
+    df1_now = df1_now[df1_now['Трудоустроено в ОПК'] != 0]
+    df1_future = df1[['Специальность', 'Будут трудоустроены в ОПК']]  # целевики трудоустроенные форма 1
+    df1_future = df1_future[df1_future['Будут трудоустроены в ОПК'] != 0]
 
     # создаем 2 датафрейма целевики уже трудоустроенные и целевики в будущем трудоустроенные
-  # создаем датафрейм, по колонке 06 заключили договор о целевом обучении и уже трудоустроенные
-    target_df_now  = df2[df2['06'] =='заключили договор о целевом обучении'] # целевики
-    target_df_now  = target_df_now[target_df_now['05'] == 'уже трудоустроены'] # целевики
-
-
+    # создаем датафрейм, по колонке 06 заключили договор о целевом обучении и уже трудоустроенные
+    target_df_now = df2[df2['06'] == 'заключили договор о целевом обучении']  # целевики
+    target_df_now = target_df_now[target_df_now['05'] == 'уже трудоустроены']  # целевики
 
     # проводим группировку
-    target_df_now = target_df_now.groupby(['02']).agg({'04':sum})
+    target_df_now = target_df_now.groupby(['02']).agg({'04': sum})
     target_df_now = target_df_now.reset_index()
 
     union_df_now = df1_now.merge(target_df_now, how='outer', left_on='Специальность', right_on='02')
@@ -1770,7 +1797,7 @@ def check_cross_second_error(df1:pd.DataFrame,df2:pd.DataFrame, name_file):
     #
     # # находим строки где есть хотя бы один nan ,это значит что в формах есть разночтения по специальностям
     row_with_nan = union_df_now[union_df_now.isna().any(axis=1)]
-    row_with_nan.fillna('Специальность не найдена',inplace=True)
+    row_with_nan.fillna('Специальность не найдена', inplace=True)
 
     for row in row_with_nan.itertuples():
         temp_error_df = pd.DataFrame(data=[[f'{name_file}',
@@ -1786,8 +1813,9 @@ def check_cross_second_error(df1:pd.DataFrame,df2:pd.DataFrame, name_file):
     check_df_now = check_df_now[~check_df_now['Результат']]
     # записываем где есть ошибки
     for row in check_df_now.itertuples():
-        temp_error_df = pd.DataFrame(data=[[f'{name_file}', f'Перекрестная проверка целевиков (трудоустроен/будет трудоустроен):В форме 1 - {row[1]} не совпадают данные !!! по форме 1 для этой специальности трудоустроено {row[2]} чел.'
-                                                            f' в форме 2 по этой специальности найдено {int(row[4])} чел.',
+        temp_error_df = pd.DataFrame(data=[[f'{name_file}',
+                                            f'Перекрестная проверка целевиков (трудоустроен/будет трудоустроен):В форме 1 - {row[1]} не совпадают данные !!! по форме 1 для этой специальности трудоустроено {row[2]} чел.'
+                                            f' в форме 2 по этой специальности найдено {int(row[4])} чел.',
                                             'Несовпадает количество выпускников целевиков которые трудоустроены в форме 1 и в форме 2. ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
                                      columns=['Название файла', 'Строка или колонка с ошибкой',
                                               'Описание ошибки'])
@@ -1806,7 +1834,7 @@ def check_cross_second_error(df1:pd.DataFrame,df2:pd.DataFrame, name_file):
     #
     # # находим строки где есть хотя бы один nan ,это значит что в формах есть разночтения по специальностям
     row_with_nan = union_df_future[union_df_future.isna().any(axis=1)]
-    row_with_nan.fillna('Специальность не найдена',inplace=True)
+    row_with_nan.fillna('Специальность не найдена', inplace=True)
     for row in row_with_nan.itertuples():
         temp_error_df = pd.DataFrame(data=[[f'{name_file}',
                                             f'Перекрестная проверка целевиков (трудоустроен/будет трудоустроен): В форме 1- {row[1]} а в форме 2- {row[3]} !!! Отсутствуют данные по этой специальности либо в форме 1 либо в форме 2',
@@ -1829,25 +1857,10 @@ def check_cross_second_error(df1:pd.DataFrame,df2:pd.DataFrame, name_file):
                                               'Описание ошибки'])
         error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
     return error_df
 
 
-
-
-def check_horizont_sum_opk_all(df:pd.DataFrame,name_file,tup_correct):
+def check_horizont_sum_opk_all(df: pd.DataFrame, name_file, tup_correct):
     """
     Функция для проверки простой горизонтальной суммы 06 = 07 +32,33,34,35,36,37,38,63,64,65,66:77
     :param df:
@@ -1858,16 +1871,16 @@ def check_horizont_sum_opk_all(df:pd.DataFrame,name_file,tup_correct):
     # получаем строку диапазона
     first_correct = tup_correct[0]
     # конвертируем в инт
-    drop_lst = ['08','09','10','11','12','13','14','15','16','17','18','19','20',
-                '21','22','23','24','25','26','27','28','29','30','31','39','40',
-                '41','42','43','44','45','46','47','48','49','50','51','52','53',
-                '54','55','56','57','58','59','60','61','62']
+    drop_lst = ['08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20',
+                '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31', '39', '40',
+                '41', '42', '43', '44', '45', '46', '47', '48', '49', '50', '51', '52', '53',
+                '54', '55', '56', '57', '58', '59', '60', '61', '62']
 
     # удаляем колонки лишние колонки
-    df.drop(columns=drop_lst,inplace=True)
+    df.drop(columns=drop_lst, inplace=True)
 
     # # получаем сумму колонок
-    df['Сумма'] = df.iloc[:,1:].sum(axis=1)
+    df['Сумма'] = df.iloc[:, 1:].sum(axis=1)
     # # Проводим проверку
     df['Результат'] = df['06'] == df['Сумма']
     # # заменяем булевые значения на понятные
@@ -1882,11 +1895,12 @@ def check_horizont_sum_opk_all(df:pd.DataFrame,name_file,tup_correct):
     finish_lst_index = list(map(lambda x: f'Строка {str(x)}', finish_lst_index))
     temp_error_df['Строка или колонка с ошибкой'] = finish_lst_index
     temp_error_df['Название файла'] = name_file
-    temp_error_df['Описание ошибки'] = 'Не выполняется условие: гр. 06 = гр.07 + сумма(всех колонок за исключением распределения по отраслям)'
+    temp_error_df[
+        'Описание ошибки'] = 'Не выполняется условие: гр. 06 = гр.07 + сумма(всех колонок за исключением распределения по отраслям)'
     return temp_error_df
 
 
-def check_vertical_opk_all(df:pd.DataFrame,border,name_file,tup_correct):
+def check_vertical_opk_all(df: pd.DataFrame, border, name_file, tup_correct):
     """
     Функция для проверки условия Количество целевиков не должно быть больше чем количество выпускников
     :param df:
@@ -1909,14 +1923,13 @@ def check_vertical_opk_all(df:pd.DataFrame,border,name_file,tup_correct):
     # обрабатываем индексы строк с ошибками чтобы строки совпадали с файлом excel
     raw_lst_index = foo_df['index'].tolist()  # делаем список
     finish_lst_index = list(
-        map(lambda x: f'Диапазон строк {border + first_correct} - {border + second_correct}, колонка {str(x)}', raw_lst_index))
+        map(lambda x: f'Диапазон строк {border + first_correct} - {border + second_correct}, колонка {str(x)}',
+            raw_lst_index))
 
     temp_error_df['Строка или колонка с ошибкой'] = finish_lst_index
     temp_error_df['Название файла'] = name_file
     temp_error_df['Описание ошибки'] = 'Не выполняется условие: стр. 02 <= стр. 01 '
     return temp_error_df
-
-
 
 
 def create_check_tables_opk(high_level_dct: dict):
@@ -2146,8 +2159,6 @@ def create_check_tables_opk(high_level_dct: dict):
     wb.save(f'{path_to_end_folder_opk}/Данные для проверки правильности заполнения файлов от {current_time}.xlsx')
 
 
-
-
 def processing_data_opk_employment():
     """
     Функция для обработки полной таблицы занятости выпускников в ОПК
@@ -2303,7 +2314,7 @@ def processing_data_opk_employment():
                 """
                 ПРОВЕРКИ
                 в том числе проверка кода специальности
-    
+
                 """
                 tup_correct = (10, 12)  # создаем кортеж  с поправками
                 file_error_df = check_error_opk(df_form1.copy(), name_file, tup_correct)
@@ -2369,7 +2380,7 @@ def processing_data_opk_employment():
                 """
                 В итоге получается такая структура
                 {БРИТ:{13.01.10:{Строка 1:{Колонка 1:0}}},ТСИГХ:{22.01.10:{Строка 1:{Колонка 1:0}}}}
-    
+
                 """
 
                 current_code = 'Ошибка проверьте правильность заполнения кодов специальностей'  # чекбокс для проверки заполнения кода специальности
@@ -2453,7 +2464,8 @@ def processing_data_opk_employment():
             frame[0].apply(lambda x: x.get('Колонка 17'))
         frame['Трудоустроены на предприятия радиоэлектроники (кроме оборонно-промышленного комплекса)'] = \
             frame[0].apply(lambda x: x.get('Колонка 18'))
-        frame['Трудоустроены на предприятия топливно-энергетического комплекса (кроме оборонно-промышленного комплекса)'] = \
+        frame[
+            'Трудоустроены на предприятия топливно-энергетического комплекса (кроме оборонно-промышленного комплекса)'] = \
             frame[0].apply(lambda x: x.get('Колонка 19'))
         frame['Трудоустроены на предприятия транспортной отрасли'] = \
             frame[0].apply(lambda x: x.get('Колонка 20'))
@@ -2466,7 +2478,8 @@ def processing_data_opk_employment():
             frame[0].apply(lambda x: x.get('Колонка 23'))
         frame['Трудоустроены на предприятия строительной отрасли'] = \
             frame[0].apply(lambda x: x.get('Колонка 24'))
-        frame['Трудоустроены на предприятия отрасли электронной промышленности (кроме оборонно-промышленного комплекса)'] = \
+        frame[
+            'Трудоустроены на предприятия отрасли электронной промышленности (кроме оборонно-промышленного комплекса)'] = \
             frame[0].apply(lambda x: x.get('Колонка 25'))
         frame['Трудоустроены на предприятия индустрии робототехники'] = \
             frame[0].apply(lambda x: x.get('Колонка 26'))
@@ -2630,7 +2643,8 @@ def processing_data_opk_employment():
             new_row.iloc[:, 2:] = 'проверка пройдена'
 
             # Вставка новой строки через каждые 15 строк
-            finish_df = pd.concat([finish_df.iloc[:i + count], new_row, finish_df.iloc[i + count:]]).reset_index(drop=True)
+            finish_df = pd.concat([finish_df.iloc[:i + count], new_row, finish_df.iloc[i + count:]]).reset_index(
+                drop=True)
             count += 1
 
         lst_number_row = ['01', '02', '03']
@@ -2646,10 +2660,12 @@ def processing_data_opk_employment():
                                    'Трудоустроены на предприятия оборонно-промышленного комплекса*',
                                    'Будут трудоустроены на предприятия оборонно-промышленного комплекса* ']]
 
-        opk_finish_df.to_excel(f'{path_to_end_folder_opk}/Трудоустройство по специальностям (ОПК) от {current_time}.xlsx',
-                               index=False)
-        finish_df.to_excel(f'{path_to_end_folder_opk}/Полная таблица Трудоустройство по отраслям от {current_time}.xlsx',
-                           index=False)
+        opk_finish_df.to_excel(
+            f'{path_to_end_folder_opk}/Трудоустройство по специальностям (ОПК) от {current_time}.xlsx',
+            index=False)
+        finish_df.to_excel(
+            f'{path_to_end_folder_opk}/Полная таблица Трудоустройство по отраслям от {current_time}.xlsx',
+            index=False)
 
         # считаем сколько целевиков
         target_df = finish_df[finish_df['Номер строки'] == '02']
@@ -2704,10 +2720,11 @@ def processing_data_opk_employment():
                                 'Данные успешно обработаны.')
 
 
-
 """
 Функции для нахождения разницы между 2 таблицами
 """
+
+
 def select_first_diffrence():
     """
     Функция для файла с данными
@@ -2716,6 +2733,7 @@ def select_first_diffrence():
     global data_first_diffrence
     # Получаем путь к файлу
     data_first_diffrence = filedialog.askopenfilename(filetypes=(('Excel files', '*.xlsx'), ('all files', '*.*')))
+
 
 def select_second_diffrence():
     """
@@ -2778,8 +2796,8 @@ def processing_diffrence():
         dif_first_sheet_name = entry_first_sheet_name_diffrence.get()
         dif_second_sheet_name = entry_second_sheet_name_diffrence.get()
 
-        df1 = pd.read_excel(data_first_diffrence,sheet_name=dif_first_sheet_name,dtype=str)
-        df2 = pd.read_excel(data_second_diffrence,sheet_name=dif_second_sheet_name,dtype=str)
+        df1 = pd.read_excel(data_first_diffrence, sheet_name=dif_first_sheet_name, dtype=str)
+        df2 = pd.read_excel(data_second_diffrence, sheet_name=dif_second_sheet_name, dtype=str)
 
         # проверяем на соответсвие размеров
         if df1.shape != df2.shape:
@@ -2787,16 +2805,20 @@ def processing_diffrence():
 
         # Проверям на соответсвие колонок
         if list(df1.columns) != list(df2.columns):
-            diff_columns = set(df1.columns).difference(set(df2.columns)) # получаем отличающиеся элементы
+            diff_columns = set(df1.columns).difference(set(df2.columns))  # получаем отличающиеся элементы
             raise ColumnsDifference
 
-        df_cols = df1.compare(df2,result_names=('Первая таблица','Вторая таблица')) # датафрейм с разницей по колонкам
-        df_cols.index = list(map(lambda x: x + 2, df_cols.index)) # добавляем к индексу +2 чтобы соответствовать нумерации в экселе
-        df_cols.index.name = '№ строки' # переименовываем индекс
+        df_cols = df1.compare(df2,
+                              result_names=('Первая таблица', 'Вторая таблица'))  # датафрейм с разницей по колонкам
+        df_cols.index = list(
+            map(lambda x: x + 2, df_cols.index))  # добавляем к индексу +2 чтобы соответствовать нумерации в экселе
+        df_cols.index.name = '№ строки'  # переименовываем индекс
 
-        df_rows = df1.compare(df2, align_axis=0, result_names=('Первая таблица', 'Вторая таблица')) # датафрейм с разницей по строкам
-        lst_mul_ind = list(map(lambda x: (x[0] + 2, x[1]), df_rows.index)) # добавляем к индексу +2 чтобы соответствовать нумерации в экселе
-        index = pd.MultiIndex.from_tuples(lst_mul_ind, names=['№ строки', 'Таблица']) # создаем мультиндекс
+        df_rows = df1.compare(df2, align_axis=0,
+                              result_names=('Первая таблица', 'Вторая таблица'))  # датафрейм с разницей по строкам
+        lst_mul_ind = list(map(lambda x: (x[0] + 2, x[1]),
+                               df_rows.index))  # добавляем к индексу +2 чтобы соответствовать нумерации в экселе
+        index = pd.MultiIndex.from_tuples(lst_mul_ind, names=['№ строки', 'Таблица'])  # создаем мультиндекс
         df_rows.index = index
 
         # Создаем датафрейм с подсчетом разниц
@@ -2814,7 +2836,6 @@ def processing_diffrence():
             df_diff_cols.insert(count_columns, (name_column, 'Разница между первым и вторым значением'),
                                 df_diff_cols.apply(lambda x: abs_diff(x[name_column]['Первая таблица'],
                                                                       x[name_column]['Вторая таблица']), axis=1))
-
 
             # высчитываем отношение второго значения от первого
             df_diff_cols.insert(count_columns + 1, (name_column, '% второго от первого значения'),
@@ -2834,9 +2855,9 @@ def processing_diffrence():
         current_time = time.strftime('%H_%M_%S', t)
         # делаем так чтобы записать на разные листы
         with pd.ExcelWriter(f'{path_to_end_folder_diffrence}/Разница между 2 таблицами {current_time}.xlsx') as writer:
-            df_cols.to_excel(writer,sheet_name='По колонкам')
-            df_rows.to_excel(writer,sheet_name='По строкам')
-            df_diff_cols.to_excel(writer,sheet_name='Значение разницы')
+            df_cols.to_excel(writer, sheet_name='По колонкам')
+            df_rows.to_excel(writer, sheet_name='По строкам')
+            df_diff_cols.to_excel(writer, sheet_name='Значение разницы')
     except ShapeDiffierence:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 3.4',
                              f'Не совпадают размеры таблиц, В первой таблице {df1.shape[0]}-стр. и {df1.shape[1]}-кол.\n'
@@ -2864,9 +2885,8 @@ def processing_diffrence():
     #     messagebox.showerror('Веста Обработка таблиц и создание документов ver 1.34',
     #                          'Возникла ошибка!!! Подробности ошибки в файле error.log')
     else:
-        messagebox.showinfo('Кассандра Подсчет данных по трудоустройству выпускников ver 3.4', 'Таблицы успешно обработаны')
-
-
+        messagebox.showinfo('Кассандра Подсчет данных по трудоустройству выпускников ver 3.4',
+                            'Таблицы успешно обработаны')
 
 
 if __name__ == '__main__':
@@ -2874,7 +2894,6 @@ if __name__ == '__main__':
     window.title('Кассандра Подсчет данных по трудоустройству выпускников ver 3.4')
     window.geometry('750x860')
     window.resizable(False, False)
-
 
     # Создаем объект вкладок
 
@@ -2912,7 +2931,7 @@ if __name__ == '__main__':
                                    )
     btn_choose_end_folder.grid(column=0, row=3, padx=10, pady=10)
 
-    #Создаем кнопку обработки данных
+    # Создаем кнопку обработки данных
 
     btn_proccessing_data = Button(tab_employment, text='3) Обработать данные', font=('Arial Bold', 20),
                                   command=processing_data_employment
@@ -2929,8 +2948,8 @@ if __name__ == '__main__':
     # Добавляем виджеты на вкладку Создание образовательных программ
     # Создаем метку для описания назначения программы
     lbl_hello_modern = Label(tab_employment_modern,
-                      text='Центр опережающей профессиональной подготовки Республики Бурятия\n'
-                           'Трудоустройство выпускников. Подсчет по специальностям/профессиям Форма №15')
+                             text='Центр опережающей профессиональной подготовки Республики Бурятия\n'
+                                  'Трудоустройство выпускников. Подсчет по специальностям/профессиям Форма №15')
     lbl_hello_modern.grid(column=0, row=0, padx=10, pady=25)
 
     # Картинка
@@ -2943,25 +2962,24 @@ if __name__ == '__main__':
 
     # Создаем кнопку Выбрать файл с данными
     btn_choose_data_modern = Button(tab_employment_modern, text='1) Выберите папку с данными', font=('Arial Bold', 20),
-                             command=select_folder_data
-                             )
+                                    command=select_folder_data
+                                    )
     btn_choose_data_modern.grid(column=0, row=2, padx=10, pady=10)
 
     # Создаем кнопку для выбора папки куда будут генерироваться файлы
 
-    btn_choose_end_folder_modern = Button(tab_employment_modern, text='2) Выберите конечную папку', font=('Arial Bold', 20),
-                                   command=select_end_folder
-                                   )
+    btn_choose_end_folder_modern = Button(tab_employment_modern, text='2) Выберите конечную папку',
+                                          font=('Arial Bold', 20),
+                                          command=select_end_folder
+                                          )
     btn_choose_end_folder_modern.grid(column=0, row=3, padx=10, pady=10)
 
-    #Создаем кнопку обработки данных
+    # Создаем кнопку обработки данных
 
     btn_proccessing_data_modern = Button(tab_employment_modern, text='3) Обработать данные', font=('Arial Bold', 20),
-                                  command=processing_data_employment_modern
-                                  )
+                                         command=processing_data_employment_modern
+                                         )
     btn_proccessing_data_modern.grid(column=0, row=4, padx=10, pady=10)
-
-
 
     """
     Вкладка для обработки отчетов центров карьеры
@@ -2973,8 +2991,8 @@ if __name__ == '__main__':
     # Добавляем виджеты на вкладку
     # Создаем метку для описания назначения программы
     lbl_hello_ck = Label(tab_ck_employment,
-                      text='Центр опережающей профессиональной подготовки Республики Бурятия\n'
-                           'Обработка данных центров карьеры по трудоустроенным выпускникам')
+                         text='Центр опережающей профессиональной подготовки Республики Бурятия\n'
+                              'Обработка данных центров карьеры по трудоустроенным выпускникам')
     lbl_hello_ck.grid(column=0, row=0, padx=10, pady=25)
 
     # Картинка
@@ -2985,25 +3003,24 @@ if __name__ == '__main__':
           image=img_ck
           ).grid(column=1, row=0, padx=10, pady=25)
 
-
     # Создаем кнопку Выбрать файл с данными
     btn_choose_ck_data = Button(tab_ck_employment, text='1) Выберите папку с данными', font=('Arial Bold', 20),
-                             command=select_folder_data_ck
-                             )
+                                command=select_folder_data_ck
+                                )
     btn_choose_ck_data.grid(column=0, row=2, padx=10, pady=10)
 
     # Создаем кнопку для выбора папки куда будут генерироваться файлы
 
     btn_choose_end_ck_folder = Button(tab_ck_employment, text='2) Выберите конечную папку', font=('Arial Bold', 20),
-                                   command=select_end_folder_ck
-                                   )
+                                      command=select_end_folder_ck
+                                      )
     btn_choose_end_ck_folder.grid(column=0, row=3, padx=10, pady=10)
 
     # Создаем кнопку обработки данных
 
     btn_proccessing_ck_data = Button(tab_ck_employment, text='3) Обработать данные', font=('Arial Bold', 20),
-                                  command=processing_data_ck_employment
-                                  )
+                                     command=processing_data_ck_employment
+                                     )
     btn_proccessing_ck_data.grid(column=0, row=4, padx=10, pady=10)
 
     """
@@ -3016,13 +3033,13 @@ if __name__ == '__main__':
     # Добавляем виджеты на вкладку
     # Создаем метку для описания назначения программы
     lbl_hello_opk = Label(tab_opk_employment,
-                         text='Центр опережающей профессиональной подготовки Республики Бурятия\n'
-                              'Обработка данных по трудоустройству ОПК (по отраслям)\n'
-                              'В обрабатываемых файлах должны быть листы Форма 1 и Форма 2,\n'
-                              'В Форме 1 должно быть 80 колонок включая 2 колонки проверки\n'
-                              ',внизу после окончания таблицы должна быть пустая строка.\n'
-                              ' На 9 строке должна быть строка с номерами колонок.'
-                              'В форме 2 должно быть 10 колонок')
+                          text='Центр опережающей профессиональной подготовки Республики Бурятия\n'
+                               'Обработка данных по трудоустройству ОПК (по отраслям)\n'
+                               'В обрабатываемых файлах должны быть листы Форма 1 и Форма 2,\n'
+                               'В Форме 1 должно быть 80 колонок включая 2 колонки проверки\n'
+                               ',внизу после окончания таблицы должна быть пустая строка.\n'
+                               ' На 9 строке должна быть строка с номерами колонок.'
+                               'В форме 2 должно быть 10 колонок')
     lbl_hello_opk.grid(column=0, row=0, padx=10, pady=25)
 
     # Картинка
@@ -3035,22 +3052,22 @@ if __name__ == '__main__':
 
     # Создаем кнопку Выбрать файл с данными
     btn_choose_opk_data = Button(tab_opk_employment, text='1) Выберите папку с данными', font=('Arial Bold', 20),
-                                command=select_folder_data_opk
-                                )
+                                 command=select_folder_data_opk
+                                 )
     btn_choose_opk_data.grid(column=0, row=2, padx=10, pady=10)
 
     # Создаем кнопку для выбора папки куда будут генерироваться файлы
 
     btn_choose_end_opk_folder = Button(tab_opk_employment, text='2) Выберите конечную папку', font=('Arial Bold', 20),
-                                      command=select_end_folder_opk
-                                      )
+                                       command=select_end_folder_opk
+                                       )
     btn_choose_end_opk_folder.grid(column=0, row=3, padx=10, pady=10)
 
     # Создаем кнопку обработки данных
 
     btn_proccessing_opk_data = Button(tab_opk_employment, text='3) Обработать данные', font=('Arial Bold', 20),
-                                     command=processing_data_opk_employment
-                                     )
+                                      command=processing_data_opk_employment
+                                      )
     btn_proccessing_opk_data.grid(column=0, row=4, padx=10, pady=10)
 
     """
@@ -3091,10 +3108,11 @@ if __name__ == '__main__':
     entry_first_sheet_name_diffrence = StringVar()
     # Описание поля
     label_first_sheet_name_diffrence = Label(frame_data_for_diffrence,
-                                   text='2) Введите название листа, где находится первая таблица')
+                                             text='2) Введите название листа, где находится первая таблица')
     label_first_sheet_name_diffrence.grid(column=0, row=4, padx=10, pady=10)
     # поле ввода имени листа
-    first_sheet_name_entry_diffrence = Entry(frame_data_for_diffrence, textvariable=entry_first_sheet_name_diffrence, width=30)
+    first_sheet_name_entry_diffrence = Entry(frame_data_for_diffrence, textvariable=entry_first_sheet_name_diffrence,
+                                             width=30)
     first_sheet_name_entry_diffrence.grid(column=0, row=5, padx=5, pady=5, ipadx=15, ipady=10)
 
     # Создаем кнопку Выбрать  второй файл с данными
@@ -3108,10 +3126,11 @@ if __name__ == '__main__':
     entry_second_sheet_name_diffrence = StringVar()
     # Описание поля
     label_second_sheet_name_diffrence = Label(frame_data_for_diffrence,
-                                    text='4) Введите название листа, где находится вторая таблица')
+                                              text='4) Введите название листа, где находится вторая таблица')
     label_second_sheet_name_diffrence.grid(column=0, row=7, padx=10, pady=10)
     # поле ввода
-    second__sheet_name_entry_diffrence = Entry(frame_data_for_diffrence, textvariable=entry_second_sheet_name_diffrence, width=30)
+    second__sheet_name_entry_diffrence = Entry(frame_data_for_diffrence, textvariable=entry_second_sheet_name_diffrence,
+                                               width=30)
     second__sheet_name_entry_diffrence.grid(column=0, row=8, padx=5, pady=5, ipadx=15, ipady=10)
 
     # Создаем кнопку выбора папки куда будет генерироваьться файл
@@ -3126,7 +3145,5 @@ if __name__ == '__main__':
                                    command=processing_diffrence
                                    )
     btn_data_do_diffrence.grid(column=0, row=11, padx=10, pady=10)
-
-
 
     window.mainloop()
