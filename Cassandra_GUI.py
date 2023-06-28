@@ -1606,6 +1606,20 @@ def check_error_opk(df1: pd.DataFrame, name_file, tup_correct):
         second_error_opk = check_vertical_opk_all(temp_df.copy(), border, name_file, tup_correct)
         error_df = pd.concat([error_df, second_error_opk], axis=0, ignore_index=True)
 
+        # проверяем условие чтобы сумма по отраслям была равна колонке 08
+
+        # список колонок которые нужно суммировать для проверки условия 07 = 08:31
+        lst_07 = ['08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24',
+                  '25', '26', '27', '28', '29', '30', '31']
+        third_error_opk = check_horizont_chosen_sum_opk(temp_df.copy(), lst_07, '07', name_file)
+        error_df = pd.concat([error_df, third_error_opk], axis=0, ignore_index=True)
+
+        # считаем для будут трудоустроены по отраслям
+        lst_038 = ['39', '40', '41', '42', '43', '44', '45', '46', '47', '48', '49', '50', '51', '52', '53', '54', '55',
+                   '56', '57', '58', '59', '60', '61', '62']
+        fourth_error_opk = check_horizont_chosen_sum_opk(temp_df.copy(), lst_038, '38', name_file)
+        error_df = pd.concat([error_df, fourth_error_opk], axis=0, ignore_index=True)
+
         border += 2
 
     return error_df
@@ -1900,6 +1914,31 @@ def check_horizont_sum_opk_all(df: pd.DataFrame, name_file, tup_correct):
     return temp_error_df
 
 
+def check_horizont_chosen_sum_opk(df: pd.DataFrame, tup_checked_cols: list, name_itog_cols, name_file):
+    """
+    Функция для проверки равенства одиночных или небольших групп колонок
+    tup_checked_cols колонки сумму которых нужно сравнить с name_itog_cols чтобы она не превышала это значение
+    """
+    # Считаем проверяемые колонки
+    df['Сумма'] = df[tup_checked_cols].sum(axis=1)
+    # Проводим проверку
+    df['Результат'] = df[name_itog_cols] == df['Сумма']
+    df['Результат'] = df['Результат'].apply(lambda x: 'Правильно' if x else 'Неправильно')
+    # получаем датафрейм с ошибками и извлекаем индекс
+    df = df[df['Результат'] == 'Неправильно'].reset_index()
+    # создаем датафрейм дял добавления в ошибки
+    temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
+    # обрабатываем индексы строк с ошибками чтобы строки совпадали с файлом excel
+    raw_lst_index = df['index'].tolist()  # делаем список
+    finish_lst_index = list(map(lambda x: x + 1, raw_lst_index))
+    finish_lst_index = list(map(lambda x: f'Строка {x+9}', finish_lst_index))
+    temp_error_df['Строка или колонка с ошибкой'] = finish_lst_index
+    temp_error_df['Название файла'] = name_file
+    temp_error_df[
+        'Описание ошибки'] = f'Не выполняется условие: гр. {name_itog_cols} == сумма {tup_checked_cols} ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!'
+    return temp_error_df
+
+
 def check_vertical_opk_all(df: pd.DataFrame, border, name_file, tup_correct):
     """
     Функция для проверки условия Количество целевиков не должно быть больше чем количество выпускников
@@ -2139,7 +2178,7 @@ def create_check_tables_opk(high_level_dct: dict):
             finish_df = finish_df.reset_index()
 
             finish_df.rename(
-                columns={'level_0': 'Код специальности', 'level_1': 'Наименование показателей (категория выпускников)'},
+                columns={'level_0': 'Название файла', 'level_1': 'Наименование показателей (категория выпускников)'},
                 inplace=True)
 
             dct = {'Строка 1': 'Всего (общая численность выпускников)',
