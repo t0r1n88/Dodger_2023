@@ -606,6 +606,15 @@ def processing_data_employment():
 
     try:
         for file in os.listdir(path_folder_data):
+            if not file.startswith('~$') and file.endswith('.xls'):
+                name_file = file.split('.xls')[0]
+                temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
+                                                    'Файл с расширением XLS (СТАРЫЙ ФОРМАТ EXCEL)!!! ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!! ']],
+                                             columns=['Название файла', 'Строка или колонка с ошибкой',
+                                                      'Описание ошибки'])
+                error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
+                continue
+
             if not file.startswith('~$') and file.endswith('.xlsx'):
                 name_file = file.split('.xlsx')[0]
                 print(name_file)
@@ -927,10 +936,10 @@ def processing_data_employment():
     except PermissionError as e:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 3.4',
                              f'Закройте открытые файлы Excel {e.args}')
-    # except:
-    #     messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 3.4',
-    #                          f'При обработка файла {name_file} возникла ошибка !!!\n'
-    #                          f'Проверьте файл на соответствие шаблону')
+    except:
+        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 3.4',
+                             f'При обработке файла {name_file} возникла ошибка !!!\n'
+                             f'Проверьте файл на соответствие шаблону')
 
     else:
         if error_df.shape[0] != 0:
@@ -1104,6 +1113,14 @@ def processing_data_ck_employment():
 
     try:
         for file in os.listdir(path_folder_data_ck):
+            if not file.startswith('~$') and file.endswith('.xls'):
+                name_file = file.split('.xls')[0]
+                temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
+                                                    'Файл с расширением XLS (СТАРЫЙ ФОРМАТ EXCEL)!!! ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!! ']],
+                                             columns=['Название файла', 'Строка или колонка с ошибкой',
+                                                      'Описание ошибки'])
+                base_error_df = pd.concat([base_error_df, temp_error_df], axis=0, ignore_index=True)
+                continue
             if not file.startswith('~$') and file.endswith('.xlsx'):
                 name_file = file.split('.xlsx')[0]
                 temp_df_ck = pd.read_excel(f'{path_folder_data_ck}/{file}', skiprows=5, nrows=5)
@@ -1183,6 +1200,10 @@ def processing_data_ck_employment():
     except PermissionError as e:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 3.4',
                              f'Закройте открытые файлы Excel {e.args}')
+    except:
+        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 3.4',
+                             f'При обработке файла {name_file} возникла ошибка !!!\n'
+                             f'Проверьте файл на соответствие шаблону.')
 
     else:
         if base_error_df.shape[0] != 0:
@@ -1212,6 +1233,14 @@ def processing_data_employment_modern():
 
     try:
         for file in os.listdir(path_folder_data):
+            if not file.startswith('~$') and file.endswith('.xls'):
+                name_file = file.split('.xls')[0]
+                temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
+                                                    'Файл с расширением XLS (СТАРЫЙ ФОРМАТ EXCEL)!!! ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!! ']],
+                                             columns=['Название файла', 'Строка или колонка с ошибкой',
+                                                      'Описание ошибки'])
+                error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
+                continue
             if not file.startswith('~$') and file.endswith('.xlsx'):
                 name_file = file.split('.xlsx')[0]
                 print(name_file)
@@ -1537,10 +1566,10 @@ def processing_data_employment_modern():
     except PermissionError as e:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 3.4',
                              f'Закройте открытые файлы Excel {e.args}')
-    # except:
-    #     messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 3.4',
-    #                          f'При обработка файла {name_file} возникла ошибка !!!\n'
-    #                          f'Проверьте файл на соответсвие шаблону')
+    except:
+        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 3.4',
+                             f'При обработке файла {name_file} возникла ошибка !!!\n'
+                             f'Проверьте файл на соответсвие шаблону')
 
     else:
         if error_df.shape[0] != 0:
@@ -2779,10 +2808,10 @@ def processing_data_opk_employment():
     except PermissionError as e:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 3.4',
                              f'Закройте открытые файлы Excel {e.args}')
-    # except:
-    #     messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 3.4',
-    #                          f'При обработка файла {name_file} возникла ошибка !!!\n'
-    #                          f'Проверьте файл на соответствие шаблону.')
+    except:
+        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 3.4',
+                             f'При обработке файла {name_file} возникла ошибка !!!\n'
+                             f'Проверьте файл на соответствие шаблону.')
     else:
         if error_df.shape[0] != 0:
             messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 3.4',
