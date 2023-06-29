@@ -2359,7 +2359,6 @@ def processing_data_opk_employment():
                 for i in range(quantity_check_code):
                     # получаем множество отбрасывая np.nan
                     temp_set = set([code_spec for code_spec in check_code_lst[border_check_code:border_check_code + 2]])
-                    print(temp_set)
                     if len(temp_set) != 1:
                         flag_error_code_spec = True
                     if ' ' in temp_set:
