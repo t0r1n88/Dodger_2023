@@ -2730,9 +2730,34 @@ def processing_data_opk_employment():
                              'Сложности при трудоустройстве (например, при взаимодействии с предприятием, наличие рисков расторжения договора о целевом обучении и т.д.), реализуемые меры (описательная часть. В отсутствие сложностей - пропустите графу)']
 
         all_form2['Количество выпускников 2023 г. (включая ожидаемый выпуск) уже трудоустроенных либо планирующих трудоустройство на предприятия оборонно-промышленного комплекса']=all_form2['Количество выпускников 2023 г. (включая ожидаемый выпуск) уже трудоустроенных либо планирующих трудоустройство на предприятия оборонно-промышленного комплекса'].astype(int)
+        # Создаем сводную таблицу
+        #переименываем колонки для удобства
+        all_form2.columns = ['Регион', 'Специальность', 'Наименование', 'Количество', 'Трудоустройство',
+                             'Целевой договор', 'ИНН', 'Предприятие', 'Должность', 'Трудоустройство по специальности',
+                             'Сложности']
+        # делаем категориальными значения в некоторых колонках
+        all_form2['Трудоустройство'] = all_form2['Трудоустройство'].astype('category')
+        all_form2["Трудоустройство"].cat.set_categories(["уже трудоустроены", "будут трудоустроены"], inplace=True)
+        all_form2['Целевой договор'] = all_form2['Целевой договор'].astype('category')
+        all_form2["Целевой договор"].cat.set_categories(["нет", "заключили договор о целевом обучении"], inplace=True)
+        all_form2['Трудоустройство по специальности'] = all_form2['Трудоустройство по специальности'].astype('category')
+        all_form2["Трудоустройство по специальности"].cat.set_categories(["нет", "да"], inplace=True)
+
+        out_svod_all_form2 = all_form2.pivot_table(index=['Специальность'],
+                                                   values=['Количество'],
+                                                   columns=['Трудоустройство', 'Целевой договор'],
+                                                   aggfunc={'Количество': sum},
+                                                   margins=True)
+
+        out_svod_all_form2.fillna(0,inplace=True)
+        out_svod_all_form2 = out_svod_all_form2.applymap(int)
+
+        out_svod_all_form2.rename(index={'All': 'Итого'}, columns={'All': 'Итого'}, inplace=True)
+
         with pd.ExcelWriter(f'{path_to_end_folder_opk}/Общий список и сводная таблица по форме 2 от {current_time}.xlsx',
                             engine='openpyxl') as writer:
             all_form2.to_excel(writer, sheet_name='Общий список',index=False)
+            out_svod_all_form2.to_excel(writer,sheet_name='Сводная таблица')
 
 
         error_df.to_excel(f'{path_to_end_folder_opk}/Ошибки ОПК от {current_time}.xlsx', index=False)
@@ -2749,10 +2774,10 @@ def processing_data_opk_employment():
     except PermissionError as e:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 3.4',
                              f'Закройте открытые файлы Excel {e.args}')
-    except:
-        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 3.4',
-                             f'При обработка файла {name_file} возникла ошибка !!!\n'
-                             f'Проверьте файл на соответствие шаблону.')
+    # except:
+    #     messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 3.4',
+    #                          f'При обработка файла {name_file} возникла ошибка !!!\n'
+    #                          f'Проверьте файл на соответствие шаблону.')
     else:
         if error_df.shape[0] != 0:
             messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников ver 3.4',
