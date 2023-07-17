@@ -305,11 +305,11 @@ def processing_svod_employment_omsk():
 
         # проводим группировку
         df = df.groupby(['2', '3', '4', '5']).agg(
-            {'6': sum, '7': sum, '8': sum,'10': sum, '11': sum, '12': sum, '13': sum, '14': sum, '15': sum,
+            {'6': sum, '7': sum, '8': sum,'9': group_text_value,'10': sum, '11': sum, '12': sum, '13': sum, '14': sum, '15': sum,
              '16': sum,
              '17': sum, '18': sum, '19': sum, '20': sum, '21': sum, '22': sum, '23': sum, '24': sum, '25': sum, '26': sum,
              '27': sum,
-             '28': sum, '29': sum, '30': sum, '31': sum, '32': sum, '33': sum, '9': group_text_value,
+             '28': sum, '29': sum, '30': sum, '31': sum, '32': sum, '33': sum,
              '34': group_text_value})
 
         # вытаскиваем индексы
