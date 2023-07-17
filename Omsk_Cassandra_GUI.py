@@ -128,7 +128,6 @@ def check_horizont_all_sum_error_omsk(df: pd.DataFrame, tup_exluded_cols: tuple,
     df['Результат'] = df['Результат'].apply(lambda x: 'Правильно' if x else 'Неправильно')
     # получаем датафрейм с ошибками и извлекаем индекс
     df = df[df['Результат'] == 'Неправильно'].reset_index()
-    df.to_excel('dsds.xlsx', index=False)
     # создаем датафрейм дял добавления в ошибки
     temp_error_df = pd.DataFrame(columns=['Строка или колонка с ошибкой', 'Описание ошибки', ])
     # обрабатываем индексы строк с ошибками чтобы строки совпадали с файлом excel
