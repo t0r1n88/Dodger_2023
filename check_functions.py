@@ -480,3 +480,140 @@ def create_check_tables(high_level_dct: dict):
     return wb
 
 
+
+
+
+"""
+Функции для обработки отчетов ЦК
+"""
+
+
+def check_horizont_all_sum_error(df: pd.DataFrame, tup_exluded_cols: tuple, name_itog_cols, name_file):
+    """
+    Функция для проверки горизонтальных сумм по всей строке
+    сумма в колонке 05 должна быть равна сумме всех колонок за исключением 07 и 15
+    """
+    # датафрейм для ощибок по горизонтали
+    hor_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки'])
+
+    # получаем список колонок
+    all_sum_cols = list(df)
+    # удаляем колонки
+    for name_cols in tup_exluded_cols:
+        all_sum_cols.remove(name_cols)
+    # удаляем итоговую колонку
+    all_sum_cols.remove(name_itog_cols)
+
+    # получаем сумму колонок за вычетом исключаемых и итоговой колонки
+    df['Сумма'] = df[all_sum_cols].sum(axis=1)
+    # Проводим проверку
+    df['Результат'] = df[name_itog_cols] == df['Сумма']
+    df['Результат'] = df['Результат'].apply(lambda x: 'Правильно' if x else 'Неправильно')
+    # получаем датафрейм с ошибками и извлекаем индекс
+    df = df[df['Результат'] == 'Неправильно'].reset_index()
+    # создаем датафрейм дял добавления в ошибки
+    temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
+    # обрабатываем индексы строк с ошибками чтобы строки совпадали с файлом excel
+    raw_lst_index = df['index'].tolist()  # делаем список
+    finish_lst_index = list(map(lambda x: x + 1, raw_lst_index))
+    finish_lst_index = list(map(lambda x: f'Строка 0{str(x)}', finish_lst_index))
+    temp_error_df['Строка или колонка с ошибкой'] = finish_lst_index
+    temp_error_df['Название файла'] = name_file
+    temp_error_df[
+        'Описание ошибки'] = f'Не выполняется условие: гр. {name_itog_cols} = сумма остальных гр. за искл.{tup_exluded_cols} ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!'
+    return temp_error_df
+
+
+def check_horizont_chosen_sum_error(df: pd.DataFrame, tup_checked_cols: list, name_itog_cols, name_file):
+    """
+    Функция для проверки равенства одиночных или небольших групп колонок
+    tup_checked_cols колонки сумму которых нужно сравнить с name_itog_cols чтобы она не превышала это значение
+    """
+    # Считаем проверяемые колонки
+    df['Сумма'] = df[tup_checked_cols].sum(axis=1)
+    # Проводим проверку
+    df['Результат'] = df[name_itog_cols] >= df['Сумма']
+    df['Результат'] = df['Результат'].apply(lambda x: 'Правильно' if x else 'Неправильно')
+    # получаем датафрейм с ошибками и извлекаем индекс
+    df = df[df['Результат'] == 'Неправильно'].reset_index()
+    # создаем датафрейм дял добавления в ошибки
+    temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
+    # обрабатываем индексы строк с ошибками чтобы строки совпадали с файлом excel
+    raw_lst_index = df['index'].tolist()  # делаем список
+    finish_lst_index = list(map(lambda x: x + 1, raw_lst_index))
+    finish_lst_index = list(map(lambda x: f'Строка 0{str(x)}', finish_lst_index))
+    temp_error_df['Строка или колонка с ошибкой'] = finish_lst_index
+    temp_error_df['Название файла'] = name_file
+    temp_error_df[
+        'Описание ошибки'] = f'Не выполняется условие: гр. {name_itog_cols} >= сумма {tup_checked_cols} ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!'
+    return temp_error_df
+
+
+def check_vertical_chosen_sum(df: pd.DataFrame, lst_checked_rows: list, itog_row, name_file):
+    """
+    Функция для проверки вертикальной суммы заданных строк сумма значений в tupl_checked_row должна быть равной ил меньше чем значение
+    в itog_row
+    """
+
+    # обрабаотываем список строк чтобы привести его в читаемый вид
+    lst_out_rows = list(map(lambda x: x + 1, lst_checked_rows))
+
+    # делаем значения строковыми
+    lst_out_rows = list(map(str, lst_out_rows))
+    # Добавляем ноль в строки
+    lst_out_rows = list(map(lambda x: '0' + x, lst_out_rows))
+    # обрабатываем формат выходной строки
+    out_itog_row = f'0{str(itog_row + 1)}'
+
+    # создаем временный датафрейм
+    foo_df = pd.DataFrame()
+    # разворачиваем строки в колонки
+    for idx_row in lst_checked_rows:
+        foo_df[idx_row] = df.iloc[idx_row, :]
+
+    # добавляем итоговую колонку
+    foo_df[itog_row] = df.iloc[itog_row, :]
+
+    # суммируем
+    foo_df['Сумма'] = foo_df[lst_checked_rows].sum(axis=1)
+    foo_df['Результат'] = foo_df[itog_row] >= foo_df['Сумма']
+    foo_df['Результат'] = foo_df['Результат'].apply(lambda x: 'Правильно' if x else 'Неправильно')
+    # получаем датафрейм с ошибками и извлекаем индекс
+    error_df = foo_df[foo_df['Результат'] == 'Неправильно'].reset_index()
+    # Добавляем слово колонка
+    error_df['index'] = error_df['index'].apply(lambda x: 'Колонка ' + str(x))
+    # создаем датафрейм дял добавления в ошибки
+    temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
+    temp_error_df['Строка или колонка с ошибкой'] = error_df['index']
+    temp_error_df[
+        'Описание ошибки'] = f'Для указанной колонки сумма в строках {lst_out_rows} превышает значением в строке {out_itog_row} ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!! '
+    temp_error_df['Название файла'] = name_file
+
+    return temp_error_df
+def check_error_ck(df: pd.DataFrame, name_file):
+    # создаем датафрейм для регистрации ошибок
+    error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки'])
+
+    # проводим горизонтальные проверки
+    # проверка на общую сумму
+    first_error_ck_df = check_horizont_all_sum_error(df.copy(), ('07', '15'), '05', name_file)
+    error_df = pd.concat([error_df, first_error_ck_df], axis=0, ignore_index=True)
+    # проверяем небольшие группы или одиночные колонки
+    second_error_ck_df = check_horizont_chosen_sum_error(df.copy(), ['07'], '06', name_file)
+    error_df = pd.concat([error_df, second_error_ck_df], axis=0, ignore_index=True)
+
+    # проверяем колонки 14 и 15
+    third_error_ck_df = check_horizont_chosen_sum_error(df.copy(), ['15'], '14', name_file)
+    error_df = pd.concat([error_df, third_error_ck_df], axis=0, ignore_index=True)
+
+    # Проводим вертикальные проверки
+    # Сумма овз и целевиков не должна превышать общую численность выпускников. Строки с индексом 1 и 4 должныть меньше или равны строке с индексом 0
+    fourth_error_ck_df = check_vertical_chosen_sum(df.copy(), [1, 4], 0, name_file)
+    error_df = pd.concat([error_df, fourth_error_ck_df], axis=0, ignore_index=True)
+
+    # Проверяем ОВЗ
+    fifth_error_ck_df = check_vertical_chosen_sum(df.copy(), [2, 3], 1, name_file)
+    error_df = pd.concat([error_df, fifth_error_ck_df], axis=0, ignore_index=True)
+
+    return error_df
+
