@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-
+"""
+Скрипт для подсчета данных центров карьеры
+"""
 from check_functions import * # импортируем функции проверки
 from support_functions import * # импортируем вспомогательные функции и исключения
 import pandas as pd

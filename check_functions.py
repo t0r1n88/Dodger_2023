@@ -617,3 +617,7 @@ def check_error_ck(df: pd.DataFrame, name_file):
 
     return error_df
 
+"""
+Проверки ОПК
+"""
+
