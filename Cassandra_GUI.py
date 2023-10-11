@@ -2,22 +2,18 @@
 """
 Графический интерфейс для программы Кассандра
 """
-from base_employment import prepare_base_employment # импортируем функцию для обработки мониторинга 5 строк
-from nose_employment import prepare_nose_employment # импортируем функцию для обработки нозологий 15 строк
-from ck_employment import prepare_ck_employment # импортируем функцию для обработки данных для отчета центров карьеры
-from opk_employment import prepare_opk_employment # импортируем функцию для обработки данных по ОПК
-from difference import prepare_diffrence # импортируем функцию для нахождения разницы между двумя таблицами
+from base_employment import prepare_base_employment  # импортируем функцию для обработки мониторинга 5 строк
+from nose_employment import prepare_nose_employment  # импортируем функцию для обработки нозологий 15 строк
+from ck_employment import prepare_ck_employment  # импортируем функцию для обработки данных для отчета центров карьеры
+from opk_employment import prepare_opk_employment  # импортируем функцию для обработки данных по ОПК
+from difference import prepare_diffrence  # импортируем функцию для нахождения разницы между двумя таблицами
 
 import pandas as pd
-import numpy as np
-import tkinter
-import sys
 import os
 from tkinter import *
 from tkinter import filedialog
 from tkinter import messagebox
 from tkinter import ttk
-import time
 
 pd.options.mode.chained_assignment = None  # default='warn'
 import warnings
@@ -25,47 +21,6 @@ import warnings
 warnings.filterwarnings('ignore', category=UserWarning, module='openpyxl')
 warnings.filterwarnings('ignore', category=DeprecationWarning)
 warnings.filterwarnings('ignore', category=FutureWarning)
-import copy
-import openpyxl
-from openpyxl.utils.dataframe import dataframe_to_rows
-import re
-import random
-
-
-# Классы для исключений
-class BadHeader(Exception):
-    """
-    Класс для проверки правильности заголовка
-    """
-    pass
-
-
-class CheckBoxException(Exception):
-    """
-    Класс для вызовы исключения в случае если неправильно выставлены чекбоксы
-    """
-    pass
-
-
-class NotFoundValue(Exception):
-    """
-    Класс для обозначения того что значение не найдено
-    """
-    pass
-
-
-class ShapeDiffierence(Exception):
-    """
-    Класс для обозначения несовпадения размеров таблицы
-    """
-    pass
-
-
-class ColumnsDifference(Exception):
-    """
-    Класс для обозначения того что названия колонок не совпадают
-    """
-    pass
 
 
 def resource_path(relative_path):
@@ -144,9 +99,11 @@ def select_files_data_xlsx():
     # Получаем путь файлы
     files_data_xlsx = filedialog.askopenfilenames(filetypes=(('Excel files', '*.xlsx'), ('all files', '*.*')))
 
+
 """
 Функция обработки файлов базового мониторинга 5 строк
 """
+
 
 def processing_base_employment():
     """
@@ -159,6 +116,7 @@ def processing_base_employment():
     except NameError:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
                              f'Выберите файлы с данными и папку куда будет генерироваться файл')
+
 
 """
 обработка таблицы нозологии 15 строк
@@ -178,10 +136,10 @@ def processing_nose_employment():
                              f'Выберите файлы с данными и папку куда будет генерироваться файл')
 
 
-
 """
 Обработка отчетов ЦК
 """
+
 
 def processing_ck_employment():
     """
@@ -195,6 +153,7 @@ def processing_ck_employment():
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
                              f'Выберите файлы с данными и папку куда будет генерироваться файл')
 
+
 def processing_opk_employment():
     """
     Функция для обработки полной таблицы занятости выпускников в ОПК
@@ -205,6 +164,7 @@ def processing_opk_employment():
     except NameError:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
                              f'Выберите файлы с данными и папку куда будет генерироваться файл')
+
 
 """
 Функции для нахождения разницы между 2 таблицами
@@ -240,9 +200,6 @@ def select_end_folder_diffrence():
     path_to_end_folder_diffrence = filedialog.askdirectory()
 
 
-
-
-
 def processing_diffrence():
     """
     Функция для вычисления разницы между двумя таблицами
@@ -251,12 +208,12 @@ def processing_diffrence():
         dif_first_sheet_name = entry_first_sheet_name_diffrence.get()
         dif_second_sheet_name = entry_second_sheet_name_diffrence.get()
 
-        prepare_diffrence(data_first_diffrence,dif_first_sheet_name,data_second_diffrence,dif_second_sheet_name,path_to_end_folder_diffrence)
+        prepare_diffrence(data_first_diffrence, dif_first_sheet_name, data_second_diffrence, dif_second_sheet_name,
+                          path_to_end_folder_diffrence)
 
     except NameError:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
                              f'Выберите файлы с данными и папку куда будет генерироваться файл')
-
 
 
 if __name__ == '__main__':
