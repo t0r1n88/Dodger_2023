@@ -2,7 +2,7 @@
 """
 Скрипт для
 """
-from check_nose_functions import * # импортируем функции проверки
+from check_functions import * # импортируем функции проверки
 from support_functions import * # импортируем вспомогательные функции и исключения
 import pandas as pd
 import numpy as np
@@ -137,7 +137,7 @@ def prepare_nose_employment(path_folder_data:str,path_to_end_folder):
     #
                 # Проводим проверку на корректность данных, отправляем копию датафрейма
                 tup_correct = (6, 20)  # создаем кортеж  с поправками
-                file_error_df = check_error_nose(df.copy(), name_file, tup_correct)
+                file_error_df = check_error(df.copy(), name_file, tup_correct)
                 error_df = pd.concat([error_df, file_error_df], axis=0, ignore_index=True)
                 if file_error_df.shape[0] != 0:
                     temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
@@ -217,7 +217,7 @@ def prepare_nose_employment(path_folder_data:str,path_to_end_folder):
     #
     #     t = time.localtime()  # получаем текущее время
     #     current_time = time.strftime('%H_%M_%S', t)
-    #     wb_check_tables = create_check_tables_nose(high_level_dct)  # проверяем данные по каждой специальности
+    #     wb_check_tables = create_check_tables(high_level_dct)  # проверяем данные по каждой специальности
     #     wb_check_tables.save(
     #         f'{path_to_end_folder}/Данные для проверки правильности заполнения файлов от {current_time}.xlsx')
     #

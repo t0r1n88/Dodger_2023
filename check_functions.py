@@ -297,7 +297,7 @@ def check_error(df: pd.DataFrame, name_file, tup_correct: tuple):
     """
     # создаем датафрейм для регистрации ошибок
     error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
-    df = df.iloc[:, 6:32]
+    df = df.iloc[:, 4:32]
     df = df.applymap(check_data)
 
     # получаем количество датафреймов
