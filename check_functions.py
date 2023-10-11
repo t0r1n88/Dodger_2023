@@ -358,6 +358,18 @@ def extract_code(value):
     else:
         return 'error'
 
+def extract_code_nose(value):
+    """
+    Функция для извлечения кода специальности из новой формы по нозологиям
+    """
+    value = str(value)
+    re_code = re.compile('(\d{2}?[.]\d{2}?[.]\d{2})\D')  # создаем выражение для поиска кода специальности
+    result = re.search(re_code, value)
+    if result:
+        return result.group()
+    else:
+        return 'error'
+
 
 def create_check_tables(high_level_dct: dict):
     """
