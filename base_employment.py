@@ -95,7 +95,7 @@ def prepare_base_employment(path_folder_data:str,path_to_end_folder:str):
                 # Проверка на непрерывность кода специальности, то есть на 15 строк должен быть только один код
                 border_check_code = 0  # счетчик обработанных страниц
                 quantity_check_code = len(check_code_lst) // 15  # получаем сколько специальностей в таблице
-                correction = 1  # размер поправки
+                correction = 0  # размер поправки
                 sameness_error_df = check_sameness_column(check_code_lst, 15, border_check_code, quantity_check_code,
                                                           tup_correct, correction, name_file, 'Код и наименование')
                 error_df = pd.concat([error_df, sameness_error_df], axis=0, ignore_index=True)
@@ -110,7 +110,7 @@ def prepare_base_employment(path_folder_data:str,path_to_end_folder:str):
 
                 # Проводим проверку на корректность данных, отправляем копию датафрейма
 
-                file_error_df = check_error(df.copy(), name_file, tup_correct)
+                file_error_df = check_error_base_mon(df.copy(), name_file, tup_correct)
                 error_df = pd.concat([error_df, file_error_df], axis=0, ignore_index=True)
                 if file_error_df.shape[0] != 0:
                     temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',

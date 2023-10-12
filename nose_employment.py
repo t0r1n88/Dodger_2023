@@ -121,7 +121,7 @@ def prepare_nose_employment(path_folder_data:str,path_to_end_folder):
     #
                 # Проводим проверку на корректность данных, отправляем копию датафрейма
 
-                file_error_df = check_error(df.copy(), name_file, tup_correct)
+                file_error_df = check_error_nose(df.copy(), name_file, tup_correct)
                 error_df = pd.concat([error_df, file_error_df], axis=0, ignore_index=True)
                 if file_error_df.shape[0] != 0:
                     temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
