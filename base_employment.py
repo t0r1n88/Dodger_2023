@@ -106,12 +106,10 @@ def prepare_base_employment(path_folder_data:str,path_to_end_folder:str):
                 quantity_check_code = len(check_code_lst) // 15  # получаем сколько специальностей в таблице
                 correction = 0  # размер поправки
                 sameness_error_df = check_sameness_column(check_code_lst, 15, border_check_code, quantity_check_code,
-                                                          tup_correct, correction, name_file, 'Код и наименование')
-                error_df = pd.concat([error_df, sameness_error_df], axis=0, ignore_index=True)
+                                                          tup_correct, correction, name_file, 'Код')
 
                 blankness_error_df = check_blankness_column(check_code_lst, 15, border_check_code, quantity_check_code,
-                                                            tup_correct, correction, name_file, 'Код и наименование')
-                error_df = pd.concat([error_df, blankness_error_df], axis=0, ignore_index=True)
+                                                            tup_correct, correction, name_file, 'Код')
 
                 df.columns = list(map(str, df.columns))
                 # Заполняем пока пропуски в 15 ячейке для каждой специальности
@@ -120,6 +118,17 @@ def prepare_base_employment(path_folder_data:str,path_to_end_folder:str):
                 # Проводим проверку на корректность данных, отправляем копию датафрейма
 
                 file_error_df = check_error_base_mon(df.copy(), name_file, tup_correct)
+                file_error_df = pd.concat([file_error_df, sameness_error_df], axis=0, ignore_index=True)
+                file_error_df = pd.concat([file_error_df, blankness_error_df], axis=0, ignore_index=True)
+                df['03'] = df['03'].apply(extract_code)  # очищаем от текста в кодах
+                # Проверяем на наличие слова error что означает что там есть некорректные значения кодов специальности
+                if 'error' in df['03'].values:
+                    temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
+                                                        'Некорректные значения в колонке 03 Код специальности.Вместо кода присутствует дата, вместе с кодом есть название,пробел перед кодом и т.п.!!!']],
+                                                 columns=['Название файла', 'Строка или колонка с ошибкой',
+                                                          'Описание ошибки'])
+                    file_error_df = pd.concat([file_error_df, temp_error_df], axis=0, ignore_index=True)
+
                 error_df = pd.concat([error_df, file_error_df], axis=0, ignore_index=True)
                 if file_error_df.shape[0] != 0:
                     temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
@@ -129,15 +138,7 @@ def prepare_base_employment(path_folder_data:str,path_to_end_folder:str):
                     error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
                     continue
 
-                df['03'] = df['03'].apply(extract_code)  # очищаем от текста в кодах
-                # Проверяем на наличие слова error что означает что там есть некорректные значения кодов специальности
-                if 'error' in df['03'].values:
-                    temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
-                                                        'Некорректные значения в колонке 03 Код специальности.Вместо кода присутствует дата, вместе с кодом есть название,пробел перед кодом и т.п.!!!']],
-                                                 columns=['Название файла', 'Строка или колонка с ошибкой',
-                                                          'Описание ошибки'])
-                    error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
-                    continue
+
 
                 code_spec = [spec for spec in df['03'].unique()]
 

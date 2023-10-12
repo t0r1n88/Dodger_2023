@@ -108,11 +108,9 @@ def prepare_nose_employment(path_folder_data:str,path_to_end_folder):
                 correction = 1 # размер поправки
                 sameness_error_df = check_sameness_column(check_code_lst,15,border_check_code,quantity_check_code,
                                                           tup_correct,correction,name_file,'Код и наименование')
-                error_df = pd.concat([error_df,sameness_error_df],axis=0,ignore_index=True)
 
                 blankness_error_df = check_blankness_column(check_code_lst,15,border_check_code,quantity_check_code,
                                                           tup_correct,correction,name_file,'Код и наименование')
-                error_df = pd.concat([error_df, blankness_error_df], axis=0, ignore_index=True)
 
 
                 df.columns = list(map(str, df.columns))
@@ -121,8 +119,22 @@ def prepare_nose_employment(path_folder_data:str,path_to_end_folder):
     #
                 # Проводим проверку на корректность данных, отправляем копию датафрейма
 
+
+
                 file_error_df = check_error_nose(df.copy(), name_file, tup_correct)
+                file_error_df = pd.concat([file_error_df, sameness_error_df], axis=0, ignore_index=True)
+                file_error_df = pd.concat([file_error_df, blankness_error_df], axis=0, ignore_index=True)
+                df['03'] = df['03'].apply(extract_code_nose)  # очищаем от текста в кодах
+                if 'error' in df['03'].values:
+                    temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
+                                                        'Некорректные значения в колонке 03 Код специальности.Вместо кода присутствует дата, вместе с кодом есть название,пробел перед кодом и т.п.!!!']],
+                                                 columns=['Название файла', 'Строка или колонка с ошибкой',
+                                                          'Описание ошибки'])
+                    file_error_df = pd.concat([file_error_df, temp_error_df], axis=0, ignore_index=True)
+
+
                 error_df = pd.concat([error_df, file_error_df], axis=0, ignore_index=True)
+
                 if file_error_df.shape[0] != 0:
                     temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
                                                         'В файле обнаружены ошибки!!! ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
@@ -130,16 +142,10 @@ def prepare_nose_employment(path_folder_data:str,path_to_end_folder):
                                                           'Описание ошибки'])
                     error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
                     continue
-                df['03'] = df['03'].apply(extract_code_nose)  # очищаем от текста в кодах
+
     #
                 # Проверяем на наличие слова error что означает что там есть некорректные значения кодов специальности
-                if 'error' in df['03'].values:
-                    temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
-                                                        'Некорректные значения в колонке 03 Код специальности.Вместо кода присутствует дата, вместе с кодом есть название,пробел перед кодом и т.п.!!!']],
-                                                 columns=['Название файла', 'Строка или колонка с ошибкой',
-                                                          'Описание ошибки'])
-                    error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
-                    continue
+
 
                 code_spec = [spec for spec in df['03'].unique()]
     #
