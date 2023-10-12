@@ -346,7 +346,6 @@ def prepare_nose_employment(path_folder_data:str,path_to_end_folder):
             small_finish_df.to_excel(writer, sheet_name='5 строк', index=False)
             one_finish_df.to_excel(writer, sheet_name='1 строка (Всего выпускников)', index=False)
 
-        # small_finish_df.to_excel(f'{path_to_end_folder}/5 строк Форма №15 от {current_time}.xlsx', index=False)
 
         # Создаем документ
         wb = openpyxl.Workbook()

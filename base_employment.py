@@ -38,14 +38,16 @@ def prepare_base_employment(path_folder_data:str,path_to_end_folder:str):
     high_level_dct = {}
     # создаем датафрейм для регистрации ошибок
     error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
+    # создаем датафрейм для сохранения названия листа откуда были взяты данные
+    sheet_name_df = pd.DataFrame(columns=['Название файла', 'Название листа откуда взяты данные'])
     tup_correct = (9, 23)  # создаем кортеж  с поправками
 
     try:
         for file in os.listdir(path_folder_data):
-            if not file.startswith('~$') and file.endswith('.xls'):
+            if not file.startswith('~$') and not file.endswith('.xlsx'):
                 name_file = file.split('.xls')[0]
                 temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
-                                                    'Файл с расширением XLS (СТАРЫЙ ФОРМАТ EXCEL)!!! ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!! ']],
+                                                    'Расширение файла НЕ XLSX! Программа обрабатывает только XLSX ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!! ']],
                                              columns=['Название файла', 'Строка или колонка с ошибкой',
                                                       'Описание ошибки'])
                 error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
@@ -54,6 +56,13 @@ def prepare_base_employment(path_folder_data:str,path_to_end_folder:str):
             if not file.startswith('~$') and file.endswith('.xlsx'):
                 name_file = file.split('.xlsx')[0]
                 print(name_file)
+                # получаем название первого листа
+                temp_wb = openpyxl.load_workbook(f'{path_folder_data}/{file}',read_only=True)
+                name_source_sheet = temp_wb.sheetnames[0] # получаем название первого листа
+                temp_wb.close()
+                temp_sheet_name_df = pd.DataFrame(data=[[f'{name_file}',f'{name_source_sheet}']],
+                                                columns=['Название файла', 'Название листа откуда взяты данные'])
+                sheet_name_df = pd.concat([sheet_name_df,temp_sheet_name_df],axis=0,ignore_index=True)
                 df = pd.read_excel(f'{path_folder_data}/{file}', skiprows=7, dtype=str)
                 # проверяем корректность заголовка
                 # создаем множество колонок наличие которых мы проверяем
@@ -343,6 +352,14 @@ def prepare_base_employment(path_folder_data:str,path_to_end_folder:str):
         wb['Sheet'].column_dimensions['C'].width = 50
 
         wb.save(f'{path_to_end_folder}/ОШИБКИ от {current_time}.xlsx')
+        # сохраняем файл с названиями листов откуда взяты данные
+        name_sheet_wb = openpyxl.Workbook()
+        for row in dataframe_to_rows(sheet_name_df, index=False, header=True):
+            name_sheet_wb['Sheet'].append(row)
+        name_sheet_wb['Sheet'].column_dimensions['A'].width = 30
+        name_sheet_wb['Sheet'].column_dimensions['B'].width = 30
+
+        name_sheet_wb.save(f'{path_to_end_folder}/Названия листов откуда взяты данные {current_time}.xlsx')
 
     except NameError:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',

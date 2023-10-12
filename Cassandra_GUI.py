@@ -35,22 +35,39 @@ def resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 
-def select_folder_data():
+def select_folder_data_base():
     """
     Функция для выбора папки c данными базового мониторинга 5 строк
     :return:
     """
-    global path_folder_data
-    path_folder_data = filedialog.askdirectory()
+    global path_folder_data_base
+    path_folder_data_base = filedialog.askdirectory()
 
 
-def select_end_folder():
+def select_end_folder_base():
     """
     Функция для выбора конечной папки куда будут складываться итоговые файлы базового мониторинга 5 строк
     :return:
     """
-    global path_to_end_folder
-    path_to_end_folder = filedialog.askdirectory()
+    global path_to_end_folder_base
+    path_to_end_folder_base = filedialog.askdirectory()
+
+def select_folder_data_nose():
+    """
+    Функция для выбора папки c данными базового мониторинга 5 строк
+    :return:
+    """
+    global path_folder_data_nose
+    path_folder_data_nose = filedialog.askdirectory()
+
+
+def select_end_folder_nose():
+    """
+    Функция для выбора конечной папки куда будут складываться итоговые файлы базового мониторинга 5 строк
+    :return:
+    """
+    global path_to_end_folder_nose
+    path_to_end_folder_nose = filedialog.askdirectory()
 
 
 # для обработки отчетов ЦК
@@ -111,7 +128,7 @@ def processing_base_employment():
     :return: файлы Excel  с результатами обработки
     """
     try:
-        prepare_base_employment(path_folder_data, path_to_end_folder)
+        prepare_base_employment(path_folder_data_base, path_to_end_folder_base)
 
     except NameError:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
@@ -129,7 +146,7 @@ def processing_nose_employment():
     :return:
     """
     try:
-        prepare_nose_employment(path_folder_data, path_to_end_folder)
+        prepare_nose_employment(path_folder_data_nose, path_to_end_folder_nose)
 
     except NameError:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
@@ -147,7 +164,7 @@ def processing_ck_employment():
     :return:
     """
     try:
-        prepare_ck_employment(path_folder_data, path_to_end_folder)
+        prepare_ck_employment(path_folder_data_ck, path_to_end_folder_ck)
 
     except NameError:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
@@ -159,7 +176,7 @@ def processing_opk_employment():
     Функция для обработки полной таблицы занятости выпускников в ОПК
     """
     try:
-        prepare_opk_employment(path_folder_data, path_to_end_folder)
+        prepare_opk_employment(path_folder_data_opk, path_to_end_folder_opk)
 
     except NameError:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
@@ -247,14 +264,14 @@ if __name__ == '__main__':
 
     # Создаем кнопку Выбрать файл с данными
     btn_choose_data = Button(tab_employment, text='1) Выберите папку с данными', font=('Arial Bold', 20),
-                             command=select_folder_data
+                             command=select_folder_data_base
                              )
     btn_choose_data.grid(column=0, row=2, padx=10, pady=10)
 
     # Создаем кнопку для выбора папки куда будут генерироваться файлы
 
     btn_choose_end_folder = Button(tab_employment, text='2) Выберите конечную папку', font=('Arial Bold', 20),
-                                   command=select_end_folder
+                                   command=select_end_folder_base
                                    )
     btn_choose_end_folder.grid(column=0, row=3, padx=10, pady=10)
 
@@ -289,7 +306,7 @@ if __name__ == '__main__':
 
     # Создаем кнопку Выбрать файл с данными
     btn_choose_data_modern = Button(tab_employment_modern, text='1) Выберите папку с данными', font=('Arial Bold', 20),
-                                    command=select_folder_data
+                                    command=select_folder_data_nose
                                     )
     btn_choose_data_modern.grid(column=0, row=2, padx=10, pady=10)
 
@@ -297,7 +314,7 @@ if __name__ == '__main__':
 
     btn_choose_end_folder_modern = Button(tab_employment_modern, text='2) Выберите конечную папку',
                                           font=('Arial Bold', 20),
-                                          command=select_end_folder
+                                          command=select_end_folder_nose
                                           )
     btn_choose_end_folder_modern.grid(column=0, row=3, padx=10, pady=10)
 
