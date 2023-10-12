@@ -45,6 +45,76 @@ def check_data_note(cell):
         return 'Не заполнено'
     return str(cell)
 
+def check_sameness_column(checked_lst:list,check_range:int,begin_border:int,quantity_check_value:int,tup_correct:tuple,correction:int,
+                          name_file=None,name_column=None):
+    """
+    checked_lst : список значений который нужно проверить на однородность в каждом диапазоне
+    check_range : сколько значений в  првоеряемом диапазоне
+    quantity_check_value : количество проверяемых диапазонов
+    tup_correct : кортеж  где нулевой элемент это первая строка диапазона в экселе а первый элемент последняя строка в диапазоне
+    это нужно чтобы точно указывать где искать ошибку в файле Excel
+    correction : дополнительная поправка
+    name_file : имя обрабатываемого файла Excel
+
+    """
+    # датафрейм для ошибок
+    _error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
+    first_correct = tup_correct[0]
+    second_correct = tup_correct[1]
+    offset = 0 # сдвиг
+
+    for i in range(quantity_check_value):
+        temp_set = set(
+            [value for value in checked_lst[begin_border:begin_border + check_range]])
+        if len(temp_set) != 1:
+            temp_error_df = pd.DataFrame(data=[[name_file,f'Диапазон строк {begin_border + first_correct + offset} - {begin_border + second_correct +offset}',
+                                                f'В колонке {name_column} в указанном диапазоне обнаружены отличающиеся значения']],
+                                         columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
+            _error_df = pd.concat([_error_df,temp_error_df],axis=0,ignore_index=True)
+
+        begin_border +=  check_range # сдвигаем проверяемый диапазон в списке
+        offset += correction # добавляем поправку
+
+    return _error_df
+
+
+def check_blankness_column(checked_lst:list,check_range:int,begin_border:int,quantity_check_value:int,tup_correct:tuple,correction:int,
+                          name_file=None,name_column=None):
+    """
+    checked_lst : список значений который нужно проверить на однородность в каждом диапазоне
+    check_range : сколько значений в  првоеряемом диапазоне
+    quantity_check_value : количество проверяемых диапазонов
+    tup_correct : кортеж  где нулевой элемент это первая строка диапазона в экселе а первый элемент последняя строка в диапазоне
+    это нужно чтобы точно указывать где искать ошибку в файле Excel
+    correction : дополнительная поправка
+    name_file : имя обрабатываемого файла Excel
+
+    """
+    # датафрейм для ошибок
+    _error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
+    first_correct = tup_correct[0]
+    second_correct = tup_correct[1]
+    offset = 0 # сдвиг
+
+    for i in range(quantity_check_value):
+        temp_set = set(
+            [value for value in checked_lst[begin_border:begin_border + check_range]])
+        if np.nan in temp_set or ' ' in temp_set:
+            temp_error_df = pd.DataFrame(data=[[name_file,f'Диапазон строк {begin_border + first_correct + offset} - {begin_border + second_correct +offset}',
+                                                f'В колонке {name_column} в указанном диапазоне обнаружены незаполненные ячейки']],
+                                         columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
+            _error_df = pd.concat([_error_df,temp_error_df],axis=0,ignore_index=True)
+
+        begin_border +=  check_range # сдвигаем проверяемый диапазон в списке
+        offset += correction # добавляем поправку
+
+    return _error_df
+
+
+
+
+
+
 
 def check_first_error(df: pd.DataFrame, name_file, tup_correct):
     """

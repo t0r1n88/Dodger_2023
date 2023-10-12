@@ -37,6 +37,8 @@ def prepare_nose_employment(path_folder_data:str,path_to_end_folder):
     error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
     # создаем датафрейм для сохранения названия листа откуда были взяты данные
     sheet_name_df = pd.DataFrame(columns=['Название файла', 'Название листа откуда взяты данные'])
+    tup_correct = (6, 20)  # создаем кортеж  с поправками где 6 это первая строка с данными а 20 строка где заканчивается первый диапазон
+
 
     try:
         for file in os.listdir(path_folder_data):
@@ -101,42 +103,24 @@ def prepare_nose_employment(path_folder_data:str,path_to_end_folder):
                         error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
                         continue
                 # Проверка на непрерывность кода специальности, то есть на 15 строк должен быть только один код
-                border_check_code = 0  # счетчик обработанных страниц
+                border_check_code = 0  # начало отсчета
                 quantity_check_code = len(check_code_lst) // 15  # получаем сколько специальностей в таблице
-                flag_error_code_spec = False  # чекбокс для ошибки несоблюдения расстояния в 15 строк
-                flag_error_space_spec = False  # чекбокс для ошибки заполнения кода специальности пробелом
-                for i in range(quantity_check_code):
-                    # получаем множество отбрасывая np.nan
-                    temp_set = set(
-                        [code_spec for code_spec in check_code_lst[border_check_code:border_check_code + 15]])
-                    if len(temp_set) != 1:
-                        flag_error_code_spec = True
-                    if ' ' in temp_set:
-                        flag_error_space_spec = True
-                    border_check_code += 15
+                correction = 1 # размер поправки
+                sameness_error_df = check_sameness_column(check_code_lst,15,border_check_code,quantity_check_code,
+                                                          tup_correct,correction,name_file,'Код и наименование')
+                error_df = pd.concat([error_df,sameness_error_df],axis=0,ignore_index=True)
 
-                if flag_error_space_spec:
-                    temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
-                                                        'Обнаружены ячейки заполненные пробелом в колонке 03 !!! ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
-                                                 columns=['Название файла', 'Строка или колонка с ошибкой',
-                                                          'Описание ошибки'])
-                    error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
-                    continue
+                blankness_error_df = check_blankness_column(check_code_lst,15,border_check_code,quantity_check_code,
+                                                          tup_correct,correction,name_file,'Код и наименование')
+                error_df = pd.concat([error_df, blankness_error_df], axis=0, ignore_index=True)
 
-                if flag_error_code_spec:
-                    temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
-                                                        'ДОЛЖЕН БЫТЬ ОДИНАКОВЫЙ КОД СПЕЦИАЛЬНОСТИ НА КАЖДЫЕ 15 СТРОК (не считая строки с проверкой)!!! ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
-                                                 columns=['Название файла', 'Строка или колонка с ошибкой',
-                                                          'Описание ошибки'])
-                    error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
-                    continue
 
                 df.columns = list(map(str, df.columns))
     #             # Заполняем пока пропуски в 15 ячейке для каждой специальности
     #             df['06'] = df['06'].fillna('15 ячейка')
     #
                 # Проводим проверку на корректность данных, отправляем копию датафрейма
-                tup_correct = (6, 20)  # создаем кортеж  с поправками
+
                 file_error_df = check_error(df.copy(), name_file, tup_correct)
                 error_df = pd.concat([error_df, file_error_df], axis=0, ignore_index=True)
                 if file_error_df.shape[0] != 0:
