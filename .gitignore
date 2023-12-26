@@ -1,3 +1,17 @@
+# Editors
+.vscode/
+.idea/
+
+# Vagrant
+.vagrant/
+
+# Mac/OSX
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# Source for the following rules: https://raw.githubusercontent.com/github/gitignore/master/Python.gitignore
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -9,12 +23,11 @@ __pycache__/
 # Distribution / packaging
 .Python
 build/
+output/
+data/
+temp/
 develop-eggs/
 dist/
-work/week_6/data
-work/week_6/Logs
-data/
-img/
 downloads/
 eggs/
 .eggs/
@@ -42,6 +55,7 @@ pip-delete-this-directory.txt
 # Unit test / coverage reports
 htmlcov/
 .tox/
+.nox/
 .coverage
 .coverage.*
 .cache
@@ -76,6 +90,10 @@ target/
 # Jupyter Notebook
 .ipynb_checkpoints
 
+# IPython
+profile_default/
+ipython_config.py
+
 # pyenv
 .python-version
 
@@ -106,3 +124,4 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+.dmypy.json
