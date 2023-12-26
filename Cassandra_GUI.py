@@ -255,7 +255,7 @@ def set_window_size(window):
     else:
         width = int(screen_width * 1)
 
-    height = int(screen_height * 0.8)
+    height = int(screen_height * 0.6)
 
     # Рассчитываем координаты для центрирования окна
     x = (screen_width - width) // 2
@@ -268,7 +268,7 @@ def set_window_size(window):
 
 if __name__ == '__main__':
     window = Tk()
-    window.title('Кассандра Подсчет данных по трудоустройству выпускников ver 3.6')
+    window.title('Кассандра Подсчет данных по трудоустройству выпускников ver 3.5')
     # Устанавливаем размер и положение окна
     set_window_size(window)
     # window.geometry('774x760')
@@ -382,170 +382,187 @@ if __name__ == '__main__':
                                                   )
     btn_proccessing_data_employment_nose.pack(padx=10, pady=10)
     #
-    # """
-    # Вкладка для обработки отчетов центров карьеры
-    # """
-    # # Создаем вкладку обработки отчетов центров карьеры
-    # tab_ck_employment = ttk.Frame(tab_control)
-    # tab_control.add(tab_ck_employment, text='Отчет ЦК')
-    # tab_control.pack(expand=1, fill='both')
-    # # Добавляем виджеты на вкладку
-    # # Создаем метку для описания назначения программы
-    # lbl_hello_ck = Label(tab_ck_employment,
-    #                      text='Центр опережающей профессиональной подготовки Республики Бурятия\n'
-    #                           'Обработка данных центров карьеры по трудоустроенным выпускникам')
-    # lbl_hello_ck.grid(column=0, row=0, padx=10, pady=25)
+    """
+    Вкладка для обработки отчетов центров карьеры
+    """
+    tab_employment_ck = ttk.Frame(tab_control)
+    tab_control.add(tab_employment_ck, text='Отчет ЦК')
+
+    employment_ck_frame_description = LabelFrame(tab_employment_ck)
+    employment_ck_frame_description.pack()
+
+    lbl_hello_employment_ck = Label(employment_ck_frame_description,
+                                    text='Центр опережающей профессиональной подготовки Республики Бурятия\n'
+                                         'Обработка данных центров карьеры по трудоустроенным выпускникам',
+                                    width=60)
+    lbl_hello_employment_ck.pack(side=LEFT, anchor=N, ipadx=25, ipady=10)
+
+    # Картинка
+    path_to_img_employment_ck = resource_path('logo.png')
+    img_employment_ck = PhotoImage(file=path_to_img_employment_ck)
+    Label(employment_ck_frame_description,
+          image=img_employment_ck, padx=10, pady=10
+          ).pack(side=LEFT, anchor=E, ipadx=5, ipady=5)
+
+    # Создаем область для того чтобы поместить туда подготовительные кнопки(выбрать файл,выбрать папку и т.п.)
+    frame_data_employment_ck = LabelFrame(tab_employment_ck, text='Подготовка')
+    frame_data_employment_ck.pack(padx=10, pady=10)
+
+    btn_choose_data_employment_ck = Button(frame_data_employment_ck, text='1) Выберите папку с данными',
+                                           font=('Arial Bold', 20),
+                                           command=select_folder_data_ck
+                                           )
+    btn_choose_data_employment_ck.pack(padx=10, pady=10)
+
+    # Создаем кнопку для выбора папки куда будут генерироваться файлы
+
+    btn_choose_end_folder_employment_ck = Button(frame_data_employment_ck, text='2) Выберите конечную папку',
+                                                 font=('Arial Bold', 20),
+                                                 command=select_end_folder_ck
+                                                 )
+    btn_choose_end_folder_employment_ck.pack(padx=10, pady=10)
     #
-    # # Картинка
-    # path_to_img_ck = resource_path('logo.png')
+    # Создаем кнопку обработки данных
+
+    btn_proccessing_data_employment_ck = Button(tab_employment_ck, text='3) Обработать данные',
+                                                font=('Arial Bold', 20),
+                                                command=processing_ck_employment
+                                                )
+    btn_proccessing_data_employment_ck.pack(padx=10, pady=10)
+
+
+
+    """
+    Подсчет данных по трудоустройству ОПК
+    """
+    tab_employment_opk = ttk.Frame(tab_control)
+    tab_control.add(tab_employment_opk, text='Отчет ОПК с отраслями')
+
+    employment_opk_frame_description = LabelFrame(tab_employment_opk)
+    employment_opk_frame_description.pack()
+
+    lbl_hello_employment_opk = Label(employment_opk_frame_description,
+                                     text='Центр опережающей профессиональной подготовки Республики Бурятия\n'
+                                          'Обработка данных по трудоустройству ОПК (по отраслям)\n'
+                                          'В обрабатываемых файлах должны быть листы Форма 1 и Форма 2,\n'
+                                          'В Форме 1 должно быть 80 колонок включая 2 колонки проверки\n'
+                                          ',внизу после окончания таблицы должна быть пустая строка.\n'
+                                          ' На 9 строке должна быть строка с номерами колонок.\n'
+                                          'В форме 2 должно быть 10 колонок',
+                                     width=60)
+    lbl_hello_employment_opk.pack(side=LEFT, anchor=N, ipadx=25, ipady=10)
+
+    # Картинка
+    path_to_img_employment_opk = resource_path('logo.png')
+    img_employment_opk = PhotoImage(file=path_to_img_employment_opk)
+    Label(employment_opk_frame_description,
+          image=img_employment_opk, padx=10, pady=10
+          ).pack(side=LEFT, anchor=E, ipadx=5, ipady=5)
+
+    # Создаем область для того чтобы поместить туда подготовительные кнопки(выбрать файл,выбрать папку и т.п.)
+    frame_data_employment_opk = LabelFrame(tab_employment_opk, text='Подготовка')
+    frame_data_employment_opk.pack(padx=10, pady=10)
+
+    btn_choose_data_employment_opk = Button(frame_data_employment_opk, text='1) Выберите папку с данными',
+                                            font=('Arial Bold', 20),
+                                            command=select_folder_data_opk
+                                            )
+    btn_choose_data_employment_opk.pack(padx=10, pady=10)
+
+    # Создаем кнопку для выбора папки куда будут генерироваться файлы
+
+    btn_choose_end_folder_employment_opk = Button(frame_data_employment_opk, text='2) Выберите конечную папку',
+                                                  font=('Arial Bold', 20),
+                                                  command=select_end_folder_opk
+                                                  )
+    btn_choose_end_folder_employment_opk.pack(padx=10, pady=10)
     #
-    # img_ck = PhotoImage(file=path_to_img_ck)
-    # Label(tab_ck_employment,
-    #       image=img_ck
-    #       ).grid(column=1, row=0, padx=10, pady=25)
+    # Создаем кнопку обработки данных
+
+    btn_proccessing_data_employment_opk = Button(tab_employment_opk, text='3) Обработать данные',
+                                                 font=('Arial Bold', 20),
+                                                 command=processing_opk_employment
+                                                 )
+    btn_proccessing_data_employment_opk.pack(padx=10, pady=10)
+
+
+
+    """
+    Разница двух таблиц
+    """
+    tab_diffrence = ttk.Frame(tab_control)
+    tab_control.add(tab_diffrence, text='Разница 2 таблиц')
+
+    diffrence_frame_description = LabelFrame(tab_diffrence)
+    diffrence_frame_description.pack()
+
+    lbl_hello_diffrence = Label(diffrence_frame_description,
+                                text='Центр опережающей профессиональной подготовки Республики Бурятия\n'
+                                     'Количество строк и колонок в таблицах должно совпадать\n'
+                                     'Названия колонок в таблицах должны совпадать'
+                                     '\nДля корректной работы программмы уберите из таблицы объединенные ячейки',
+                                width=60)
+    lbl_hello_diffrence.pack(side=LEFT, anchor=N, ipadx=25, ipady=10)
+
+    # Картинка
+    path_to_img_diffrence = resource_path('logo.png')
+    img_diffrence = PhotoImage(file=path_to_img_diffrence)
+    Label(diffrence_frame_description,
+          image=img_diffrence, padx=10, pady=10
+          ).pack(side=LEFT, anchor=E, ipadx=5, ipady=5)
+
+    # Создаем область для того чтобы поместить туда подготовительные кнопки(выбрать файл,выбрать папку и т.п.)
+    frame_data_for_diffrence = LabelFrame(tab_diffrence, text='Подготовка')
+    frame_data_for_diffrence.pack(padx=10, pady=10)
     #
-    # # Создаем кнопку Выбрать файл с данными
-    # btn_choose_ck_data = Button(tab_ck_employment, text='1) Выберите папку с данными', font=('Arial Bold', 20),
-    #                             command=select_folder_data_ck
-    #                             )
-    # btn_choose_ck_data.grid(column=0, row=2, padx=10, pady=10)
+    # Создаем кнопку Выбрать  первый файл с данными
+    btn_data_first_diffrence = Button(frame_data_for_diffrence, text='1) Выберите файл с первой таблицей',
+                                      font=('Arial Bold', 10),
+                                      command=select_first_diffrence
+                                      )
+    btn_data_first_diffrence.pack(padx=10, pady=10)
     #
-    # # Создаем кнопку для выбора папки куда будут генерироваться файлы
+    # Определяем текстовую переменную
+    entry_first_sheet_name_diffrence = StringVar()
+    # Описание поля
+    label_first_sheet_name_diffrence = Label(frame_data_for_diffrence,
+                                             text='2) Введите название листа, где находится первая таблица')
+    label_first_sheet_name_diffrence.pack(padx=10, pady=10)
+    # поле ввода имени листа
+    first_sheet_name_entry_diffrence = Entry(frame_data_for_diffrence, textvariable=entry_first_sheet_name_diffrence,
+                                             width=30)
+    first_sheet_name_entry_diffrence.pack(padx=10, pady=10)
+
+    # Создаем кнопку Выбрать  второй файл с данными
+    btn_data_second_diffrence = Button(frame_data_for_diffrence, text='3) Выберите файл со второй таблицей',
+                                       font=('Arial Bold', 10),
+                                       command=select_second_diffrence
+                                       )
+    btn_data_second_diffrence.pack(padx=10, pady=10)
+
+    # Определяем текстовую переменную
+    entry_second_sheet_name_diffrence = StringVar()
+    # Описание поля
+    label_second_sheet_name_diffrence = Label(frame_data_for_diffrence,
+                                              text='4) Введите название листа, где находится вторая таблица')
+    label_second_sheet_name_diffrence.pack(padx=10, pady=10)
+    # поле ввода
+    second__sheet_name_entry_diffrence = Entry(frame_data_for_diffrence, textvariable=entry_second_sheet_name_diffrence,
+                                               width=30)
+    second__sheet_name_entry_diffrence.pack(padx=10, pady=10)
+
+    # Создаем кнопку выбора папки куда будет генерироваьться файл
+    btn_select_end_diffrence = Button(frame_data_for_diffrence, text='5) Выберите конечную папку',
+                                      font=('Arial Bold', 10),
+                                      command=select_end_folder_diffrence
+                                      )
+    btn_select_end_diffrence.pack(padx=10, pady=10)
     #
-    # btn_choose_end_ck_folder = Button(tab_ck_employment, text='2) Выберите конечную папку', font=('Arial Bold', 20),
-    #                                   command=select_end_folder_ck
-    #                                   )
-    # btn_choose_end_ck_folder.grid(column=0, row=3, padx=10, pady=10)
-    #
-    # # Создаем кнопку обработки данных
-    #
-    # btn_proccessing_ck_data = Button(tab_ck_employment, text='3) Обработать данные', font=('Arial Bold', 20),
-    #                                  command=processing_ck_employment
-    #                                  )
-    # btn_proccessing_ck_data.grid(column=0, row=4, padx=10, pady=10)
-    #
-    # """
-    # Подсчет данных по трудоустройству ОПК
-    # """
-    # # Создаем вкладку обработки отчетов центров карьеры
-    # tab_opk_employment = ttk.Frame(tab_control)
-    # tab_control.add(tab_opk_employment, text='Отчет ОПК с отраслями')
-    # tab_control.pack(expand=1, fill='both')
-    # # Добавляем виджеты на вкладку
-    # # Создаем метку для описания назначения программы
-    # lbl_hello_opk = Label(tab_opk_employment,
-    #                       text='Центр опережающей профессиональной подготовки Республики Бурятия\n'
-    #                            'Обработка данных по трудоустройству ОПК (по отраслям)\n'
-    #                            'В обрабатываемых файлах должны быть листы Форма 1 и Форма 2,\n'
-    #                            'В Форме 1 должно быть 80 колонок включая 2 колонки проверки\n'
-    #                            ',внизу после окончания таблицы должна быть пустая строка.\n'
-    #                            ' На 9 строке должна быть строка с номерами колонок.'
-    #                            'В форме 2 должно быть 10 колонок')
-    # lbl_hello_opk.grid(column=0, row=0, padx=10, pady=25)
-    #
-    # # Картинка
-    # path_to_img_opk = resource_path('logo.png')
-    #
-    # img_opk = PhotoImage(file=path_to_img_opk)
-    # Label(tab_opk_employment,
-    #       image=img_opk
-    #       ).grid(column=1, row=0, padx=10, pady=25)
-    #
-    # # Создаем кнопку Выбрать файл с данными
-    # btn_choose_opk_data = Button(tab_opk_employment, text='1) Выберите папку с данными', font=('Arial Bold', 20),
-    #                              command=select_folder_data_opk
-    #                              )
-    # btn_choose_opk_data.grid(column=0, row=2, padx=10, pady=10)
-    #
-    # # Создаем кнопку для выбора папки куда будут генерироваться файлы
-    #
-    # btn_choose_end_opk_folder = Button(tab_opk_employment, text='2) Выберите конечную папку', font=('Arial Bold', 20),
-    #                                    command=select_end_folder_opk
-    #                                    )
-    # btn_choose_end_opk_folder.grid(column=0, row=3, padx=10, pady=10)
-    #
-    # # Создаем кнопку обработки данных
-    #
-    # btn_proccessing_opk_data = Button(tab_opk_employment, text='3) Обработать данные', font=('Arial Bold', 20),
-    #                                   command=processing_opk_employment
-    #                                   )
-    # btn_proccessing_opk_data.grid(column=0, row=4, padx=10, pady=10)
-    #
-    # """
-    # Разница двух таблиц
-    # """
-    # tab_diffrence = ttk.Frame(tab_control)
-    # tab_control.add(tab_diffrence, text='Разница 2 таблиц')
-    # tab_control.pack(expand=1, fill='both')
-    #
-    # # Добавляем виджеты на вкладку разница 2 двух таблиц
-    # # Создаем метку для описания назначения программы
-    # lbl_hello = Label(tab_diffrence,
-    #                   text='Центр опережающей профессиональной подготовки Республики Бурятия\n'
-    #                        'Количество строк и колонок в таблицах должно совпадать\n'
-    #                        'Названия колонок в таблицах должны совпадать'
-    #                        '\nДля корректной работы программмы уберите из таблицы объединенные ячейки')
-    # lbl_hello.grid(column=0, row=0, padx=10, pady=25)
-    #
-    # # Картинка
-    # path_com = resource_path('logo.png')
-    # img_diffrence = PhotoImage(file=path_com)
-    # Label(tab_diffrence,
-    #       image=img_diffrence
-    #       ).grid(column=1, row=0, padx=10, pady=25)
-    #
-    # # Создаем область для того чтобы поместить туда подготовительные кнопки(выбрать файл,выбрать папку и т.п.)
-    # frame_data_for_diffrence = LabelFrame(tab_diffrence, text='Подготовка')
-    # frame_data_for_diffrence.grid(column=0, row=2, padx=10)
-    #
-    # # Создаем кнопку Выбрать  первый файл с данными
-    # btn_data_first_diffrence = Button(frame_data_for_diffrence, text='1) Выберите файл с первой таблицей',
-    #                                   font=('Arial Bold', 10),
-    #                                   command=select_first_diffrence
-    #                                   )
-    # btn_data_first_diffrence.grid(column=0, row=3, padx=10, pady=10)
-    #
-    # # Определяем текстовую переменную
-    # entry_first_sheet_name_diffrence = StringVar()
-    # # Описание поля
-    # label_first_sheet_name_diffrence = Label(frame_data_for_diffrence,
-    #                                          text='2) Введите название листа, где находится первая таблица')
-    # label_first_sheet_name_diffrence.grid(column=0, row=4, padx=10, pady=10)
-    # # поле ввода имени листа
-    # first_sheet_name_entry_diffrence = Entry(frame_data_for_diffrence, textvariable=entry_first_sheet_name_diffrence,
-    #                                          width=30)
-    # first_sheet_name_entry_diffrence.grid(column=0, row=5, padx=5, pady=5, ipadx=15, ipady=10)
-    #
-    # # Создаем кнопку Выбрать  второй файл с данными
-    # btn_data_second_diffrence = Button(frame_data_for_diffrence, text='3) Выберите файл со второй таблицей',
-    #                                    font=('Arial Bold', 10),
-    #                                    command=select_second_diffrence
-    #                                    )
-    # btn_data_second_diffrence.grid(column=0, row=6, padx=10, pady=10)
-    #
-    # # Определяем текстовую переменную
-    # entry_second_sheet_name_diffrence = StringVar()
-    # # Описание поля
-    # label_second_sheet_name_diffrence = Label(frame_data_for_diffrence,
-    #                                           text='4) Введите название листа, где находится вторая таблица')
-    # label_second_sheet_name_diffrence.grid(column=0, row=7, padx=10, pady=10)
-    # # поле ввода
-    # second__sheet_name_entry_diffrence = Entry(frame_data_for_diffrence, textvariable=entry_second_sheet_name_diffrence,
-    #                                            width=30)
-    # second__sheet_name_entry_diffrence.grid(column=0, row=8, padx=5, pady=5, ipadx=15, ipady=10)
-    #
-    # # Создаем кнопку выбора папки куда будет генерироваьться файл
-    # btn_select_end_diffrence = Button(frame_data_for_diffrence, text='5) Выберите конечную папку',
-    #                                   font=('Arial Bold', 10),
-    #                                   command=select_end_folder_diffrence
-    #                                   )
-    # btn_select_end_diffrence.grid(column=0, row=10, padx=10, pady=10)
-    #
-    # # Создаем кнопку Обработать данные
-    # btn_data_do_diffrence = Button(tab_diffrence, text='6) Обработать таблицы', font=('Arial Bold', 20),
-    #                                command=processing_diffrence
-    #                                )
-    # btn_data_do_diffrence.grid(column=0, row=11, padx=10, pady=10)
+    # Создаем кнопку Обработать данные
+    btn_data_do_diffrence = Button(tab_diffrence, text='6) Обработать таблицы', font=('Arial Bold', 20),
+                                   command=processing_diffrence
+                                   )
+    btn_data_do_diffrence.pack(padx=10, pady=10)
 
 
     # Создаем виджет для управления полосой прокрутки
