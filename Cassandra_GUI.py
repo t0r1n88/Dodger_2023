@@ -268,7 +268,7 @@ def set_window_size(window):
 
 if __name__ == '__main__':
     window = Tk()
-    window.title('Кассандра Подсчет данных по трудоустройству выпускников ver 3.5')
+    window.title('Кассандра Подсчет данных по трудоустройству выпускников ver 3.6')
     # Устанавливаем размер и положение окна
     set_window_size(window)
     # window.geometry('774x760')
