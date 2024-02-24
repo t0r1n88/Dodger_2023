@@ -141,19 +141,51 @@ def prepare_form_one_employment(path_folder_data:str,path_to_end_folder):
                 error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
                 continue
 
+            # Создание словаря для хранения данных файла
+            code_spec = [spec for spec in df['02'].unique()] # получаем список специальностей которые есть в файле
+            # Создаем список для строк
+            row_cat = [f'Строка {i}' for i in range(1, 6)]
+            # Создаем список для колонок
+            column_cat = [f'Колонка {i}' for i in range(5, 28)]  # раньше было 7
+            # Создаем словарь нижнего уровня содержащий в себе все данные для каждой специальности
+            spec_dict = {}
+            for row in row_cat:
+                spec_dict[row] = {key: 0 for key in column_cat}
+            poo_dct = {key: copy.deepcopy(spec_dict) for key in code_spec}
+            high_level_dct[name_file] = copy.deepcopy(poo_dct)
+    #             """
+    #             В итоге получается такая структура
+    #             {БРИТ:{13.01.10:{Строка 1:{Колонка 1:0}}},ТСИГХ:{22.01.10:{Строка 1:{Колонка 1:0}}}}
+
+            current_code = 'Ошибка проверьте правильность заполнения кодов специальностей'  # чекбокс для проверки заполнения кода специальности
+
+            idx_row = 1  # счетчик обработанных строк
+
+            # Итерируемся по полученному датафрейму через itertuples
+            for row in df.itertuples():
+                # если счетчик колонок больше 15 то уменьшаем его до единицы
+                if idx_row > 5:
+                    idx_row = 1
+                # Проверяем на незаполненные ячейки и ячейки заполненные пробелами
+                if (row[1] is not np.nan) and (row[1] != ' '):
+                    # если значение ячейки отличается от текущего кода специальности то обновляем значение текущего кода
+                    if row[1] != current_code:
+                        current_code = row[1]
+                data_row = row[4:27]  # получаем срез с нужными данными
 
 
+                for idx_col, value in enumerate(data_row, start=1):
+                    high_level_dct[name_file][current_code][f'Строка {idx_row}'][
+                        f'Колонка {idx_col + 4}'] += check_data(value)
+                #
+                idx_row += 1
+    t = time.localtime()  # получаем текущее время
+    current_time = time.strftime('%H_%M_%S', t)
+    wb_check_tables = create_check_tables_form_one(high_level_dct)  # проверяем данные по каждой специальности
+    wb_check_tables.save(
+        f'{path_to_end_folder}/Данные для проверки правильности заполнения файлов от {current_time}.xlsx')
 
-
-
-
-
-
-
-
-
-
-    print(error_df)
+    # print(error_df)
     error_df.to_excel('data/result/errro.xlsx',index=False,header=True)
 
 

@@ -205,11 +205,11 @@ def prepare_nose_employment(path_folder_data:str,path_to_end_folder):
 
                     idx_row += 1
     #
-        t = time.localtime()  # получаем текущее время
-        current_time = time.strftime('%H_%M_%S', t)
-        wb_check_tables = create_check_tables(high_level_dct)  # проверяем данные по каждой специальности
-        wb_check_tables.save(
-            f'{path_to_end_folder}/Данные для проверки правильности заполнения файлов от {current_time}.xlsx')
+            t = time.localtime()  # получаем текущее время
+            current_time = time.strftime('%H_%M_%S', t)
+            wb_check_tables = create_check_tables(high_level_dct)  # проверяем данные по каждой специальности
+            wb_check_tables.save(
+                f'{path_to_end_folder}/Данные для проверки правильности заполнения файлов от {current_time}.xlsx')
     #
         # получаем уникальные специальности
         all_spec_code = set()
