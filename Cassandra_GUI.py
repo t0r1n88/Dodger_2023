@@ -2,7 +2,7 @@
 """
 Графический интерфейс для программы Кассандра
 """
-from base_employment import prepare_base_employment  # импортируем функцию для обработки мониторинга 5 строк
+from form_one_five_row import prepare_form_one_employment  # импортируем функцию для обработки мониторинга 5 строк
 from nose_employment import prepare_nose_employment  # импортируем функцию для обработки нозологий 15 строк
 from ck_employment import prepare_ck_employment  # импортируем функцию для обработки данных для отчета центров карьеры
 from opk_employment import prepare_opk_employment  # импортируем функцию для обработки данных по ОПК
@@ -128,7 +128,7 @@ def processing_base_employment():
     :return: файлы Excel  с результатами обработки
     """
     try:
-        prepare_base_employment(path_folder_data_base, path_to_end_folder_base)
+        prepare_form_one_employment(path_folder_data_base, path_to_end_folder_base)
 
     except NameError:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
@@ -268,11 +268,9 @@ def set_window_size(window):
 
 if __name__ == '__main__':
     window = Tk()
-    window.title('Кассандра Подсчет данных по трудоустройству выпускников ver 3.6')
+    window.title('Кассандра Подсчет данных по трудоустройству выпускников ver 4.0')
     # Устанавливаем размер и положение окна
     set_window_size(window)
-    # window.geometry('774x760')
-    # window.geometry('980x910+700+100')
     window.resizable(True, True)
 
     # Создаем вертикальный скроллбар
@@ -292,14 +290,14 @@ if __name__ == '__main__':
     Создаем вкладку для обработки отчета 5 строк
     """
     tab_employment_five = ttk.Frame(tab_control)
-    tab_control.add(tab_employment_five, text='Подсчет 5 строк')
+    tab_control.add(tab_employment_five, text='Форма 1 (5 строк)')
 
     employment_five_frame_description = LabelFrame(tab_employment_five)
     employment_five_frame_description.pack()
 
     lbl_hello_employment_five = Label(employment_five_frame_description,
                                   text='Центр опережающей профессиональной подготовки Республики Бурятия\n'
-                           'Трудоустройство выпускников.\n Подсчет по специальностям/профессиям 5 строк', width=60)
+                           'Трудоустройство выпускников. Форма 1 пятистрочная', width=60)
     lbl_hello_employment_five.pack(side=LEFT, anchor=N, ipadx=25, ipady=10)
 
     # Картинка
@@ -338,14 +336,14 @@ if __name__ == '__main__':
     Вкладка для обработки формы №15 нозологии
     """
     tab_employment_nose = ttk.Frame(tab_control)
-    tab_control.add(tab_employment_nose, text='Подсчет нозология 15 строк')
+    tab_control.add(tab_employment_nose, text='Форма 2 нозологии')
 
     employment_nose_frame_description = LabelFrame(tab_employment_nose)
     employment_nose_frame_description.pack()
 
     lbl_hello_employment_nose = Label(employment_nose_frame_description,
                                       text='Центр опережающей профессиональной подготовки Республики Бурятия\n'
-                                           'Трудоустройство выпускников. Подсчет по специальностям/профессиям\n нозологии 15 строк',
+                                           'Трудоустройство выпускников. Форма 2 нозологии (15 строк)',
                                       width=60)
     lbl_hello_employment_nose.pack(side=LEFT, anchor=N, ipadx=25, ipady=10)
 
