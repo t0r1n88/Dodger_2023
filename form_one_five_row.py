@@ -81,7 +81,7 @@ def prepare_form_one_employment(path_folder_data:str,path_to_end_folder):
                 error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
                 continue
 
-            df = df.loc[:, '02':'28']
+            df = df.loc[:, '02':'27'] # отсекаем колонки с регионом и проверками
             # получаем  часть с данными
             mask = pd.isna(df).all(axis=1)  # создаем маску для строк с пропущенными значениями
             # проверяем есть ли строка полностью состоящая из nan
@@ -101,7 +101,7 @@ def prepare_form_one_employment(path_folder_data:str,path_to_end_folder):
                                                           'Описание ошибки'])
                     error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
                     continue
-            # Проверка на непрерывность кода специальности, то есть на 5 строк должен быть только один код
+            # Проверка на непрерывность кода специальности, то есть на 5 строк должен быть только один код и на пустые ячейки
             border_check_code = 0  # начало отсчета
             quantity_check_code = len(check_code_lst) // 5  # получаем сколько специальностей в таблице
             correction = 0  # размер поправки на случай если есть строка проверки
@@ -111,8 +111,13 @@ def prepare_form_one_employment(path_folder_data:str,path_to_end_folder):
             blankness_error_df = check_blankness_column(check_code_lst, 5, border_check_code, quantity_check_code,
                                                         tup_correct, correction, name_file, 'Код и наименование')
 
-
-
+            # проверяем на арифметические ошибки
+            file_error_df = check_error_form_one(df.copy(), name_file, tup_correct)
+            # добавляем в получившийся датафейм ошибки однородности диапазона
+            file_error_df = pd.concat([file_error_df, sameness_error_df], axis=0, ignore_index=True)
+            file_error_df = pd.concat([file_error_df, blankness_error_df], axis=0, ignore_index=True)
+            # добавляем в основной файл с ошибками
+            error_df = pd.concat([error_df, file_error_df], axis=0, ignore_index=True)
 
 
 
