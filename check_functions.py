@@ -48,6 +48,7 @@ def check_data_note(cell):
 def check_sameness_column(checked_lst:list,check_range:int,begin_border:int,quantity_check_value:int,tup_correct:tuple,correction:int,
                           name_file=None,name_column=None):
     """
+    Функция для проверки заполнен ли определенный диапазон одинаковыми значениями
     checked_lst : список значений который нужно проверить на однородность в каждом диапазоне
     check_range : сколько значений в  првоеряемом диапазоне
     quantity_check_value : количество проверяемых диапазонов
@@ -81,6 +82,7 @@ def check_sameness_column(checked_lst:list,check_range:int,begin_border:int,quan
 def check_blankness_column(checked_lst:list,check_range:int,begin_border:int,quantity_check_value:int,tup_correct:tuple,correction:int,
                           name_file=None,name_column=None):
     """
+    Функция для проверки есть ли в определенном диапазоне пустые значения
     checked_lst : список значений который нужно проверить на однородность в каждом диапазоне
     check_range : сколько значений в  првоеряемом диапазоне
     quantity_check_value : количество проверяемых диапазонов

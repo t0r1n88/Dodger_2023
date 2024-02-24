@@ -66,6 +66,7 @@ def prepare_form_one_employment(path_folder_data:str,path_to_end_folder):
             #                                   columns=['Название файла', 'Название листа откуда взяты данные'])
             # sheet_name_df = pd.concat([sheet_name_df, temp_sheet_name_df], axis=0, ignore_index=True)
             df = pd.read_excel(f'{path_folder_data}/{file}', skiprows=4, dtype=str)
+            df.columns = list(map(str,df.columns)) # делаем названия колонок строковыми
             # создаем множество колонок наличие которых мы проверяем
             check_cols = ['01','02', '03','04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15',
                           '16', '17',
@@ -80,6 +81,35 @@ def prepare_form_one_employment(path_folder_data:str,path_to_end_folder):
                 error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
                 continue
 
+            df = df.loc[:, '02':'28']
+            # получаем  часть с данными
+            mask = pd.isna(df).all(axis=1)  # создаем маску для строк с пропущенными значениями
+            # проверяем есть ли строка полностью состоящая из nan
+            empty_row_index = np.where(df.isna().all(axis=1))
+            if empty_row_index[0].tolist():
+                row_index = empty_row_index[0][0]
+                df = df.iloc[:row_index]
+            #     # Проверка на размер таблицы, должно бьть кратно 5
+            count_spec = df.shape[0] // 5  # количество специальностей
+            check_code_lst = df['02'].tolist()  # получаем список кодов специальностей
+            # Проверка на то чтобы в колонке 03 в первой строке не было пустой ячейки
+            if True in mask.tolist():
+                if check_code_lst[0] is np.nan or check_code_lst[0] == ' ':
+                    temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
+                                                        'В колонке 02 на первой строке не заполнен код специальности. ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!! ']],
+                                                 columns=['Название файла', 'Строка или колонка с ошибкой',
+                                                          'Описание ошибки'])
+                    error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
+                    continue
+            # Проверка на непрерывность кода специальности, то есть на 5 строк должен быть только один код
+            border_check_code = 0  # начало отсчета
+            quantity_check_code = len(check_code_lst) // 5  # получаем сколько специальностей в таблице
+            correction = 0  # размер поправки на случай если есть строка проверки
+            sameness_error_df = check_sameness_column(check_code_lst, 5, border_check_code, quantity_check_code,
+                                                      tup_correct, correction, name_file, 'Код и наименование')
+
+            blankness_error_df = check_blankness_column(check_code_lst, 5, border_check_code, quantity_check_code,
+                                                        tup_correct, correction, name_file, 'Код и наименование')
 
 
 
@@ -90,7 +120,13 @@ def prepare_form_one_employment(path_folder_data:str,path_to_end_folder):
 
 
 
-    print(error_df)
+
+
+
+
+
+
+    # print(error_df)
     error_df.to_excel('data/result/errro.xlsx',index=False,header=True)
 
 
