@@ -628,7 +628,7 @@ def extract_code(value):
     Функция для извлечения кода специальности
     """
     value = str(value)
-    re_code = re.compile('^\d{2}?[.]\d{2}?[.]\d{2}$')  # создаем выражение для поиска кода специальности
+    re_code = re.compile('^\d{2}?[.]\d{2}?[.]\d{2}')  # создаем выражение для поиска кода специальности
     result = re.search(re_code, value)
     if result:
         return result.group()
@@ -643,7 +643,7 @@ def extract_code_nose(value):
     re_code = re.compile('(\d{2}?[.]\d{2}?[.]\d{2})\D')  # создаем выражение для поиска кода специальности
     result = re.search(re_code, value)
     if result:
-        return result.group()
+        return result.groups()[0]
     else:
         return 'error'
 

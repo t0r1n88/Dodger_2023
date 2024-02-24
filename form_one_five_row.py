@@ -116,6 +116,21 @@ def prepare_form_one_employment(path_folder_data:str,path_to_end_folder):
             # добавляем в получившийся датафейм ошибки однородности диапазона
             file_error_df = pd.concat([file_error_df, sameness_error_df], axis=0, ignore_index=True)
             file_error_df = pd.concat([file_error_df, blankness_error_df], axis=0, ignore_index=True)
+
+
+            # создаем словарь для хранения пары ключ значение где ключ это код специальности а значение- код и наименование
+            dct_code_and_name = dict()
+            for full_name in df['02'].tolist():
+                code = extract_code_nose(full_name) # получаем только цифры
+                dct_code_and_name[code] = full_name
+            # очищаем от текста чтобы названия листов не обрезались
+            df['02'] = df['02'].apply(extract_code_nose)  # очищаем от текста в кодах
+            if 'error' in df['02'].values:
+                temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
+                                                    'Некорректные значения в колонке 02 Код и наименование профессии/специальности.Вместо кода присутствует дата, и т.п. проверьте правильность заполнения колонки 02!!!']],
+                                             columns=['Название файла', 'Строка или колонка с ошибкой',
+                                                      'Описание ошибки'])
+                file_error_df = pd.concat([file_error_df, temp_error_df], axis=0, ignore_index=True)
             # добавляем в основной файл с ошибками
             error_df = pd.concat([error_df, file_error_df], axis=0, ignore_index=True)
             if file_error_df.shape[0] != 0:
@@ -138,7 +153,7 @@ def prepare_form_one_employment(path_folder_data:str,path_to_end_folder):
 
 
 
-    # print(error_df)
+    print(error_df)
     error_df.to_excel('data/result/errro.xlsx',index=False,header=True)
 
 
