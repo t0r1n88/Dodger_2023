@@ -65,9 +65,6 @@ def prepare_form_one_employment(path_folder_data:str,path_to_end_folder):
                                                           'Описание ошибки'])
                     error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
                     continue
-                # temp_sheet_name_df = pd.DataFrame(data=[[f'{name_file}', f'{name_source_sheet}']],
-                #                                   columns=['Название файла', 'Название листа откуда взяты данные'])
-                # sheet_name_df = pd.concat([sheet_name_df, temp_sheet_name_df], axis=0, ignore_index=True)
                 df = pd.read_excel(f'{path_folder_data}/{file}', skiprows=4, dtype=str)
                 df.columns = list(map(str,df.columns)) # делаем названия колонок строковыми
                 # создаем множество колонок наличие которых мы проверяем
