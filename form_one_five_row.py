@@ -118,6 +118,13 @@ def prepare_form_one_employment(path_folder_data:str,path_to_end_folder):
             file_error_df = pd.concat([file_error_df, blankness_error_df], axis=0, ignore_index=True)
             # добавляем в основной файл с ошибками
             error_df = pd.concat([error_df, file_error_df], axis=0, ignore_index=True)
+            if file_error_df.shape[0] != 0:
+                temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
+                                                    'В файле обнаружены ошибки!!! ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
+                                             columns=['Название файла', 'Строка или колонка с ошибкой',
+                                                      'Описание ошибки'])
+                error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
+                continue
 
 
 
