@@ -34,6 +34,8 @@ def prepare_form_one_employment(path_folder_data:str,path_to_end_folder):
     """
     # создаем словарь верхнего уровня для каждого поо
     high_level_dct = {}
+    # создаем словарь верхнего уровня для хранения пары ключ значение где ключ это код специальности а значение- код и наименование
+    dct_code_and_name = dict()
     # создаем датафрейм для регистрации ошибок
     error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
 
@@ -117,9 +119,6 @@ def prepare_form_one_employment(path_folder_data:str,path_to_end_folder):
             file_error_df = pd.concat([file_error_df, sameness_error_df], axis=0, ignore_index=True)
             file_error_df = pd.concat([file_error_df, blankness_error_df], axis=0, ignore_index=True)
 
-
-            # создаем словарь для хранения пары ключ значение где ключ это код специальности а значение- код и наименование
-            dct_code_and_name = dict()
             for full_name in df['02'].tolist():
                 code = extract_code_nose(full_name) # получаем только цифры
                 dct_code_and_name[code] = full_name
@@ -185,8 +184,117 @@ def prepare_form_one_employment(path_folder_data:str,path_to_end_folder):
     wb_check_tables.save(
         f'{path_to_end_folder}/Данные для проверки правильности заполнения файлов от {current_time}.xlsx')
 
-    # print(error_df)
-    error_df.to_excel('data/result/errro.xlsx',index=False,header=True)
+    # получаем уникальные специальности
+    all_spec_code = set()
+    for poo, spec in high_level_dct.items():
+        for code_spec, data in spec.items():
+            all_spec_code.add(code_spec)
+
+    itog_df = {key: copy.deepcopy(spec_dict) for key in all_spec_code}
+    # Складываем результаты неочищенного словаря
+    for poo, spec in high_level_dct.items():
+        for code_spec, data in spec.items():
+            for row, col_data in data.items():
+                for col, value in col_data.items():
+                    itog_df[code_spec][row][col] += value
+
+    # Сортируем получившийся словарь по возрастанию для удобства использования
+    sort_itog_dct = sorted(itog_df.items())
+    itog_df = {dct[0]: dct[1] for dct in sort_itog_dct}
+
+    out_df = pd.DataFrame.from_dict(itog_df, orient='index')
+
+    stack_df = out_df.stack()
+    # название такое выбрал потому что было лень заменять значения из блокнота юпитера
+    frame = stack_df.to_frame()
+    frame['Всего'] = frame[0].apply(lambda x: x.get('Колонка 5'))
+    frame[
+        'Трудоустроены (по трудовому договору, договору ГПХ в соответствии с трудовым законодательством, законодательством  об обязательном пенсионном страховании)'] = \
+        frame[0].apply(lambda x: x.get('Колонка 6'))
+    frame['Индивидуальные предприниматели'] = frame[0].apply(lambda x: x.get('Колонка 7'))
+    frame[
+        'Самозанятые (перешедшие на специальный налоговый режим  - налог на профессио-нальный доход)'] = \
+        frame[0].apply(lambda x: x.get('Колонка 8'))
+    frame['Продолжили обучение'] = frame[0].apply(lambda x: x.get('Колонка 9'))
+    frame['Проходят службу в армии по призыву'] = frame[0].apply(lambda x: x.get('Колонка 10'))
+    frame[
+        'Проходят службу в армии на контрактной основе, в органах внутренних дел, Государственной противопожарной службе, органах по контролю за оборотом наркотических средств и психотропных веществ, учреждениях и органах уголовно-исполнительной системы, войсках национальной гвардии Российской Федерации, органах принудительного исполнения Российской Федерации*'] = \
+        frame[0].apply(lambda x: x.get('Колонка 11'))
+    frame['Находятся в отпуске по уходу за ребенком'] = frame[0].apply(
+        lambda x: x.get('Колонка 12'))
+    frame['Неформальная занятость (теневой сектор экономики)'] = frame[0].apply(lambda x: x.get('Колонка 13'))
+    frame[
+        'Зарегистрированы в центрах занятости в качестве безработных (получают пособие по безработице) и не планируют трудоустраиваться'] = \
+        frame[0].apply(lambda x: x.get('Колонка 14'))
+    frame[
+        'Не имеют мотивации к трудоустройству (кроме зарегистрированных в качестве безработных) и не планируют трудоустраиваться, в том числе по причинам получения иных социальных льгот '] = \
+        frame[0].apply(lambda x: x.get('Колонка 15'))
+    frame[
+        'Иные причины нахождения под риском нетрудоустройства (включая отсутствие проводимой с выпускниками работы по содействию их занятости)'] = \
+    frame[0].apply(
+        lambda x: x.get('Колонка 16'))
+    frame['Смерть, тяжелое состояние здоровья'] = frame[0].apply(lambda x: x.get('Колонка 17'))
+    frame['Находятся под следствием, отбывают наказание'] = frame[0].apply(
+        lambda x: x.get('Колонка 18'))
+    frame[
+        'Переезд за пределы Российской Федерации (кроме переезда в иные регионы - по ним регион должен располагать сведениями)'] = \
+        frame[0].apply(lambda x: x.get('Колонка 19'))
+    frame[
+        'Не могут трудоустраиваться в связи с уходом за больными родственниками, в связи с иными семейными обстоятельствами'] = \
+        frame[0].apply(lambda x: x.get('Колонка 20'))
+    frame['Выпускники из числа иностранных граждан, которые не имеют СНИЛС'] = frame[0].apply(
+        lambda x: x.get('Колонка 21'))
+    frame['будут трудоустроены'] = frame[0].apply(lambda x: x.get('Колонка 22'))
+    frame['будут осуществлять предпринимательскую деятельность'] = frame[0].apply(
+        lambda x: x.get('Колонка 23'))
+    frame['будут самозанятыми'] = frame[0].apply(lambda x: x.get('Колонка 24'))
+    frame['будут призваны в армию'] = frame[0].apply(lambda x: x.get('Колонка 25'))
+    frame[
+        'будут в армии на контрактной основе, в органах внутренних дел, Государственной противопожарной службе, органах по контролю за оборотом наркотических средств и психотропных веществ, учреждениях и органах уголовно-исполнительной системы, войсках национальной гвардии Российской Федерации, органах принудительного исполнения Российской Федерации*'] = \
+        frame[0].apply(lambda x: x.get('Колонка 26'))
+    frame['будут продолжать обучение'] = frame[0].apply(lambda x: x.get('Колонка 27'))
+
+    finish_df = frame.drop([0], axis=1)
+
+    finish_df = finish_df.reset_index()
+
+    finish_df.rename(
+        columns={'level_0': 'Код специальности', 'level_1': 'Наименование показателей (категория выпускников)'},
+        inplace=True)
+
+    dct = {'Строка 1': 'Всего (общая численность выпускников)',
+           'Строка 2': 'из общей численности выпускников (из строки 01): лица с ОВЗ',
+           'Строка 3': 'из числа лиц с ОВЗ (из строки 02): инвалиды и дети-инвалиды',
+           'Строка 4': 'Инвалиды и дети-инвалиды (кроме учтенных в строке 03)',
+           'Строка 5': 'Имеют договор о целевом обучении'
+
+           }
+    finish_df['Наименование показателей (категория выпускников)'] = finish_df[
+        'Наименование показателей (категория выпускников)'].apply(lambda x: dct[x])
+
+    finish_df = finish_df[finish_df['Код специальности'] != 'nan']  # отбрасываем nan
+    finish_df['Код специальности'] = finish_df['Код специальности'].apply(lambda x:dct_code_and_name[x]) # делаем код чтобы отображался код и наименование
+    # Создаем файл в котором будут отображаться листы с 5 и одной строками
+    one_row_finish_df = pd.DataFrame(columns=finish_df.columns) # для одной строки по каждой специальности
+    lst_code_spec = finish_df['Код специальности'].unique()  # получаем список специальностей
+    for code_spec in lst_code_spec:
+        temp_df = finish_df[finish_df['Код специальности'] == code_spec]
+        one_row_finish_df = pd.concat([one_row_finish_df, temp_df.iloc[:1, :]], axis=0, ignore_index=True)
+
+    with pd.ExcelWriter(f'{path_to_end_folder}/Полная таблица Форма 1 пятистрочная от {current_time}.xlsx') as writer:
+        finish_df.to_excel(writer, sheet_name='5 строк', index=False)
+        one_row_finish_df.to_excel(writer, sheet_name='1 строка (Всего выпускников)', index=False)
+
+    # Создаем документ
+    wb = openpyxl.Workbook()
+    for r in dataframe_to_rows(error_df, index=False, header=True):
+        wb['Sheet'].append(r)
+
+    wb['Sheet'].column_dimensions['A'].width = 50
+    wb['Sheet'].column_dimensions['B'].width = 40
+    wb['Sheet'].column_dimensions['C'].width = 50
+
+    wb.save(f'{path_to_end_folder}/ОШИБКИ Форма 1 пятистрочная от {current_time}.xlsx')
 
 
 if __name__ == '__main__':
