@@ -374,8 +374,6 @@ def check_error_form_one(df: pd.DataFrame, name_file, tup_correct: tuple):
     df = df.iloc[:, 3:26] # получаем часть с числами
     df = df.applymap(check_data) # заполняем пустые ячейки нулями
 
-    print(df.columns)
-
     # получаем количество датафреймов
     quantity = df.shape[0] // 5
     # счетчик для обработанных строк
@@ -385,43 +383,26 @@ def check_error_form_one(df: pd.DataFrame, name_file, tup_correct: tuple):
         temp_df = df.iloc[border:border + 5, :]
 
         # Проводим проверку гр. 05=сумма(с гр.06 по гр.28)
-        second_error_df = check_second_error_form_one(temp_df.copy(), name_file, tup_correct)
+        first_error_df = check_first_error_form_one(temp_df.copy(), name_file, tup_correct)
         # добавляем результат проверки в датафрейм
+        error_df = pd.concat([error_df, first_error_df], axis=0, ignore_index=True)
+
+        # Проводим проверку стр.03 <= стр.02
+        second_error_df = check_second_error_form_one(temp_df.copy(), name_file, border, tup_correct,correction)
         error_df = pd.concat([error_df, second_error_df], axis=0, ignore_index=True)
         #
-        # # Проводим проверку стр. 06 = стр. 02 + стр. 04
-        # third_error_df = check_third_error(temp_df.copy(), name_file, border, tup_correct,correction)
-        # # добавляем результат проверки в датафрейм
-        # error_df = pd.concat([error_df, third_error_df], axis=0, ignore_index=True)
-        #
-        # # Проводим проверку стр. 06 = стр.07 + стр.08 + стр.09 + стр.10 + стр.11 + стр.12 + стр. 13
-        # fourth_error_df = check_fourth_error(temp_df.copy(), name_file, border, tup_correct,correction)
-        # # добавляем результат проверки в датафрейм
-        # error_df = pd.concat([error_df, fourth_error_df], axis=0, ignore_index=True)
-        #
-        # # Проводим проверку стр. 14<=стр. 06, стр. 14<=стр 05 (<= означает "меньше или равно")
-        # fifth_error_df = check_fifth_error(temp_df.copy(), name_file, border, tup_correct,correction)
-        # # добавляем результат проверки в датафрейм
-        # error_df = pd.concat([error_df, fifth_error_df], axis=0, ignore_index=True)
-        #
-        # # Проводим проверку стр.03 <= стр.02
-        # sixth_error_df = check_sixth_error(temp_df.copy(), name_file, border, tup_correct,correction)
-        # error_df = pd.concat([error_df, sixth_error_df], axis=0, ignore_index=True)
-        #
-        # # Проводим проверку стр.02 и стр.04 и стр.05 < стр.01
-        # seventh_error_df = check_seventh_error(temp_df.copy(), name_file, border, tup_correct,correction)
-        # error_df = pd.concat([error_df, seventh_error_df], axis=0, ignore_index=True)
+        # Проводим проверку стр.02 и стр.04 и стр.05 < стр.01
+        third_error_df = check_third_error_form_one(temp_df.copy(), name_file, border, tup_correct,correction)
+        error_df = pd.concat([error_df, third_error_df], axis=0, ignore_index=True)
 
         # прибавляем border
 
         border += 5
     # Возвращаем датафрейм с ошибками
-    print(error_df)
-
     return error_df
 
 
-def check_second_error_form_one(df: pd.DataFrame, name_file, tup_correct):
+def check_first_error_form_one(df: pd.DataFrame, name_file, tup_correct):
     """
     Функция для проверки правильности введеденных данных
     (гр. 05= сумма(с гр.06 по гр.27))
@@ -450,6 +431,76 @@ def check_second_error_form_one(df: pd.DataFrame, name_file, tup_correct):
     temp_error_df['Строка или колонка с ошибкой'] = finish_lst_index
     temp_error_df['Название файла'] = name_file
     temp_error_df['Описание ошибки'] = 'Не выполняется условие: гр. 05 = сумма(с гр.06 по гр.27)'
+    return temp_error_df
+
+def check_second_error_form_one(df: pd.DataFrame, name_file, border, tup_correct: tuple,correction):
+    """
+    Функция для проверки правильности введеденных данных
+    стр 03 <= стр 02 (<= означает "меньше или равно")
+    :param foo_df: копия датафрейма с данными из файла поо
+    : param tup_correction кортеж с поправочными границами для того чтобы диапазон строки с ошибкой корректно считался
+    :return:датафрейм с ошибками
+    """
+    # получаем поправки на диапазон
+    first_correct = tup_correct[0]
+    second_correct = tup_correct[1]
+    foo_df = pd.DataFrame(columns=['02', '03'])
+
+    # Добавляем данные в датафрейм
+    foo_df['02'] = df.iloc[1, :]
+    foo_df['03'] = df.iloc[2, :]
+    foo_df['Результат'] = foo_df['03'] <= foo_df['02']
+    foo_df['Результат'] = foo_df['Результат'].apply(lambda x: 'Правильно' if x else 'Неправильно')
+
+    foo_df = foo_df[foo_df['Результат'] == 'Неправильно'].reset_index()
+    temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
+    # обрабатываем индексы строк с ошибками чтобы строки совпадали с файлом excel
+    raw_lst_index = foo_df['index'].tolist()  # делаем список
+    finish_lst_index = list(
+        map(lambda x: f'Диапазон строк {border + first_correct+correction} - {border + second_correct+correction}, колонка {str(x)}',
+            raw_lst_index))
+
+    temp_error_df['Строка или колонка с ошибкой'] = finish_lst_index
+    temp_error_df['Название файла'] = name_file
+    temp_error_df['Описание ошибки'] = 'Не выполняется условие: стр. 03 <= стр. 02 '
+    return temp_error_df
+
+
+def check_third_error_form_one(df: pd.DataFrame, name_file, border, tup_correct: tuple,correction):
+    """
+    Функция для проверки правильности введеденных данных
+    стр.02 и стр.04 и стр.05 < стр.01
+    :param foo_df: копия датафрейма с данными из файла поо
+    : param tup_correction кортеж с поправочными границами для того чтобы диапазон строки с ошибкой корректно считался
+    :return:датафрейм с ошибками
+    """
+    # получаем поправки на диапазон
+    first_correct = tup_correct[0]
+    second_correct = tup_correct[1]
+    foo_df = pd.DataFrame(columns=['02', '04', '05', '01'])
+
+    # Добавляем данные в датафрейм
+    foo_df['01'] = df.iloc[0, :]
+    foo_df['02'] = df.iloc[1, :]
+    foo_df['04'] = df.iloc[3, :]
+    foo_df['05'] = df.iloc[4, :]
+
+    foo_df['Результат'] = (foo_df['01'] >= foo_df['02']) & (foo_df['01'] >= foo_df['04']) & (
+                foo_df['01'] >= foo_df['05'])
+    foo_df['Результат'] = foo_df['Результат'].apply(lambda x: 'Правильно' if x else 'Неправильно')
+
+    foo_df = foo_df[foo_df['Результат'] == 'Неправильно'].reset_index()
+    temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
+    # обрабатываем индексы строк с ошибками чтобы строки совпадали с файлом excel
+    raw_lst_index = foo_df['index'].tolist()  # делаем список
+    finish_lst_index = list(
+        map(lambda x: f'Диапазон строк {border + first_correct+correction} - {border + second_correct+correction}, колонка {str(x)}',
+            raw_lst_index))
+
+    temp_error_df['Строка или колонка с ошибкой'] = finish_lst_index
+    temp_error_df['Название файла'] = name_file
+    temp_error_df[
+        'Описание ошибки'] = 'Не выполняется условие: стр.02<= стр.01 или стр.04<= стр.01 или стр.05<= стр.01 '
     return temp_error_df
 
 
