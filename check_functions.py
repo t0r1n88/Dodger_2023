@@ -494,17 +494,17 @@ def check_error_form_one(df: pd.DataFrame, name_file, tup_correct: tuple):
     for i in range(1, quantity + 1):
         temp_df = df.iloc[border:border + 5, :]
 
-        # Проводим проверку гр. 05=сумма(с гр.06 по гр.28)
-        first_error_df = check_first_error(temp_df.copy(), name_file, tup_correct)
+        # Проводим проверку стр.03 <= стр.02
+        first_error_df = check_first_error(temp_df.copy(), name_file,border, tup_correct,correction)
         # добавляем результат проверки в датафрейм
         error_df = pd.concat([error_df, first_error_df], axis=0, ignore_index=True)
 
-        # Проводим проверку стр.03 <= стр.02
+        # Проводим проверку стр.02 и стр.04 и стр.05 < стр.01
         second_error_df = check_second_error(temp_df.copy(), name_file, border, tup_correct, correction)
         error_df = pd.concat([error_df, second_error_df], axis=0, ignore_index=True)
         #
-        # Проводим проверку стр.02 и стр.04 и стр.05 < стр.01
-        third_error_df = check_third_error(temp_df.copy(), name_file, border, tup_correct, correction)
+        # Проводим проверку гр. 05=сумма(с гр.06 по гр.28)
+        third_error_df = check_third_error(temp_df.copy(), name_file, tup_correct)
         error_df = pd.concat([error_df, third_error_df], axis=0, ignore_index=True)
 
         # прибавляем border
@@ -637,19 +637,15 @@ def check_error_form_two(df: pd.DataFrame, name_file, tup_correct: tuple):
     for i in range(1, quantity + 1):
         temp_df = df.iloc[border:border + 15, :]
         # Проводим проверку стр 03 <= стр 02
-        first_error_df = check_first_error(temp_df.copy(), name_file, tup_correct,correction)
+        first_error_df = check_first_error(temp_df.copy(), name_file,border, tup_correct,correction)
         # добавляем результат проверки в датафрейм
         error_df = pd.concat([error_df, first_error_df], axis=0, ignore_index=True)
 
-
-        # # Проводим проверку стр. 06 = стр. 02 + стр. 04
-        # third_error_df = check_third_error(temp_df.copy(), name_file, border, tup_correct,correction)
-        # # добавляем результат проверки в датафрейм
-        # error_df = pd.concat([error_df, third_error_df], axis=0, ignore_index=True)
-
-        # Проводим проверку гр. 05= cумма(с гр.06 по гр.27)
-        third_error_df = check_third_error(temp_df.copy(), name_file, tup_correct,correction)
-        # добавляем результат проверки в датафрейм
+        # Проводим проверку стр.02 и стр.04 и стр.05 < стр.01
+        second_error_df = check_second_error(temp_df.copy(), name_file, border, tup_correct, correction)
+        error_df = pd.concat([error_df, second_error_df], axis=0, ignore_index=True)
+        # Проводим проверку гр. 05=сумма(с гр.06 по гр.28)
+        third_error_df = check_third_error(temp_df.copy(), name_file, tup_correct)
         error_df = pd.concat([error_df, third_error_df], axis=0, ignore_index=True)
 
 
