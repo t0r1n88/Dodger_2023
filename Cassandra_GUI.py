@@ -3,7 +3,7 @@
 Графический интерфейс для программы Кассандра
 """
 from form_one_five_row import prepare_form_one_employment  # импортируем функцию для обработки мониторинга 5 строк
-from nose_employment import prepare_nose_employment  # импортируем функцию для обработки нозологий 15 строк
+from form_two_fifteen_row_nose import prepare_form_two_employment  # импортируем функцию для обработки нозологий 15 строк
 from ck_employment import prepare_ck_employment  # импортируем функцию для обработки данных для отчета центров карьеры
 from opk_employment import prepare_opk_employment  # импортируем функцию для обработки данных по ОПК
 from difference import prepare_diffrence  # импортируем функцию для нахождения разницы между двумя таблицами
@@ -146,7 +146,7 @@ def processing_nose_employment():
     :return:
     """
     try:
-        prepare_nose_employment(path_folder_data_nose, path_to_end_folder_nose)
+        prepare_form_two_employment(path_folder_data_nose, path_to_end_folder_nose)
 
     except NameError:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
