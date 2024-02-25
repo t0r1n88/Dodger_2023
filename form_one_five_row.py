@@ -117,6 +117,7 @@ def prepare_form_one_employment(path_folder_data:str,path_to_end_folder):
                 file_error_df = pd.concat([file_error_df, sameness_error_df], axis=0, ignore_index=True)
                 file_error_df = pd.concat([file_error_df, blankness_error_df], axis=0, ignore_index=True)
 
+                # добавляем в словарь в полные имена из кода и наименования
                 for full_name in df['02'].tolist():
                     code = extract_code_nose(full_name) # получаем только цифры
                     dct_code_and_name[code] = full_name
