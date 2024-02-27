@@ -1051,7 +1051,96 @@ def check_error_form_three(df: pd.DataFrame, name_file, tup_correct: tuple):
     # Возвращаем датафрейм с ошибками
     return error_df
 
+def create_check_tables_form_three(high_level_dct: dict):
+    """
+    Функция для создания файла с данными по каждой специальности
+    """
+    # Создаем словарь в котором будут храниться словари по специальностям
+    code_spec_dct = {}
 
+    # инвертируем словарь так чтобы код специальности стал внешним ключом а названия файлов внутренними
+    for poo, spec_data in high_level_dct.items():
+        for code_spec, data in spec_data.items():
+            if code_spec not in code_spec_dct:
+                code_spec_dct[code_spec] = {f'{poo}': high_level_dct[poo][code_spec]}
+            else:
+                code_spec_dct[code_spec].update({f'{poo}': high_level_dct[poo][code_spec]})
+
+    # Сортируем получившийся словарь по возрастанию для удобства использования
+    sort_code_spec_dct = sorted(code_spec_dct.items())
+    code_spec_dct = {dct[0]: dct[1] for dct in sort_code_spec_dct}
+
+    # Создаем файл
+    wb = openpyxl.Workbook()
+    # Создаем листы
+    for idx, code_spec in enumerate(code_spec_dct.keys()):
+        if code_spec != 'nan':
+            wb.create_sheet(title=code_spec, index=idx)
+
+    for code_spec in code_spec_dct.keys():
+        if code_spec != 'nan':
+            temp_code_df = pd.DataFrame.from_dict(code_spec_dct[code_spec], orient='index')
+            temp_code_df = temp_code_df.stack()
+            temp_code_df = temp_code_df.to_frame()
+
+            temp_code_df['Ожидаемый выпуск Всего'] = temp_code_df[0].apply(lambda x: x.get('Колонка 5'))
+            temp_code_df[
+                'Трудоустроены (по трудовому договору, договору ГПХ в соответствии с трудовым законодательством, законодательством  об обязательном пенсионном страховании)'] = \
+                temp_code_df[0].apply(lambda x: x.get('Колонка 6'))
+            temp_code_df['совмещают обучение с трудоустройством по специальности, в том числе с переводом на индивидуальный учебный план'] = temp_code_df[0].apply(lambda x: x.get('Колонка 7'))
+            temp_code_df[
+                'проходят оплачиваемую практику по специальности с заключением срочного трудового договора '] = \
+                temp_code_df[0].apply(lambda x: x.get('Колонка 8'))
+            temp_code_df['трудоустроены в учебно-производственных комплексах, созданных на базе образовательных организаций, по специальности'] = temp_code_df[0].apply(lambda x: x.get('Колонка 9'))
+            temp_code_df['Индивидуальные предприни-матели '] = temp_code_df[0].apply(lambda x: x.get('Колонка 10'))
+            temp_code_df[
+                'Самозанятые (перешедшие на специальный налоговый режим - налог на профессио-нальный доход)'] = \
+                temp_code_df[0].apply(lambda x: x.get('Колонка 11'))
+            temp_code_df['Планируют трудоустройство'] = temp_code_df[0].apply(
+                lambda x: x.get('Колонка 12'))
+            temp_code_df['трудоустроятся на предприятиях, в которых была пройдена практика'] = temp_code_df[0].apply(lambda x: x.get('Колонка 13'))
+            temp_code_df[
+                'трудоустроятся на других предприятиях, являющихся партнерами образовательной организации'] = \
+                temp_code_df[0].apply(lambda x: x.get('Колонка 14'))
+            temp_code_df[
+                'Планируют осуществлять предпринимательскую деятельность в форме индивидуального предпринимателя'] = \
+                temp_code_df[0].apply(lambda x: x.get('Колонка 15'))
+            temp_code_df['Планируют зарегистрироваться в качестве самозанятых'] = temp_code_df[0].apply(
+                lambda x: x.get('Колонка 16'))
+            temp_code_df['Подлежат призыву в армию'] = temp_code_df[0].apply(lambda x: x.get('Колонка 17'))
+            temp_code_df['Планируют поступить в армию на контрактной основе, в органах внутренних дел, Государственной противопожарной службе, органах по контролю за оборотом наркотических средств и психотропных веществ, учреждениях и органах уголовно-исполнительной системы, войсках национальной гвардии Российской Федерации, органах принудительного исполнения Российской Федерации*'] = temp_code_df[0].apply(
+                lambda x: x.get('Колонка 18'))
+            temp_code_df[
+                'Планируют продолжать обучение'] = \
+                temp_code_df[0].apply(lambda x: x.get('Колонка 19'))
+            temp_code_df[
+                'Находятся под риском нетрудоустройства'] = \
+                temp_code_df[0].apply(lambda x: x.get('Колонка 20'))
+            temp_code_df['Планируют переезд за пределы Российской Федерации(кроме переезда в иные регионы - по ним регион должен располагать сведениями)'] = temp_code_df[0].apply(
+                lambda x: x.get('Колонка 21'))
+            temp_code_df['Выпускники из числа иностранных граждан, которые не имеют СНИЛС'] = temp_code_df[0].apply(lambda x: x.get('Колонка 22'))
+            finish_code_spec_df = temp_code_df.drop([0], axis=1)
+
+            finish_code_spec_df = finish_code_spec_df.reset_index()
+
+            finish_code_spec_df.rename(
+                columns={'level_0': 'Название файла', 'level_1': 'Наименование показателей (категория выпускников)'},
+                inplace=True)
+
+            dct = {'Строка 1': 'Всего (общая численность выпускников)',
+                   'Строка 2': 'из общей численности выпускников (из строки 01): лица с ОВЗ',
+                   'Строка 3': 'из числа лиц с ОВЗ (из строки 02): инвалиды и дети-инвалиды',
+                   'Строка 4': 'Инвалиды и дети-инвалиды (кроме учтенных в строке 03)',
+                   'Строка 5': 'Имеют договор о целевом обучении'
+                   }
+            finish_code_spec_df['Наименование показателей (категория выпускников)'] = finish_code_spec_df[
+                'Наименование показателей (категория выпускников)'].apply(lambda x: dct[x])
+
+            for r in dataframe_to_rows(finish_code_spec_df, index=False, header=True):
+                wb[code_spec].append(r)
+            wb[code_spec].column_dimensions['A'].width = 20
+            wb[code_spec].column_dimensions['B'].width = 40
+    return wb
 
 
 
