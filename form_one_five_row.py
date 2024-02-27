@@ -6,25 +6,17 @@ from check_functions import * # импортируем функции прове
 from support_functions import * # импортируем вспомогательные функции и исключения
 import pandas as pd
 import numpy as np
-import tkinter
-import sys
 import os
-from tkinter import *
-from tkinter import filedialog
+import warnings
 from tkinter import messagebox
-from tkinter import ttk
 import time
 pd.options.mode.chained_assignment = None  # default='warn'
-import warnings
-
 warnings.filterwarnings('ignore', category=UserWarning, module='openpyxl')
 warnings.filterwarnings('ignore', category=DeprecationWarning)
 warnings.filterwarnings('ignore', category=FutureWarning)
 import copy
 import openpyxl
 from openpyxl.utils.dataframe import dataframe_to_rows
-import re
-import random
 
 
 def prepare_form_one_employment(path_folder_data:str,path_to_end_folder):
