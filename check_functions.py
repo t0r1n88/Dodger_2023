@@ -470,13 +470,85 @@ def form_three_check_third_error(df: pd.DataFrame, name_file, tup_correct):
     return temp_error_df
 
 
+def form_three_check_fourth_error(df: pd.DataFrame, name_file, tup_correct):
+    """
+    Функция для проверки правильности введенных данных Форма 3 ожидаемый выпуск
+    гр. 07+ гр. 08 + гр. 09 <= гр. 06
+    """
+    # получаем строку диапазона
+    first_correct = tup_correct[0]
+
+    # получаем сумму колонок
+    df['Сумма'] = df[['07','08','09',]].sum(axis=1)
+    # Проводим проверку
+    df['Результат'] = df['06'] >= df['Сумма']
+    # заменяем булевые значения на понятные
+    df['Результат'] = df['Результат'].apply(lambda x: 'Правильно' if x else 'Неправильно')
+    # получаем датафрейм с ошибками и извлекаем индекс
+    df = df[df['Результат'] == 'Неправильно'].reset_index()
+    # создаем датафрейм дял добавления в ошибки
+    temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
+    # обрабатываем индексы строк с ошибками чтобы строки совпадали с файлом excel
+    raw_lst_index = df['index'].tolist()  # делаем список
+    finish_lst_index = list(map(lambda x: x + first_correct, raw_lst_index))
+    finish_lst_index = list(map(lambda x: f'Строка {str(x)}', finish_lst_index))
+    temp_error_df['Строка или колонка с ошибкой'] = finish_lst_index
+    temp_error_df['Название файла'] = name_file
+    temp_error_df['Описание ошибки'] = 'Не выполняется условие: гр. 07+ гр. 08 + гр. 09 <= гр. 06'
+    return temp_error_df
+
+def form_three_check_fifth_error(df: pd.DataFrame, name_file, tup_correct):
+    """
+    Функция для проверки правильности введенных данных Форма 3 ожидаемый выпуск
+    гр. 13 + гр. 14 <= 12
+    """
+    # получаем строку диапазона
+    first_correct = tup_correct[0]
+    # получаем сумму колонок
+    df['Сумма'] = df[['13','14']].sum(axis=1)
+    # Проводим проверку
+    df['Результат'] = df['12'] >= df['Сумма']
+    # заменяем булевые значения на понятные
+    df['Результат'] = df['Результат'].apply(lambda x: 'Правильно' if x else 'Неправильно')
+    # получаем датафрейм с ошибками и извлекаем индекс
+    df = df[df['Результат'] == 'Неправильно'].reset_index()
+    # создаем датафрейм дял добавления в ошибки
+    temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
+    # обрабатываем индексы строк с ошибками чтобы строки совпадали с файлом excel
+    raw_lst_index = df['index'].tolist()  # делаем список
+    finish_lst_index = list(map(lambda x: x + first_correct, raw_lst_index))
+    finish_lst_index = list(map(lambda x: f'Строка {str(x)}', finish_lst_index))
+    temp_error_df['Строка или колонка с ошибкой'] = finish_lst_index
+    temp_error_df['Название файла'] = name_file
+    temp_error_df['Описание ошибки'] = 'Не выполняется условие: гр. 13 + гр. 14 <= 12'
+    return temp_error_df
 
 
-
-
-
-
-
+def form_three_check_sixteen_error(df: pd.DataFrame, name_file, tup_correct):
+    """
+    Функция для проверки правильности введенных данных Форма 3 ожидаемый выпуск
+    гр. 21 + гр. 22 <= 20
+    """
+    # получаем строку диапазона
+    first_correct = tup_correct[0]
+    # получаем сумму колонок
+    df['Сумма'] = df[['21','22']].sum(axis=1)
+    # Проводим проверку
+    df['Результат'] = df['20'] >= df['Сумма']
+    # заменяем булевые значения на понятные
+    df['Результат'] = df['Результат'].apply(lambda x: 'Правильно' if x else 'Неправильно')
+    # получаем датафрейм с ошибками и извлекаем индекс
+    df = df[df['Результат'] == 'Неправильно'].reset_index()
+    # создаем датафрейм дял добавления в ошибки
+    temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
+    # обрабатываем индексы строк с ошибками чтобы строки совпадали с файлом excel
+    raw_lst_index = df['index'].tolist()  # делаем список
+    finish_lst_index = list(map(lambda x: x + first_correct, raw_lst_index))
+    finish_lst_index = list(map(lambda x: f'Строка {str(x)}', finish_lst_index))
+    temp_error_df['Строка или колонка с ошибкой'] = finish_lst_index
+    temp_error_df['Название файла'] = name_file
+    temp_error_df['Описание ошибки'] = 'Не выполняется условие: гр. 21 + гр. 22 <= 20'
+    return temp_error_df
 
 
 
@@ -959,6 +1031,19 @@ def check_error_form_three(df: pd.DataFrame, name_file, tup_correct: tuple):
         # # Проводим проверку (гр.05 = гр.06 + гр. 10-12 + гр. 15-20)
         third_error_df = form_three_check_third_error(temp_df.copy(), name_file, tup_correct)
         error_df = pd.concat([error_df, third_error_df], axis=0, ignore_index=True)
+
+        # Проводим проверку гр. 07+ гр. 08 + гр. 09 <= гр. 06
+        fourth_error_df = form_three_check_fourth_error(temp_df.copy(), name_file, tup_correct)
+        error_df = pd.concat([error_df, fourth_error_df], axis=0, ignore_index=True)
+
+        # Проводим проверку гр. 13 + гр. 14 <= 12
+        fifth_error_df = form_three_check_fifth_error(temp_df.copy(), name_file, tup_correct)
+        error_df = pd.concat([error_df, fifth_error_df], axis=0, ignore_index=True)
+
+        # Проводим проверку гр. 21 + гр. 22 <= 20
+        sixteen_error_df = form_three_check_sixteen_error(temp_df.copy(), name_file, tup_correct)
+        error_df = pd.concat([error_df, sixteen_error_df], axis=0, ignore_index=True)
+
 
         # прибавляем border
 
