@@ -286,7 +286,6 @@ def prepare_form_one_employment(path_folder_data:str,path_to_end_folder):
         wb['Sheet'].column_dimensions['C'].width = 50
 
         wb.save(f'{path_to_end_folder}/ОШИБКИ Форма 1 пятистрочная от {current_time}.xlsx')
-        wb.close()
     except NameError:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
                              f'Выберите файлы с данными и папку куда будет генерироваться файл')
