@@ -151,7 +151,7 @@ def prepare_form_three_employment(path_folder_data:str,path_to_end_folder):
     wb['Sheet'].column_dimensions['A'].width = 50
     wb['Sheet'].column_dimensions['B'].width = 40
     wb['Sheet'].column_dimensions['C'].width = 50
-    wb.save(f'{path_to_end_folder}/ОШИБКИ Форма 1 пятистрочная от {current_time}.xlsx')
+    wb.save(f'{path_to_end_folder}/ОШИБКИ Форма 3 Ожидаемый выпуск от {current_time}.xlsx')
     wb.close()
 
 
