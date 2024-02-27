@@ -933,6 +933,45 @@ def create_check_tables_form_two(high_level_dct: dict):
     return wb
 
 
+def check_error_form_three(df: pd.DataFrame, name_file, tup_correct: tuple):
+    """
+    Функция для проверки данных нозологий
+    tup_correct - кортеж  с поправками для того чтобы диапазон строк с ошибкой корректно отображался
+    """
+    # создаем датафрейм для регистрации ошибок
+    error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
+    df = df.iloc[:, 3:26] # получаем часть с числами
+    df = df.applymap(check_data) # заполняем пустые ячейки нулями
+
+    # получаем количество датафреймов
+    quantity = df.shape[0] // 5
+    # счетчик для обработанных строк
+    border = 0
+    correction = 0 # поправка для учета строки c проверками
+    for i in range(1, quantity + 1):
+        temp_df = df.iloc[border:border + 5, :]
+
+        # Проводим проверку стр.03 <= стр.02
+        first_error_df = check_first_error(temp_df.copy(), name_file,border, tup_correct,correction)
+        # добавляем результат проверки в датафрейм
+        error_df = pd.concat([error_df, first_error_df], axis=0, ignore_index=True)
+
+        # Проводим проверку стр.02 и стр.04 и стр.05 < стр.01
+        second_error_df = check_second_error(temp_df.copy(), name_file, border, tup_correct, correction)
+        error_df = pd.concat([error_df, second_error_df], axis=0, ignore_index=True)
+        #
+        # Проводим проверку гр. 05=сумма(с гр.06 по гр.28)
+        third_error_df = check_third_error(temp_df.copy(), name_file, tup_correct)
+        error_df = pd.concat([error_df, third_error_df], axis=0, ignore_index=True)
+
+        # прибавляем border
+
+        border += 5
+    # Возвращаем датафрейм с ошибками
+    return error_df
+
+
+
 
 
 
