@@ -301,10 +301,10 @@ def prepare_form_one_employment(path_folder_data:str,path_to_end_folder):
     except PermissionError as e:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
                              f'Закройте открытые файлы Excel {e.args}')
-    # except:
-    #     messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
-    #                          f'При обработке файла {name_file} возникла ошибка !!!\n'
-    #                          f'Проверьте файл на соответсвие шаблону')
+    except:
+        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
+                             f'При обработке файла {name_file} возникла ошибка !!!\n'
+                             f'Проверьте файл на соответствие шаблону Формы 1 (пятистрочная)')
 
     else:
         if error_df.shape[0] != 0:

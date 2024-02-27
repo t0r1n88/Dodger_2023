@@ -2,8 +2,9 @@
 """
 Графический интерфейс для программы Кассандра
 """
-from form_one_five_row import prepare_form_one_employment  # импортируем функцию для обработки мониторинга 5 строк
-from form_two_fifteen_row_nose import prepare_form_two_employment  # импортируем функцию для обработки нозологий 15 строк
+from form_one_five_row import prepare_form_one_employment  # импортируем функцию для обработки Формы 1 (5 строк)
+from form_two_fifteen_row_nose import prepare_form_two_employment  # импортируем функцию для обработки Форма 2 нозологии 15 строк
+from form_three_expected_release import prepare_form_three_employment # импортируем функцию для обработки Формы 3 Ожидаемый выпуск
 from ck_employment import prepare_ck_employment  # импортируем функцию для обработки данных для отчета центров карьеры
 from opk_employment import prepare_opk_employment  # импортируем функцию для обработки данных по ОПК
 from difference import prepare_diffrence  # импортируем функцию для нахождения разницы между двумя таблицами
@@ -69,6 +70,25 @@ def select_end_folder_nose():
     global path_to_end_folder_nose
     path_to_end_folder_nose = filedialog.askdirectory()
 
+def select_folder_data_form_three():
+    """
+    Функция для выбора папки c данными базового мониторинга 5 строк
+    :return:
+    """
+    global path_folder_data_form_three
+    path_folder_data_form_three = filedialog.askdirectory()
+
+
+def select_end_folder_form_three():
+    """
+    Функция для выбора конечной папки куда будут складываться итоговые файлы базового мониторинга 5 строк
+    :return:
+    """
+    global path_to_end_folder_form_three
+    path_to_end_folder_form_three = filedialog.askdirectory()
+
+
+
 
 # для обработки отчетов ЦК
 def select_folder_data_ck():
@@ -118,7 +138,7 @@ def select_files_data_xlsx():
 
 
 """
-Функция обработки файлов базового мониторинга 5 строк
+Функция обработки формы 1 (пятистрочная)
 """
 
 
@@ -136,9 +156,8 @@ def processing_base_employment():
 
 
 """
-обработка таблицы нозологии 15 строк
+обработка Формы 2 нозологии 15 строк
 """
-
 
 def processing_nose_employment():
     """
@@ -151,6 +170,20 @@ def processing_nose_employment():
     except NameError:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
                              f'Выберите файлы с данными и папку куда будет генерироваться файл')
+
+
+def processing_form_three_employment():
+    """
+    Функция для обработки данных мониторинга Форма 3 Ожидаемый выпуск
+    :return:
+    """
+    try:
+        prepare_form_three_employment(path_folder_data_form_three, path_to_end_folder_form_three)
+
+    except NameError:
+        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
+                             f'Выберите файлы с данными и папку куда будет генерироваться файл')
+
 
 
 """
@@ -268,7 +301,7 @@ def set_window_size(window):
 
 if __name__ == '__main__':
     window = Tk()
-    window.title('Кассандра Подсчет данных по трудоустройству выпускников ver 4.0')
+    window.title('Кассандра Подсчет данных по трудоустройству выпускников ver 4.1')
     # Устанавливаем размер и положение окна
     set_window_size(window)
     window.resizable(True, True)
@@ -287,7 +320,7 @@ if __name__ == '__main__':
     tab_control = ttk.Notebook(canvas)
 
     """
-    Создаем вкладку для обработки отчета 5 строк
+    Создаем вкладку для обработки формы 1 (пятистрочная)
     """
     tab_employment_five = ttk.Frame(tab_control)
     tab_control.add(tab_employment_five, text='Форма 1 (5 строк)')
@@ -333,7 +366,7 @@ if __name__ == '__main__':
 
 
     """
-    Вкладка для обработки формы №15 нозологии
+    Вкладка для обработки формы 2 нозологии 15 строк
     """
     tab_employment_nose = ttk.Frame(tab_control)
     tab_control.add(tab_employment_nose, text='Форма 2 нозологии')
@@ -380,6 +413,56 @@ if __name__ == '__main__':
                                                   )
     btn_proccessing_data_employment_nose.pack(padx=10, pady=10)
     #
+
+    """
+    Вкладка для обработки формы 3 Ожидаемый выпуск
+    """
+    tab_employment_expect = ttk.Frame(tab_control)
+    tab_control.add(tab_employment_expect, text='Форма 3 Ожидаемый выпуск')
+
+    employment_expect_frame_description = LabelFrame(tab_employment_expect)
+    employment_expect_frame_description.pack()
+
+    lbl_hello_employment_expect = Label(employment_expect_frame_description,
+                                        text='Центр опережающей профессиональной подготовки Республики Бурятия\n'
+                                             'Трудоустройство выпускников. Форма 3 нозологии Ожидаемый выпуск',
+                                        width=60)
+    lbl_hello_employment_expect.pack(side=LEFT, anchor=N, ipadx=25, ipady=10)
+
+    # Картинка
+    path_to_img_employment_expect = resource_path('logo.png')
+    img_employment_expect = PhotoImage(file=path_to_img_employment_expect)
+    Label(employment_expect_frame_description,
+          image=img_employment_expect, padx=10, pady=10
+          ).pack(side=LEFT, anchor=E, ipadx=5, ipady=5)
+
+    # Создаем область для того чтобы поместить туда подготовительные кнопки(выбрать файл,выбрать папку и т.п.)
+    frame_data_employment_expect = LabelFrame(tab_employment_expect, text='Подготовка')
+    frame_data_employment_expect.pack(padx=10, pady=10)
+
+    btn_choose_data_employment_expect = Button(frame_data_employment_expect, text='1) Выберите папку с данными',
+                                               font=('Arial Bold', 20),
+                                               command=select_folder_data_form_three
+                                               )
+    btn_choose_data_employment_expect.pack(padx=10, pady=10)
+
+    # Создаем кнопку для выбора папки куда будут генерироваться файлы
+
+    btn_choose_end_folder_employment_expect = Button(frame_data_employment_expect, text='2) Выберите конечную папку',
+                                                     font=('Arial Bold', 20),
+                                                     command=select_end_folder_form_three
+                                                     )
+    btn_choose_end_folder_employment_expect.pack(padx=10, pady=10)
+    #
+    # Создаем кнопку обработки данных
+
+    btn_proccessing_data_employment_expect = Button(tab_employment_expect, text='3) Обработать данные',
+                                                    font=('Arial Bold', 20),
+                                                    command=processing_form_three_employment
+                                                    )
+    btn_proccessing_data_employment_expect.pack(padx=10, pady=10)
+
+
     """
     Вкладка для обработки отчетов центров карьеры
     """
