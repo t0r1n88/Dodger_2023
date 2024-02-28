@@ -55,7 +55,7 @@ def prepare_form_two_employment(path_folder_data:str,path_to_end_folder):
                                                           'Описание ошибки'])
                     error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
                     continue
-                df = pd.read_excel(f'{path_folder_data}/{file}', skiprows=4, dtype=str)
+                df = pd.read_excel(f'{path_folder_data}/{file}',sheet_name='Форма 2 нозологии', skiprows=4, dtype=str)
                 df.columns = list(map(str, df.columns))  # делаем названия колонок строковыми
                 # создаем множество колонок наличие которых мы проверяем
                 check_cols = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15',
@@ -353,6 +353,7 @@ def prepare_form_two_employment(path_folder_data:str,path_to_end_folder):
 
 if __name__ == '__main__':
     main_data_folder = 'data/example/15'
+    main_data_folder = 'data/example/Поиск Ошибки Форма 2'
     main_result_folder = 'data/result/15'
     prepare_form_two_employment(main_data_folder,main_result_folder)
 
