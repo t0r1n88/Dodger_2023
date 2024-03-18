@@ -138,12 +138,10 @@ def processing_diff_svod(first_file:str,second_file:str,end_folder:str):
                 (merge_df['Вторая таблица'] / merge_df['Первая таблица']) * 100, 2)
 
             merge_df.sort_values(by='Показатель', inplace=True)  # Сортируем по показателю
-
-
+            dct_df[name_sheet] = merge_df  # сохраняем в словарь
 
         else:
             # обрабатываем нестандартные листы
-            print('Лист с зарплатой')
             first_df = pd.read_excel(first_file, sheet_name=name_sheet)  # первый файл для сравнения
             second_df = pd.read_excel(second_file, sheet_name=name_sheet)  # второй файл для сравнения
 
@@ -214,15 +212,21 @@ def processing_diff_svod(first_file:str,second_file:str,end_folder:str):
 
 
             merge_df.sort_values(by='Показатель', inplace=True)  # Сортируем по показателю
+            dct_df[name_sheet] = merge_df  # сохраняем в словарь
 
 
-        dct_df[name_sheet] = merge_df # сохраняем в словарь
+
 
         # Создаем словарь с параметрами записи
         dct_change = {'number_column':3,'font':Font(color='FF000000'),
                       'fill':PatternFill(fill_type='solid', fgColor='ffa500'),
                       'find_value':'-'}
-        change_wb = write_df_to_excel_color_selection(dct_df,False,[dct_change],lst_not_standard_sheets)
+        # Создаем словарь для отрицательных значений среднего арифметического
+        dct_mean = {'number_column':5,'font':Font(color='FF000000'),
+                      'fill':PatternFill(fill_type='solid', fgColor='ffa500'),
+                      'find_value':'-'}
+
+        change_wb = write_df_to_excel_color_selection(dct_df,False,[dct_change,dct_mean],lst_not_standard_sheets)
         change_wb.save(f'{end_folder}/Изменения от {current_time}.xlsx')
 
 

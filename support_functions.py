@@ -82,7 +82,23 @@ def write_df_to_excel_color_selection(dct_df:dict,write_index:bool,lst_color_sel
                 wb[name_sheet].column_dimensions[column_name].width = adjusted_width
             count_index += 1
         else:
-            pass
+            # делаем перенос строк чтобы было удобнее
+            wb[name_sheet].column_dimensions['A'].width = 50 #
+            wb[name_sheet]['A1'].alignment = openpyxl.styles.Alignment(wrapText=True)
+            wb[name_sheet]['B1'].alignment = openpyxl.styles.Alignment(wrapText=True)
+            wb[name_sheet]['C1'].alignment = openpyxl.styles.Alignment(wrapText=True)
+            wb[name_sheet]['D1'].alignment = openpyxl.styles.Alignment(wrapText=True)
+            wb[name_sheet]['E1'].alignment = openpyxl.styles.Alignment(wrapText=True)
+            wb[name_sheet]['F1'].alignment = openpyxl.styles.Alignment(wrapText=True)
+            wb[name_sheet]['G1'].alignment = openpyxl.styles.Alignment(wrapText=True)
+            wb[name_sheet]['H1'].alignment = openpyxl.styles.Alignment(wrapText=True)
+            wb[name_sheet]['I1'].alignment = openpyxl.styles.Alignment(wrapText=True)
+            wb[name_sheet]['J1'].alignment = openpyxl.styles.Alignment(wrapText=True)
+            wb[name_sheet]['K1'].alignment = openpyxl.styles.Alignment(wrapText=True)
+            wb[name_sheet]['L1'].alignment = openpyxl.styles.Alignment(wrapText=True)
+            wb[name_sheet]['M1'].alignment = openpyxl.styles.Alignment(wrapText=True)
+            wb[name_sheet]['N1'].alignment = openpyxl.styles.Alignment(wrapText=True)
+
 
         # Форматирование строк
         # Итерируемся по словарям с параметрами
@@ -96,18 +112,6 @@ def write_df_to_excel_color_selection(dct_df:dict,write_index:bool,lst_color_sel
                     for cell in row: # применяем стиль если условие сработало
                         cell.font = font
                         cell.fill = fill
-
-
-        # column_number = 0 # номер колонки в которой ищем слово Статус_
-        # # Создаем  стиль шрифта и заливки
-        # font = Font(color='FF000000')  # Черный цвет
-        # fill = PatternFill(fill_type='solid', fgColor='ffa500')  # Оранжевый цвет
-        # for row in wb[name_sheet].iter_rows(min_row=1, max_row=wb[name_sheet].max_row,
-        #                                                 min_col=column_number, max_col=df.shape[1]+1):  # Перебираем строки
-        #     if 'Итого' in str(row[column_number].value): # делаем ячейку строковой и проверяем наличие слова Статус_
-        #         for cell in row: # применяем стиль если условие сработало
-        #             cell.font = font
-        #             cell.fill = fill
 
 
     return wb
