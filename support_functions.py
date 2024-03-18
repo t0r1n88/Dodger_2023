@@ -83,7 +83,15 @@ def write_df_to_excel_color_selection(dct_df:dict,write_index:bool,lst_color_sel
         # Форматирование строк
         # Итерируемся по словарям с параметрами
         for param_dct in lst_color_select:
+            font = param_dct['font']  # Получаем цвет шрифта
+            fill = param_dct['fill'] # получаем заливку
 
+            for row in wb[name_sheet].iter_rows(min_row=1, max_row=wb[name_sheet].max_row,
+                                                            min_col=0, max_col=df.shape[1]+1):  # Перебираем строки
+                if param_dct['find_value'] in str(row[param_dct['number_column']].value): # делаем ячейку строковой и проверяем наличие искомого слова
+                    for cell in row: # применяем стиль если условие сработало
+                        cell.font = font
+                        cell.fill = fill
 
 
         # column_number = 0 # номер колонки в которой ищем слово Статус_

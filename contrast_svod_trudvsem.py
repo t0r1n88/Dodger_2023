@@ -4,7 +4,11 @@
 from support_functions import write_df_to_excel_color_selection # получаем функцию для записи в листы Excel
 import pandas as pd
 import numpy as np
+import time
 import openpyxl
+from openpyxl.utils.dataframe import dataframe_to_rows
+from openpyxl.utils import get_column_letter
+from openpyxl.styles import Font, PatternFill
 
 
 class FirstNotSheets(Exception):
@@ -43,6 +47,9 @@ def processing_diff_svod(first_file:str,second_file:str,end_folder:str):
     """
     Функция для подсчета разницы между двумя сводами
     """
+    t = time.localtime()  # получаем текущее время
+    current_time = time.strftime('%H_%M_%S', t)
+    current_date = time.strftime('%d_%m_%Y', t)
     # Список обязательных листов которые должны быть в файле
     lst_svod_sheets = ['Вакансии по отраслям', 'Вакансии по работодателям', 'Зарплата по отраслям',
                        'Зарплата по работодателям',
@@ -135,6 +142,12 @@ def processing_diff_svod(first_file:str,second_file:str,end_folder:str):
 
         dct_df[name_sheet] = merge_df # сохраняем в словарь
 
+        # Создаем словарь с параметрами записи
+        dct_change = {'number_column':3,'font':Font(color='FF000000'),
+                      'fill':PatternFill(fill_type='solid', fgColor='ffa500'),
+                      'find_value':'-'}
+        change_wb = write_df_to_excel_color_selection(dct_df,False,[dct_change])
+        change_wb.save(f'{end_folder}/Изменения от {current_time}.xlsx')
 
 
 
