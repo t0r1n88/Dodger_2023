@@ -3,7 +3,7 @@
 """
 import pandas as pd
 import numpy as np
-import openpyxl
+from openpyxl.utils.exceptions import IllegalCharacterError
 import json
 import ast
 import re
@@ -76,6 +76,18 @@ def clear_bonus_tag_br(cell):
         return result
     else:
         return None
+
+def clean_text(cell):
+    """
+    Функция для очистки от незаписываемых символов
+    """
+    if isinstance(cell,str):
+        return re.sub(r'[^\d\w\s()=*+,.:;-]','',cell)
+    else:
+        return cell
+
+
+
 
 
 def convert_date(cell):
@@ -234,6 +246,7 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
         # проверяем
         if region not in lst_region:
             raise NotRegion
+        print(region)
         df = df[df['regionName'] == region] # Фильтруем данные по региону
 
         # получаем обработанный датафрейм со всеми статусами вакансий
@@ -272,12 +285,26 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
             union_company_df = pd.concat([union_company_df, temp_df], ignore_index=True)
 
         # Сохраняем общий файл с всеми вакансиями выбранных работодателей
-        union_company_df.to_excel(f'{org_folder}/Общий файл.xlsx', index=False)
+        try:
+            union_company_df.to_excel(f'{org_folder}/Общий файл.xlsx', index=False)
 
-        with pd.ExcelWriter(f'{end_folder}/Вакансии по региону от {current_time}.xlsx') as writer:
-            prepared_df.to_excel(writer, sheet_name='Только подтвержденные вакансии', index=False)
-            df.to_excel(writer, sheet_name='Необработанные данные', index=False)
-            all_status_prepared_df.to_excel(writer, sheet_name='Вакансии со всеми статусами', index=False)
+            with pd.ExcelWriter(f'{end_folder}/Вакансии по региону от {current_time}.xlsx') as writer:
+                prepared_df.to_excel(writer, sheet_name='Только подтвержденные вакансии', index=False)
+                # df.to_excel(writer, sheet_name='Необработанные данные', index=False)
+                all_status_prepared_df.to_excel(writer, sheet_name='Вакансии со всеми статусами', index=False)
+        except IllegalCharacterError:
+            # Список колонок с текстом
+            lst_text_columns = ['Вакансия','Требуемая специализация','Требования','Обязанности',
+                                'Бонусы','Дополнительные бонусы','Требуемые доп. документы',
+                                'Требуемые хардскиллы','Требуемые софтскиллы','Полное название работодателя',
+                                'Адрес вакансии','Доп информация по адресу вакансии','Email работодателя','Контактное лицо']
+
+            prepared_df[lst_text_columns] = prepared_df[lst_text_columns].applymap(clean_text)
+            all_status_prepared_df[lst_text_columns] = all_status_prepared_df[lst_text_columns].applymap(clean_text)
+            with pd.ExcelWriter(f'{end_folder}/Вакансии по региону от {current_time}.xlsx') as writer:
+                prepared_df.to_excel(writer, sheet_name='Только подтвержденные вакансии', index=False)
+                # df.to_excel(writer, sheet_name='Необработанные данные', index=False)
+                all_status_prepared_df.to_excel(writer, sheet_name='Вакансии со всеми статусами', index=False)
 
         """
             Свод по региону
@@ -700,10 +727,12 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
 if __name__ == '__main__':
     main_file_data = 'data/vacancy.csv'
     main_file_data = 'data/vacancy_7 (4).csv'
+    main_file_data = 'data/vacancy all.csv'
     main_org_file = 'data/company.xlsx'
     main_region = 'Республика Бурятия'
     main_region = 'Томская область'
     main_region = 'Иркутская область'
+    main_region = 'Город Санкт-Петербург'
     main_end_folder = 'data'
 
     processing_data_trudvsem(main_file_data,main_org_file,main_end_folder,main_region)
