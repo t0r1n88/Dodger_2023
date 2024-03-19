@@ -284,13 +284,17 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
             temp_df.insert(0, 'Организация', name_company)
             union_company_df = pd.concat([union_company_df, temp_df], ignore_index=True)
 
+        # Сортируем по колонке Вакансия
+        prepared_df.sort_values(by=['Вакансия'],inplace=True)
+        all_status_prepared_df.sort_values(by=['Вакансия'],inplace=True)
+        union_company_df.sort_values(by=['Вакансия'],inplace=True)
+
         # Сохраняем общий файл с всеми вакансиями выбранных работодателей
         try:
             union_company_df.to_excel(f'{org_folder}/Общий файл.xlsx', index=False)
 
             with pd.ExcelWriter(f'{end_folder}/Вакансии по региону от {current_time}.xlsx') as writer:
                 prepared_df.to_excel(writer, sheet_name='Только подтвержденные вакансии', index=False)
-                # df.to_excel(writer, sheet_name='Необработанные данные', index=False)
                 all_status_prepared_df.to_excel(writer, sheet_name='Вакансии со всеми статусами', index=False)
         except IllegalCharacterError:
             # Список колонок с текстом
@@ -298,12 +302,15 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
                                 'Бонусы','Дополнительные бонусы','Требуемые доп. документы',
                                 'Требуемые хардскиллы','Требуемые софтскиллы','Полное название работодателя',
                                 'Адрес вакансии','Доп информация по адресу вакансии','Email работодателя','Контактное лицо']
-
+            # очищаем от неправильных символов
             prepared_df[lst_text_columns] = prepared_df[lst_text_columns].applymap(clean_text)
             all_status_prepared_df[lst_text_columns] = all_status_prepared_df[lst_text_columns].applymap(clean_text)
+            union_company_df[lst_text_columns] = union_company_df[lst_text_columns].applymap(clean_text)
+
+            union_company_df.to_excel(f'{org_folder}/Общий файл.xlsx', index=False)
+
             with pd.ExcelWriter(f'{end_folder}/Вакансии по региону от {current_time}.xlsx') as writer:
                 prepared_df.to_excel(writer, sheet_name='Только подтвержденные вакансии', index=False)
-                # df.to_excel(writer, sheet_name='Необработанные данные', index=False)
                 all_status_prepared_df.to_excel(writer, sheet_name='Вакансии со всеми статусами', index=False)
 
         """
@@ -733,6 +740,8 @@ if __name__ == '__main__':
     main_region = 'Томская область'
     main_region = 'Иркутская область'
     main_region = 'Город Санкт-Петербург'
+    main_region = 'Кемеровская область - Кузбасс'
+
     main_end_folder = 'data'
 
     processing_data_trudvsem(main_file_data,main_org_file,main_end_folder,main_region)
