@@ -86,7 +86,18 @@ def clean_text(cell):
     else:
         return cell
 
+def clean_equal(cell:str):
+    """
+    Функция для очистки от знака равно в начале строки
+    """
+    if isinstance(cell,str):
+        if cell.startswith('='):
+            return f' {cell}'
+        else:
+            return cell
 
+    else:
+        return cell
 
 
 
@@ -291,6 +302,17 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
 
         # Сохраняем общий файл с всеми вакансиями выбранных работодателей
         try:
+            # Список колонок с текстом
+            lst_text_columns = ['Вакансия','Требуемая специализация','Требования','Обязанности',
+                                'Бонусы','Дополнительные бонусы','Требуемые доп. документы',
+                                'Требуемые хардскиллы','Требуемые софтскиллы','Полное название работодателя',
+                                'Адрес вакансии','Доп информация по адресу вакансии','Email работодателя','Контактное лицо']
+            # очищаем текстовые колонки от возможного знака равно в начале ячейки, в таком случае возникает ошибка
+            # потому что значение принимается за формулу
+            prepared_df[lst_text_columns] = prepared_df[lst_text_columns].applymap(clean_equal)
+            all_status_prepared_df[lst_text_columns] = all_status_prepared_df[lst_text_columns].applymap(clean_equal)
+            union_company_df[lst_text_columns] = union_company_df[lst_text_columns].applymap(clean_equal)
+
             union_company_df.to_excel(f'{org_folder}/Общий файл.xlsx', index=False)
 
             with pd.ExcelWriter(f'{end_folder}/Вакансии по региону от {current_time}.xlsx') as writer:
@@ -302,6 +324,7 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
                                 'Бонусы','Дополнительные бонусы','Требуемые доп. документы',
                                 'Требуемые хардскиллы','Требуемые софтскиллы','Полное название работодателя',
                                 'Адрес вакансии','Доп информация по адресу вакансии','Email работодателя','Контактное лицо']
+
             # очищаем от неправильных символов
             prepared_df[lst_text_columns] = prepared_df[lst_text_columns].applymap(clean_text)
             all_status_prepared_df[lst_text_columns] = all_status_prepared_df[lst_text_columns].applymap(clean_text)
@@ -741,6 +764,8 @@ if __name__ == '__main__':
     main_region = 'Иркутская область'
     main_region = 'Город Санкт-Петербург'
     main_region = 'Кемеровская область - Кузбасс'
+    main_region = 'Город Москва'
+
 
     main_end_folder = 'data'
 
