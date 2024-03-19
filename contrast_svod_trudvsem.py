@@ -46,7 +46,7 @@ def sum_category(row: pd.Series, user_sep: str):
     return out_id
 
 
-def processing_diff_svod(first_file:str,second_file:str,end_folder:str):
+def prepare_diff_svod_trudvsem(first_file:str, second_file:str, end_folder:str):
     """
     Функция для подсчета разницы между двумя сводами
     """
@@ -270,7 +270,7 @@ if __name__ == '__main__':
     main_second_file = 'data/Аналитика по вакансиям региона/19_03_2024/Свод по региону от 09_53_17.xlsx'
     main_end_folder = 'data'
 
-    processing_diff_svod(main_first_file,main_second_file,main_end_folder)
+    prepare_diff_svod_trudvsem(main_first_file, main_second_file, main_end_folder)
 
     print('Lindy Booth !!!')
 

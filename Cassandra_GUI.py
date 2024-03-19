@@ -8,6 +8,7 @@ from form_three_expected_release import prepare_form_three_employment # импо
 from ck_employment import prepare_ck_employment  # импортируем функцию для обработки данных для отчета центров карьеры
 from opk_employment import prepare_opk_employment  # импортируем функцию для обработки данных по ОПК
 from create_svod_trudvsem import processing_data_trudvsem # импортируем функцию для обработки данных с трудвсем
+from contrast_svod_trudvsem import prepare_diff_svod_trudvsem # импортируем функцию для измерения разницы между двумя сводами
 from difference import prepare_diffrence  # импортируем функцию для нахождения разницы между двумя таблицами
 
 import pandas as pd
@@ -167,6 +168,33 @@ def select_end_folder_svod_trudvsem():
     path_to_end_folder_svod_trudvsem = filedialog.askdirectory()
 
 
+# Функции для изменений по сводам
+def select_first_file_diff_svod_trudvsem():
+    """
+    Функция для выбора файла с организациями
+    """
+    global file_frist_diff_svod_trudvsem
+    # Получаем путь к файлу
+    file_frist_diff_svod_trudvsem = filedialog.askopenfilename(filetypes=(('Excel files', '*.xlsx'), ('all files', '*.*')))
+
+def select_second_file_diff_svod_trudvsem():
+    """
+    Функция для выбора файла с организациями
+    """
+    global file_second_diff_svod_trudvsem
+    # Получаем путь к файлу
+    file_second_diff_svod_trudvsem = filedialog.askopenfilename(filetypes=(('Excel files', '*.xlsx'), ('all files', '*.*')))
+
+
+def select_end_folder_diff_svod_trudvsem():
+    """
+    Функия для выбора папки
+    :return:
+    """
+    global path_to_end_folder_diff_svod_trudvsem
+    path_to_end_folder_diff_svod_trudvsem = filedialog.askdirectory()
+
+
 
 
 
@@ -236,6 +264,16 @@ def processing_svod_trudvsem():
                              f'Выберите файлы с данными и папку куда будет генерироваться файл')
 
 
+def processing_diff_svod_trudvsem():
+    """
+    Функция для подсчета изменений
+    """
+    try:
+        prepare_diff_svod_trudvsem(file_frist_diff_svod_trudvsem, file_second_diff_svod_trudvsem,path_to_end_folder_diff_svod_trudvsem)
+
+    except NameError:
+        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
+                             f'Выберите файлы с данными и папку куда будет генерироваться файл')
 
 
 
@@ -350,6 +388,41 @@ def set_window_size(window):
     # Устанавливаем размер и положение окна
     window.geometry(f"{width}x{height}+{x}+{y}")
 
+def make_textmenu(root):
+    """
+    Функции для контекстного меню( вырезать,копировать,вставить)
+    взято отсюда https://gist.github.com/angeloped/91fb1bb00f1d9e0cd7a55307a801995f
+    """
+    # эта штука делает меню
+    global the_menu
+    the_menu = Menu(root, tearoff=0)
+    the_menu.add_command(label="Вырезать")
+    the_menu.add_command(label="Копировать")
+    the_menu.add_command(label="Вставить")
+    the_menu.add_separator()
+    the_menu.add_command(label="Выбрать все")
+
+
+def callback_select_all(event):
+    """
+    Функции для контекстного меню( вырезать,копировать,вставить)
+    взято отсюда https://gist.github.com/angeloped/91fb1bb00f1d9e0cd7a55307a801995f
+    """
+    # select text after 50ms
+    window.after(50, lambda: event.widget.select_range(0, 'end'))
+
+
+def show_textmenu(event):
+    """
+    Функции для контекстного меню( вырезать,копировать,вставить)
+    взято отсюда https://gist.github.com/angeloped/91fb1bb00f1d9e0cd7a55307a801995f
+    """
+    e_widget = event.widget
+    the_menu.entryconfigure("Вырезать", command=lambda: e_widget.event_generate("<<Cut>>"))
+    the_menu.entryconfigure("Копировать", command=lambda: e_widget.event_generate("<<Copy>>"))
+    the_menu.entryconfigure("Вставить", command=lambda: e_widget.event_generate("<<Paste>>"))
+    the_menu.entryconfigure("Выбрать все", command=lambda: e_widget.select_range(0, 'end'))
+    the_menu.tk.call("tk_popup", the_menu, event.x_root, event.y_root)
 
 
 if __name__ == '__main__':
@@ -358,7 +431,8 @@ if __name__ == '__main__':
     # Устанавливаем размер и положение окна
     set_window_size(window)
     window.resizable(True, True)
-
+    # Добавляем контекстное меню в поля ввода
+    make_textmenu(window)
     # Создаем вертикальный скроллбар
     scrollbar = Scrollbar(window, orient="vertical")
 
@@ -588,6 +662,71 @@ if __name__ == '__main__':
     btn_proccessing_data_svod_trudvsem.pack(padx=10, pady=10)
 
 
+    """
+    Вкладка для подсчета разницы в сводах
+    """
+    tab_diff_svod_trudvsem = ttk.Frame(tab_control)
+    tab_control.add(tab_diff_svod_trudvsem, text='Динамика Работа в России')
+
+    svod_trudvsem_frame_description = LabelFrame(tab_diff_svod_trudvsem)
+    svod_trudvsem_frame_description.pack()
+
+    lbl_hello_diff_svod_trudvsem = Label(svod_trudvsem_frame_description,
+                                         text='Центр опережающей профессиональной подготовки Республики Бурятия\n'
+                                              'Подсчет изменений по кадровой ситуации на основании сводов \n'
+                                              'полученнных с помощью вкладки Свод Работа в России',
+                                         width=60)
+    lbl_hello_diff_svod_trudvsem.pack(side=LEFT, anchor=N, ipadx=25, ipady=10)
+
+    # Картинка
+    path_to_img_diff_svod_trudvsem = resource_path('logo.png')
+    img_diff_svod_trudvsem = PhotoImage(file=path_to_img_diff_svod_trudvsem)
+    Label(svod_trudvsem_frame_description,
+          image=img_diff_svod_trudvsem, padx=10, pady=10
+          ).pack(side=LEFT, anchor=E, ipadx=5, ipady=5)
+
+    # Создаем область для того чтобы поместить туда подготовительные кнопки(выбрать файл,выбрать папку и т.п.)
+    frame_data_diff_svod_trudvsem = LabelFrame(tab_diff_svod_trudvsem, text='Подготовка')
+    frame_data_diff_svod_trudvsem.pack(padx=10, pady=10)
+
+    # Кнопка для выбора первого файла
+    btn_choose_first_file_diff_svod_trudvsem = Button(frame_data_diff_svod_trudvsem,
+                                                text='1) Выберите первый файл',
+                                                font=('Arial Bold', 15),
+                                                command=select_first_file_diff_svod_trudvsem
+                                                )
+    btn_choose_first_file_diff_svod_trudvsem.pack(padx=10, pady=10)
+
+    # Создаем кнопку для выбора второго файла
+
+    btn_choose_second_file_diff_svod_trudvsem = Button(frame_data_diff_svod_trudvsem,
+                                                    text='2) Выберите второй файл',
+                                                    font=('Arial Bold', 15),
+                                                    command=select_second_file_diff_svod_trudvsem
+                                                    )
+    btn_choose_second_file_diff_svod_trudvsem.pack(padx=10, pady=10)
+
+
+    # Кнопка для выбора конечной папки
+    btn_choose_end_folder_diff_svod_trudvsem = Button(frame_data_diff_svod_trudvsem, text='3) Выберите конечную папку',
+                                                      font=('Arial Bold', 15),
+                                                      command=select_end_folder_diff_svod_trudvsem
+                                                      )
+    btn_choose_end_folder_diff_svod_trudvsem.pack(padx=10, pady=10)
+
+    btn_proccessing_data_diff_svod_trudvsem = Button(tab_diff_svod_trudvsem, text='4) Обработать данные',
+                                                     font=('Arial Bold', 20),
+                                                     command=processing_diff_svod_trudvsem
+                                                     )
+    btn_proccessing_data_diff_svod_trudvsem.pack(padx=10, pady=10)
+
+
+
+
+
+
+
+
 
 
 
@@ -788,4 +927,6 @@ if __name__ == '__main__':
     # Вешаем событие скроллинга
     canvas.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
 
+    window.bind_class("Entry", "<Button-3><ButtonRelease-3>", show_textmenu)
+    window.bind_class("Entry", "<Control-a>", callback_select_all)
     window.mainloop()
