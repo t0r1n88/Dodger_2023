@@ -706,6 +706,6 @@ if __name__ == '__main__':
     main_region = 'Иркутская область'
     main_end_folder = 'data'
 
-    processing_data_trudvsem(main_file_data,main_org_file,main_region,main_end_folder)
+    processing_data_trudvsem(main_file_data,main_org_file,main_end_folder,main_region)
 
     print('Lindy Booth !!!')
