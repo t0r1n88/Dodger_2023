@@ -15,6 +15,14 @@ from dateutil import parser
 pd.options.mode.chained_assignment = None
 
 
+class NotRegion(Exception):
+    """
+    Класс для отслеживания наличия региона в данных
+    """
+    pass
+
+
+
 def extract_data_from_list_cell(cell: str, lst_need_keys: list):
     """
     Функция для извлечения данных из словаря в ячейке датафрейма
@@ -167,7 +175,7 @@ def prepare_data_vacancy(df: pd.DataFrame, dct_name_columns: dict, lst_columns: 
     return df
 
 
-def processing_data_trudvsem(file_data:str,file_org:str,region:str,end_folder:str):
+def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:str):
     """
     Основная функция для обработки данных
     :param file_data: файл в формате csv с данными вакансий
@@ -222,6 +230,10 @@ def processing_data_trudvsem(file_data:str,file_org:str,region:str,end_folder:st
                        'ИНН работодателя','КПП работодателя','ОГРН работодателя','Контактное лицо','Контактный телефон','Email работодателя',
                        'Профиль работодателя','Долгота адрес вакансии','Широта адрес вакансии']
 
+        lst_region = df['regionName'].unique() # Получаем список регионов
+        # проверяем
+        if region not in lst_region:
+            raise NotRegion
         df = df[df['regionName'] == region] # Фильтруем данные по региону
 
         # получаем обработанный датафрейм со всеми статусами вакансий
@@ -465,205 +477,212 @@ def processing_data_trudvsem(file_data:str,file_org:str,region:str,end_folder:st
         """
             Свод по выбранным работодателям
             """
-        # Свод по вакансиям выбранных работодателей
+        if len(union_company_df) != 0:
 
-        # Свод по количеству рабочих мест по отраслям
+            # Свод по вакансиям выбранных работодателей
 
-        svod_vac_reg_org_df = pd.pivot_table(union_company_df,
-                                             index=['Сфера деятельности'],
-                                             values=['Количество рабочих мест'],
-                                             aggfunc={'Количество рабочих мест': [np.sum]})
-        svod_vac_reg_org_df = svod_vac_reg_org_df.droplevel(level=0, axis=1)  # убираем мультииндекс
+            # Свод по количеству рабочих мест по отраслям
 
-        svod_vac_reg_org_df.sort_values(by=['sum'], ascending=False, inplace=True)
-        svod_vac_reg_org_df.loc['Итого'] = svod_vac_reg_org_df['sum'].sum()
-        svod_vac_reg_org_df.rename(columns={'sum': 'Количество вакансий'}, inplace=True)
-        svod_vac_reg_org_df = svod_vac_reg_org_df.reset_index()
+            svod_vac_reg_org_df = pd.pivot_table(union_company_df,
+                                                 index=['Сфера деятельности'],
+                                                 values=['Количество рабочих мест'],
+                                                 aggfunc={'Количество рабочих мест': [np.sum]})
+            svod_vac_reg_org_df = svod_vac_reg_org_df.droplevel(level=0, axis=1)  # убираем мультииндекс
 
-        # Свод по количеству рабочих мест по организациям
-        svod_vac_org_org_df = pd.pivot_table(union_company_df,
-                                             index=['Полное название работодателя'],
-                                             values=['Количество рабочих мест'],
-                                             aggfunc={'Количество рабочих мест': [np.sum]})
-        svod_vac_org_org_df = svod_vac_org_org_df.droplevel(level=0, axis=1)  # убираем мультииндекс
-        svod_vac_org_org_df.sort_values(by=['sum'], ascending=False, inplace=True)
-        svod_vac_org_org_df.loc['Итого'] = svod_vac_org_org_df['sum'].sum()
-        svod_vac_org_org_df.rename(columns={'sum': 'Количество вакансий'}, inplace=True)
-        svod_vac_org_org_df = svod_vac_org_org_df.reset_index()
+            svod_vac_reg_org_df.sort_values(by=['sum'], ascending=False, inplace=True)
+            svod_vac_reg_org_df.loc['Итого'] = svod_vac_reg_org_df['sum'].sum()
+            svod_vac_reg_org_df.rename(columns={'sum': 'Количество вакансий'}, inplace=True)
+            svod_vac_reg_org_df = svod_vac_reg_org_df.reset_index()
 
-        # Свод по средней и медианной минимальной зарплате для сфер деятельности
-        svod_shpere_pay_org_df = pd.pivot_table(union_company_df,
-                                                index=['Сфера деятельности'],
-                                                values=['Минимальная зарплата'],
-                                                aggfunc={'Минимальная зарплата': [np.mean, np.median]},
-                                                fill_value=0)
-        svod_shpere_pay_org_df = svod_shpere_pay_org_df.droplevel(level=0, axis=1)  # убираем мультииндекс
+            # Свод по количеству рабочих мест по организациям
+            svod_vac_org_org_df = pd.pivot_table(union_company_df,
+                                                 index=['Полное название работодателя'],
+                                                 values=['Количество рабочих мест'],
+                                                 aggfunc={'Количество рабочих мест': [np.sum]})
+            svod_vac_org_org_df = svod_vac_org_org_df.droplevel(level=0, axis=1)  # убираем мультииндекс
+            svod_vac_org_org_df.sort_values(by=['sum'], ascending=False, inplace=True)
+            svod_vac_org_org_df.loc['Итого'] = svod_vac_org_org_df['sum'].sum()
+            svod_vac_org_org_df.rename(columns={'sum': 'Количество вакансий'}, inplace=True)
+            svod_vac_org_org_df = svod_vac_org_org_df.reset_index()
 
-        svod_shpere_pay_org_df = svod_shpere_pay_org_df.astype(int, errors='ignore')
-        svod_shpere_pay_org_df.columns = ['Средняя ариф. минимальная зп', 'Медианная минимальная зп']
-        svod_shpere_pay_org_df = svod_shpere_pay_org_df.reset_index()
+            # Свод по средней и медианной минимальной зарплате для сфер деятельности
+            svod_shpere_pay_org_df = pd.pivot_table(union_company_df,
+                                                    index=['Сфера деятельности'],
+                                                    values=['Минимальная зарплата'],
+                                                    aggfunc={'Минимальная зарплата': [np.mean, np.median]},
+                                                    fill_value=0)
+            svod_shpere_pay_org_df = svod_shpere_pay_org_df.droplevel(level=0, axis=1)  # убираем мультииндекс
 
-        # Свод по средней и медианной минимальной зарплате для работодателей
-        svod_org_pay_org_df = pd.pivot_table(union_company_df,
-                                             index=['Полное название работодателя', 'Сфера деятельности'],
-                                             values=['Минимальная зарплата'],
-                                             aggfunc={'Минимальная зарплата': [np.mean, np.median]},
-                                             fill_value=0)
-        svod_org_pay_org_df = svod_org_pay_org_df.droplevel(level=0, axis=1)  # убираем мультииндекс
+            svod_shpere_pay_org_df = svod_shpere_pay_org_df.astype(int, errors='ignore')
+            svod_shpere_pay_org_df.columns = ['Средняя ариф. минимальная зп', 'Медианная минимальная зп']
+            svod_shpere_pay_org_df = svod_shpere_pay_org_df.reset_index()
 
-        svod_org_pay_org_df = svod_org_pay_org_df.astype(int, errors='ignore')
-        svod_org_pay_org_df.columns = ['Средняя ариф. минимальная зп', 'Медианная минимальная зп']
-        svod_org_pay_org_df = svod_org_pay_org_df.reset_index()
+            # Свод по средней и медианной минимальной зарплате для работодателей
+            svod_org_pay_org_df = pd.pivot_table(union_company_df,
+                                                 index=['Полное название работодателя', 'Сфера деятельности'],
+                                                 values=['Минимальная зарплата'],
+                                                 aggfunc={'Минимальная зарплата': [np.mean, np.median]},
+                                                 fill_value=0)
+            svod_org_pay_org_df = svod_org_pay_org_df.droplevel(level=0, axis=1)  # убираем мультииндекс
 
-        # Свод по требуемому образованию для сфер деятельности
-        svod_shpere_educ_org_df = pd.pivot_table(union_company_df,
-                                                 index=['Сфера деятельности', 'Образование'],
+            svod_org_pay_org_df = svod_org_pay_org_df.astype(int, errors='ignore')
+            svod_org_pay_org_df.columns = ['Средняя ариф. минимальная зп', 'Медианная минимальная зп']
+            svod_org_pay_org_df = svod_org_pay_org_df.reset_index()
+
+            # Свод по требуемому образованию для сфер деятельности
+            svod_shpere_educ_org_df = pd.pivot_table(union_company_df,
+                                                     index=['Сфера деятельности', 'Образование'],
+                                                     values=['Количество рабочих мест'],
+                                                     aggfunc={'Количество рабочих мест': [np.sum]},
+                                                     fill_value=0)
+            svod_shpere_educ_org_df = svod_shpere_educ_org_df.droplevel(level=0, axis=1)  # убираем мультииндекс
+
+            svod_shpere_educ_org_df = svod_shpere_educ_org_df.astype(int, errors='ignore')
+            svod_shpere_educ_org_df.columns = ['Количество вакансий']
+            svod_shpere_educ_org_df = svod_shpere_educ_org_df.reset_index()
+
+            # Свод по требуемому образованию для работодателей
+            svod_org_educ_org_df = pd.pivot_table(union_company_df,
+                                                  index=['Полное название работодателя', 'Образование'],
+                                                  values=['Количество рабочих мест'],
+                                                  aggfunc={'Количество рабочих мест': [np.sum]},
+                                                  fill_value=0)
+            svod_org_educ_org_df = svod_org_educ_org_df.droplevel(level=0, axis=1)  # убираем мультииндекс
+
+            svod_org_educ_org_df = svod_org_educ_org_df.astype(int, errors='ignore')
+            svod_org_educ_org_df.columns = ['Количество вакансий']
+            svod_org_educ_org_df = svod_org_educ_org_df.reset_index()
+
+            # Свод по графику работы для сфер деятельности
+            svod_shpere_schedule_org_df = pd.pivot_table(union_company_df,
+                                                         index=['Сфера деятельности', 'График работы'],
+                                                         values=['Количество рабочих мест'],
+                                                         aggfunc={'Количество рабочих мест': [np.sum]},
+                                                         fill_value=0)
+            svod_shpere_schedule_org_df = svod_shpere_schedule_org_df.droplevel(level=0, axis=1)  # убираем мультииндекс
+
+            svod_shpere_schedule_org_df = svod_shpere_schedule_org_df.astype(int, errors='ignore')
+            svod_shpere_schedule_org_df.columns = ['Количество вакансий']
+            svod_shpere_schedule_org_df = svod_shpere_schedule_org_df.reset_index()
+
+            # Свод по графику работы для работодателей
+            svod_org_schedule_org_df = pd.pivot_table(union_company_df,
+                                                      index=['Полное название работодателя', 'График работы'],
+                                                      values=['Количество рабочих мест'],
+                                                      aggfunc={'Количество рабочих мест': [np.sum]},
+                                                      fill_value=0)
+            svod_org_schedule_org_df = svod_org_schedule_org_df.droplevel(level=0, axis=1)  # убираем мультииндекс
+
+            svod_org_schedule_org_df = svod_org_schedule_org_df.astype(int, errors='ignore')
+            svod_org_schedule_org_df.columns = ['Количество вакансий']
+            svod_org_schedule_org_df = svod_org_schedule_org_df.reset_index()
+
+            # Свод по типу занятости для сфер деятельности
+            svod_shpere_type_job_org_df = pd.pivot_table(union_company_df,
+                                                         index=['Сфера деятельности', 'Тип занятости'],
+                                                         values=['Количество рабочих мест'],
+                                                         aggfunc={'Количество рабочих мест': [np.sum]},
+                                                         fill_value=0)
+            svod_shpere_type_job_org_df = svod_shpere_type_job_org_df.droplevel(level=0, axis=1)  # убираем мультииндекс
+
+            svod_shpere_type_job_org_df = svod_shpere_type_job_org_df.astype(int, errors='ignore')
+            svod_shpere_type_job_org_df.columns = ['Количество вакансий']
+            svod_shpere_type_job_org_df = svod_shpere_type_job_org_df.reset_index()
+
+            # Свод по типу занятости для работодателей
+            svod_org_type_job_org_df = pd.pivot_table(union_company_df,
+                                                      index=['Полное название работодателя', 'Тип занятости'],
+                                                      values=['Количество рабочих мест'],
+                                                      aggfunc={'Количество рабочих мест': [np.sum]},
+                                                      fill_value=0)
+            svod_org_type_job_org_df = svod_org_type_job_org_df.droplevel(level=0, axis=1)  # убираем мультииндекс
+
+            svod_org_type_job_org_df = svod_org_type_job_org_df.astype(int, errors='ignore')
+            svod_org_type_job_org_df.columns = ['Количество вакансий']
+            svod_org_type_job_org_df = svod_org_type_job_org_df.reset_index()
+
+            # Свод по квотируемым местам для сфер деятельности
+            svod_shpere_quote_org_df = pd.pivot_table(union_company_df,
+                                                      index=['Сфера деятельности', 'Квотируемое место'],
+                                                      values=['Количество рабочих мест'],
+                                                      aggfunc={'Количество рабочих мест': [np.sum]},
+                                                      fill_value=0)
+            svod_shpere_quote_org_df = svod_shpere_quote_org_df.droplevel(level=0, axis=1)  # убираем мультииндекс
+
+            svod_shpere_quote_org_df = svod_shpere_quote_org_df.astype(int, errors='ignore')
+            svod_shpere_quote_org_df.columns = ['Количество вакансий']
+            svod_shpere_quote_org_df = svod_shpere_quote_org_df.reset_index()
+
+            # Свод по квотируемым местам для работодателей
+            svod_org_quote_org_df = pd.pivot_table(union_company_df,
+                                                   index=['Полное название работодателя', 'Квотируемое место'],
+                                                   values=['Количество рабочих мест'],
+                                                   aggfunc={'Количество рабочих мест': [np.sum]},
+                                                   fill_value=0)
+            svod_org_quote_org_df = svod_org_quote_org_df.droplevel(level=0, axis=1)  # убираем мультииндекс
+
+            svod_org_quote_org_df = svod_org_quote_org_df.astype(int, errors='ignore')
+            svod_org_quote_org_df.columns = ['Количество вакансий']
+            svod_org_quote_org_df = svod_org_quote_org_df.reset_index()
+
+            # Свод по вакансиям для социальных категорий
+            dct_soc_cat_org = extract_soc_category(union_company_df, 'Социально защищенная категория',
+                                                   ';')  # считаем количество категорий
+            svod_soc_org_df = pd.DataFrame.from_dict(dct_soc_cat_org, orient='index').reset_index()  # содаем датафрейм
+            svod_soc_org_df.columns = ['Категория', 'Количество вакансий']
+            svod_soc_org_df.sort_values(by=['Количество вакансий'], ascending=False, inplace=True)
+
+            # Свод по требуемому опыту для сфер деятельности
+            svod_shpere_exp_org_df = pd.pivot_table(union_company_df,
+                                                    index=['Сфера деятельности', 'Требуемый опыт работы в годах'],
+                                                    values=['Количество рабочих мест'],
+                                                    aggfunc={'Количество рабочих мест': [np.sum]},
+                                                    fill_value=0)
+            svod_shpere_exp_org_df = svod_shpere_exp_org_df.droplevel(level=0, axis=1)  # убираем мультииндекс
+
+            svod_shpere_exp_org_df = svod_shpere_exp_org_df.astype(int, errors='ignore')
+            svod_shpere_exp_org_df.columns = ['Количество вакансий']
+            svod_shpere_exp_org_df = svod_shpere_exp_org_df.reset_index()
+
+            # Свод по требуемому опыту для работодателей
+            svod_org_exp_org_df = pd.pivot_table(union_company_df,
+                                                 index=['Полное название работодателя', 'Требуемый опыт работы в годах'],
                                                  values=['Количество рабочих мест'],
                                                  aggfunc={'Количество рабочих мест': [np.sum]},
                                                  fill_value=0)
-        svod_shpere_educ_org_df = svod_shpere_educ_org_df.droplevel(level=0, axis=1)  # убираем мультииндекс
+            svod_org_exp_org_df = svod_org_exp_org_df.droplevel(level=0, axis=1)  # убираем мультииндекс
 
-        svod_shpere_educ_org_df = svod_shpere_educ_org_df.astype(int, errors='ignore')
-        svod_shpere_educ_org_df.columns = ['Количество вакансий']
-        svod_shpere_educ_org_df = svod_shpere_educ_org_df.reset_index()
+            svod_org_exp_org_df = svod_org_exp_org_df.astype(int, errors='ignore')
+            svod_org_exp_org_df.columns = ['Количество вакансий']
+            svod_org_exp_org_df = svod_org_exp_org_df.reset_index()
 
-        # Свод по требуемому образованию для работодателей
-        svod_org_educ_org_df = pd.pivot_table(union_company_df,
-                                              index=['Полное название работодателя', 'Образование'],
-                                              values=['Количество рабочих мест'],
-                                              aggfunc={'Количество рабочих мест': [np.sum]},
-                                              fill_value=0)
-        svod_org_educ_org_df = svod_org_educ_org_df.droplevel(level=0, axis=1)  # убираем мультииндекс
-
-        svod_org_educ_org_df = svod_org_educ_org_df.astype(int, errors='ignore')
-        svod_org_educ_org_df.columns = ['Количество вакансий']
-        svod_org_educ_org_df = svod_org_educ_org_df.reset_index()
-
-        # Свод по графику работы для сфер деятельности
-        svod_shpere_schedule_org_df = pd.pivot_table(union_company_df,
-                                                     index=['Сфера деятельности', 'График работы'],
-                                                     values=['Количество рабочих мест'],
-                                                     aggfunc={'Количество рабочих мест': [np.sum]},
-                                                     fill_value=0)
-        svod_shpere_schedule_org_df = svod_shpere_schedule_org_df.droplevel(level=0, axis=1)  # убираем мультииндекс
-
-        svod_shpere_schedule_org_df = svod_shpere_schedule_org_df.astype(int, errors='ignore')
-        svod_shpere_schedule_org_df.columns = ['Количество вакансий']
-        svod_shpere_schedule_org_df = svod_shpere_schedule_org_df.reset_index()
-
-        # Свод по графику работы для работодателей
-        svod_org_schedule_org_df = pd.pivot_table(union_company_df,
-                                                  index=['Полное название работодателя', 'График работы'],
-                                                  values=['Количество рабочих мест'],
-                                                  aggfunc={'Количество рабочих мест': [np.sum]},
-                                                  fill_value=0)
-        svod_org_schedule_org_df = svod_org_schedule_org_df.droplevel(level=0, axis=1)  # убираем мультииндекс
-
-        svod_org_schedule_org_df = svod_org_schedule_org_df.astype(int, errors='ignore')
-        svod_org_schedule_org_df.columns = ['Количество вакансий']
-        svod_org_schedule_org_df = svod_org_schedule_org_df.reset_index()
-
-        # Свод по типу занятости для сфер деятельности
-        svod_shpere_type_job_org_df = pd.pivot_table(union_company_df,
-                                                     index=['Сфера деятельности', 'Тип занятости'],
-                                                     values=['Количество рабочих мест'],
-                                                     aggfunc={'Количество рабочих мест': [np.sum]},
-                                                     fill_value=0)
-        svod_shpere_type_job_org_df = svod_shpere_type_job_org_df.droplevel(level=0, axis=1)  # убираем мультииндекс
-
-        svod_shpere_type_job_org_df = svod_shpere_type_job_org_df.astype(int, errors='ignore')
-        svod_shpere_type_job_org_df.columns = ['Количество вакансий']
-        svod_shpere_type_job_org_df = svod_shpere_type_job_org_df.reset_index()
-
-        # Свод по типу занятости для работодателей
-        svod_org_type_job_org_df = pd.pivot_table(union_company_df,
-                                                  index=['Полное название работодателя', 'Тип занятости'],
-                                                  values=['Количество рабочих мест'],
-                                                  aggfunc={'Количество рабочих мест': [np.sum]},
-                                                  fill_value=0)
-        svod_org_type_job_org_df = svod_org_type_job_org_df.droplevel(level=0, axis=1)  # убираем мультииндекс
-
-        svod_org_type_job_org_df = svod_org_type_job_org_df.astype(int, errors='ignore')
-        svod_org_type_job_org_df.columns = ['Количество вакансий']
-        svod_org_type_job_org_df = svod_org_type_job_org_df.reset_index()
-
-        # Свод по квотируемым местам для сфер деятельности
-        svod_shpere_quote_org_df = pd.pivot_table(union_company_df,
-                                                  index=['Сфера деятельности', 'Квотируемое место'],
-                                                  values=['Количество рабочих мест'],
-                                                  aggfunc={'Количество рабочих мест': [np.sum]},
-                                                  fill_value=0)
-        svod_shpere_quote_org_df = svod_shpere_quote_org_df.droplevel(level=0, axis=1)  # убираем мультииндекс
-
-        svod_shpere_quote_org_df = svod_shpere_quote_org_df.astype(int, errors='ignore')
-        svod_shpere_quote_org_df.columns = ['Количество вакансий']
-        svod_shpere_quote_org_df = svod_shpere_quote_org_df.reset_index()
-
-        # Свод по квотируемым местам для работодателей
-        svod_org_quote_org_df = pd.pivot_table(union_company_df,
-                                               index=['Полное название работодателя', 'Квотируемое место'],
-                                               values=['Количество рабочих мест'],
-                                               aggfunc={'Количество рабочих мест': [np.sum]},
-                                               fill_value=0)
-        svod_org_quote_org_df = svod_org_quote_org_df.droplevel(level=0, axis=1)  # убираем мультииндекс
-
-        svod_org_quote_org_df = svod_org_quote_org_df.astype(int, errors='ignore')
-        svod_org_quote_org_df.columns = ['Количество вакансий']
-        svod_org_quote_org_df = svod_org_quote_org_df.reset_index()
-
-        # Свод по вакансиям для социальных категорий
-        dct_soc_cat_org = extract_soc_category(union_company_df, 'Социально защищенная категория',
-                                               ';')  # считаем количество категорий
-        svod_soc_org_df = pd.DataFrame.from_dict(dct_soc_cat_org, orient='index').reset_index()  # содаем датафрейм
-        svod_soc_org_df.columns = ['Категория', 'Количество вакансий']
-        svod_soc_org_df.sort_values(by=['Количество вакансий'], ascending=False, inplace=True)
-
-        # Свод по требуемому опыту для сфер деятельности
-        svod_shpere_exp_org_df = pd.pivot_table(union_company_df,
-                                                index=['Сфера деятельности', 'Требуемый опыт работы в годах'],
-                                                values=['Количество рабочих мест'],
-                                                aggfunc={'Количество рабочих мест': [np.sum]},
-                                                fill_value=0)
-        svod_shpere_exp_org_df = svod_shpere_exp_org_df.droplevel(level=0, axis=1)  # убираем мультииндекс
-
-        svod_shpere_exp_org_df = svod_shpere_exp_org_df.astype(int, errors='ignore')
-        svod_shpere_exp_org_df.columns = ['Количество вакансий']
-        svod_shpere_exp_org_df = svod_shpere_exp_org_df.reset_index()
-
-        # Свод по требуемому опыту для работодателей
-        svod_org_exp_org_df = pd.pivot_table(union_company_df,
-                                             index=['Полное название работодателя', 'Требуемый опыт работы в годах'],
-                                             values=['Количество рабочих мест'],
-                                             aggfunc={'Количество рабочих мест': [np.sum]},
-                                             fill_value=0)
-        svod_org_exp_org_df = svod_org_exp_org_df.droplevel(level=0, axis=1)  # убираем мультииндекс
-
-        svod_org_exp_org_df = svod_org_exp_org_df.astype(int, errors='ignore')
-        svod_org_exp_org_df.columns = ['Количество вакансий']
-        svod_org_exp_org_df = svod_org_exp_org_df.reset_index()
-
-        with pd.ExcelWriter(f'{svod_org_folder}/Свод по выбранным работодателям от {current_time}.xlsx') as writer:
-            svod_vac_reg_org_df.to_excel(writer, sheet_name='Вакансии по отраслям', index=False)
-            svod_vac_org_org_df.to_excel(writer, sheet_name='Вакансии по работодателям', index=False)
-            svod_shpere_pay_org_df.to_excel(writer, sheet_name='Зарплата по отраслям', index=False)
-            svod_org_pay_org_df.to_excel(writer, sheet_name='Зарплата по работодателям', index=False)
-            svod_shpere_educ_org_df.to_excel(writer, sheet_name='Образование по отраслям', index=False)
-            svod_org_educ_org_df.to_excel(writer, sheet_name='Образование по работодателям', index=False)
-            svod_shpere_schedule_org_df.to_excel(writer, sheet_name='График работы по отраслям', index=False)
-            svod_org_schedule_org_df.to_excel(writer, sheet_name='График работы по работодателям', index=False)
-            svod_shpere_type_job_org_df.to_excel(writer, sheet_name='Тип занятости по отраслям', index=False)
-            svod_org_type_job_org_df.to_excel(writer, sheet_name='Тип занятости по работодателям', index=False)
-            svod_shpere_quote_org_df.to_excel(writer, sheet_name='Квоты по отраслям', index=False)
-            svod_org_quote_org_df.to_excel(writer, sheet_name='Квоты по работодателям', index=False)
-            svod_soc_org_df.to_excel(writer, sheet_name='Вакансии для соц.кат.', index=False)
-            svod_shpere_exp_org_df.to_excel(writer, sheet_name='Требуемый опыт по отраслям', index=False)
-            svod_org_exp_org_df.to_excel(writer, sheet_name='Требуемый опыт по работодателям', index=False)
+            with pd.ExcelWriter(f'{svod_org_folder}/Свод по выбранным работодателям от {current_time}.xlsx') as writer:
+                svod_vac_reg_org_df.to_excel(writer, sheet_name='Вакансии по отраслям', index=False)
+                svod_vac_org_org_df.to_excel(writer, sheet_name='Вакансии по работодателям', index=False)
+                svod_shpere_pay_org_df.to_excel(writer, sheet_name='Зарплата по отраслям', index=False)
+                svod_org_pay_org_df.to_excel(writer, sheet_name='Зарплата по работодателям', index=False)
+                svod_shpere_educ_org_df.to_excel(writer, sheet_name='Образование по отраслям', index=False)
+                svod_org_educ_org_df.to_excel(writer, sheet_name='Образование по работодателям', index=False)
+                svod_shpere_schedule_org_df.to_excel(writer, sheet_name='График работы по отраслям', index=False)
+                svod_org_schedule_org_df.to_excel(writer, sheet_name='График работы по работодателям', index=False)
+                svod_shpere_type_job_org_df.to_excel(writer, sheet_name='Тип занятости по отраслям', index=False)
+                svod_org_type_job_org_df.to_excel(writer, sheet_name='Тип занятости по работодателям', index=False)
+                svod_shpere_quote_org_df.to_excel(writer, sheet_name='Квоты по отраслям', index=False)
+                svod_org_quote_org_df.to_excel(writer, sheet_name='Квоты по работодателям', index=False)
+                svod_soc_org_df.to_excel(writer, sheet_name='Вакансии для соц.кат.', index=False)
+                svod_shpere_exp_org_df.to_excel(writer, sheet_name='Требуемый опыт по отраслям', index=False)
+                svod_org_exp_org_df.to_excel(writer, sheet_name='Требуемый опыт по работодателям', index=False)
+        else:
+            union_company_df.to_excel(f'{svod_org_folder}/Проверьте правильность ИНН организаций {current_time}.xlsx')
     except NameError:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
                                  f'Выберите файлы с данными и папку куда будет генерироваться файл')
-    except KeyError as e:
+    except NotRegion:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
-                             f'Не найдено значение {e.args}')
+                                 f'Не найден регион! Проверьте написание региона в соответствии с правилами сайта Работа в России')
+    # except KeyError as e:
+    #     messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
+    #                          f'Не найдено значение {e.args}')
     except FileNotFoundError:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
                              f'Перенесите файлы которые вы хотите обработать в корень диска. Проблема может быть\n '
@@ -683,6 +702,8 @@ if __name__ == '__main__':
     main_file_data = 'data/vacancy_7 (4).csv'
     main_org_file = 'data/company.xlsx'
     main_region = 'Республика Бурятия'
+    main_region = 'Томская область'
+    main_region = 'Иркутская область'
     main_end_folder = 'data'
 
     processing_data_trudvsem(main_file_data,main_org_file,main_region,main_end_folder)

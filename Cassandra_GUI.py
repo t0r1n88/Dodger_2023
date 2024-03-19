@@ -7,6 +7,7 @@ from form_two_fifteen_row_nose import prepare_form_two_employment  # импор�
 from form_three_expected_release import prepare_form_three_employment # импортируем функцию для обработки Формы 3 Ожидаемый выпуск
 from ck_employment import prepare_ck_employment  # импортируем функцию для обработки данных для отчета центров карьеры
 from opk_employment import prepare_opk_employment  # импортируем функцию для обработки данных по ОПК
+from create_svod_trudvsem import processing_data_trudvsem # импортируем функцию для обработки данных с трудвсем
 from difference import prepare_diffrence  # импортируем функцию для нахождения разницы между двумя таблицами
 
 import pandas as pd
@@ -136,6 +137,39 @@ def select_files_data_xlsx():
     # Получаем путь файлы
     files_data_xlsx = filedialog.askopenfilenames(filetypes=(('Excel files', '*.xlsx'), ('all files', '*.*')))
 
+"""
+Вспомогательные функции для обработки даннных с Работы в России
+"""
+def select_file_csv_trudvsem():
+    """
+    Функция для выбора файла csv
+    """
+    global file_csv_svod_trudvsem
+    # Получаем путь к файлу
+    file_csv_svod_trudvsem = filedialog.askopenfilename(filetypes=(('csv files', '*.csv'), ('all files', '*.*')))
+
+
+def select_file_org_trudvsem():
+    """
+    Функция для выбора файла с организациями
+    """
+    global file_org_svod_trudvsem
+    # Получаем путь к файлу
+    file_org_svod_trudvsem = filedialog.askopenfilename(filetypes=(('Excel files', '*.xlsx'), ('all files', '*.*')))
+
+
+def select_end_folder_svod_trudvsem():
+    """
+    Функия для выбора папки.Определенно вот это когда нибудь я перепишу на ООП
+    :return:
+    """
+    global path_to_end_folder_svod_trudvsem
+    path_to_end_folder_svod_trudvsem = filedialog.askdirectory()
+
+
+
+
+
 
 """
 Функция обработки формы 1 (пятистрочная)
@@ -183,6 +217,25 @@ def processing_form_three_employment():
     except NameError:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
                              f'Выберите файлы с данными и папку куда будет генерироваться файл')
+
+"""
+Создание свода Работа в России
+"""
+
+def processing_svod_trudvsem():
+    """
+    Функция для обработки данных с сайта Работа в России
+    :return:
+    """
+    try:
+        name_region = str(entry_region.get()) # Получаем название региона
+        processing_data_trudvsem(file_csv_svod_trudvsem, file_org_svod_trudvsem,path_to_end_folder_svod_trudvsem,name_region)
+
+    except NameError:
+        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
+                             f'Выберите файлы с данными и папку куда будет генерироваться файл')
+
+
 
 
 
@@ -464,107 +517,182 @@ if __name__ == '__main__':
 
 
     """
-    Вкладка для обработки отчетов центров карьеры
+    Вкладка для создания свода из данных с сайта Работа в России
     """
-    tab_employment_ck = ttk.Frame(tab_control)
-    tab_control.add(tab_employment_ck, text='Отчет ЦК')
+    tab_svod_trudvsem = ttk.Frame(tab_control)
+    tab_control.add(tab_svod_trudvsem, text='Свод Работа в России')
 
-    employment_ck_frame_description = LabelFrame(tab_employment_ck)
-    employment_ck_frame_description.pack()
+    svod_trudvsem_frame_description = LabelFrame(tab_svod_trudvsem)
+    svod_trudvsem_frame_description.pack()
 
-    lbl_hello_employment_ck = Label(employment_ck_frame_description,
+    lbl_hello_svod_trudvsem = Label(svod_trudvsem_frame_description,
                                     text='Центр опережающей профессиональной подготовки Республики Бурятия\n'
-                                         'Обработка данных центров карьеры по трудоустроенным выпускникам',
+                                         'Аналитика по кадровой ситуации в регионе на основании данных \n'
+                                         'с сайта Работа в России (trudvsem.ru)',
                                     width=60)
-    lbl_hello_employment_ck.pack(side=LEFT, anchor=N, ipadx=25, ipady=10)
+    lbl_hello_svod_trudvsem.pack(side=LEFT, anchor=N, ipadx=25, ipady=10)
 
     # Картинка
-    path_to_img_employment_ck = resource_path('logo.png')
-    img_employment_ck = PhotoImage(file=path_to_img_employment_ck)
-    Label(employment_ck_frame_description,
-          image=img_employment_ck, padx=10, pady=10
+    path_to_img_svod_trudvsem = resource_path('logo.png')
+    img_svod_trudvsem = PhotoImage(file=path_to_img_svod_trudvsem)
+    Label(svod_trudvsem_frame_description,
+          image=img_svod_trudvsem, padx=10, pady=10
           ).pack(side=LEFT, anchor=E, ipadx=5, ipady=5)
 
     # Создаем область для того чтобы поместить туда подготовительные кнопки(выбрать файл,выбрать папку и т.п.)
-    frame_data_employment_ck = LabelFrame(tab_employment_ck, text='Подготовка')
-    frame_data_employment_ck.pack(padx=10, pady=10)
+    frame_data_svod_trudvsem = LabelFrame(tab_svod_trudvsem, text='Подготовка')
+    frame_data_svod_trudvsem.pack(padx=10, pady=10)
 
-    btn_choose_data_employment_ck = Button(frame_data_employment_ck, text='1) Выберите папку с данными',
-                                           font=('Arial Bold', 20),
-                                           command=select_folder_data_ck
+    # Кнопка для выбора файла csv
+    btn_choose_data_svod_trudvsem = Button(frame_data_svod_trudvsem, text='1) Выберите файл скачанный с сайта\n'
+                                                                          'Работа в России в формате csv',
+                                           font=('Arial Bold', 15),
+                                           command=select_file_csv_trudvsem
                                            )
-    btn_choose_data_employment_ck.pack(padx=10, pady=10)
+    btn_choose_data_svod_trudvsem.pack(padx=10, pady=10)
 
-    # Создаем кнопку для выбора папки куда будут генерироваться файлы
+    # Создаем кнопку для выбора файла с работодателями
 
-    btn_choose_end_folder_employment_ck = Button(frame_data_employment_ck, text='2) Выберите конечную папку',
-                                                 font=('Arial Bold', 20),
-                                                 command=select_end_folder_ck
+    btn_choose_data_org_svod_trudvsem = Button(frame_data_svod_trudvsem, text='2) Выберите файл с работодателями',
+                                                 font=('Arial Bold', 15),
+                                                 command=select_file_org_trudvsem
                                                  )
-    btn_choose_end_folder_employment_ck.pack(padx=10, pady=10)
+    btn_choose_data_org_svod_trudvsem.pack(padx=10, pady=10)
     #
-    # Создаем кнопку обработки данных
+    # Создаем поле для ввода региона
 
-    btn_proccessing_data_employment_ck = Button(tab_employment_ck, text='3) Обработать данные',
+    # Определяем текстовую переменную
+    entry_region = StringVar()
+    # Описание поля
+    label_svod_trudvsem = Label(frame_data_svod_trudvsem,
+                                             text='3) Введите название региона')
+    label_svod_trudvsem.pack(padx=10, pady=10)
+    # поле ввода имени листа
+    svod_trudvsem_entry = Entry(frame_data_svod_trudvsem, textvariable=entry_region,
+                                             width=30)
+    svod_trudvsem_entry.pack(padx=10, pady=10)
+
+    # Кнопка для выбора конечной папки
+    btn_choose_end_folder_svod_trudvsem = Button(frame_data_svod_trudvsem, text='4) Выберите конечную папку',
+                                                 font=('Arial Bold', 15),
+                                                 command=select_end_folder_svod_trudvsem
+                                                 )
+    btn_choose_end_folder_svod_trudvsem.pack(padx=10, pady=10)
+
+
+
+    btn_proccessing_data_svod_trudvsem = Button(tab_svod_trudvsem, text='5) Обработать данные',
                                                 font=('Arial Bold', 20),
-                                                command=processing_ck_employment
+                                                command=processing_svod_trudvsem
                                                 )
-    btn_proccessing_data_employment_ck.pack(padx=10, pady=10)
+    btn_proccessing_data_svod_trudvsem.pack(padx=10, pady=10)
 
 
 
-    """
-    Подсчет данных по трудоустройству ОПК
-    """
-    tab_employment_opk = ttk.Frame(tab_control)
-    tab_control.add(tab_employment_opk, text='Отчет ОПК с отраслями')
 
-    employment_opk_frame_description = LabelFrame(tab_employment_opk)
-    employment_opk_frame_description.pack()
 
-    lbl_hello_employment_opk = Label(employment_opk_frame_description,
-                                     text='Центр опережающей профессиональной подготовки Республики Бурятия\n'
-                                          'Обработка данных по трудоустройству ОПК (по отраслям)\n'
-                                          'В обрабатываемых файлах должны быть листы Форма 1 и Форма 2,\n'
-                                          'В Форме 1 должно быть 80 колонок включая 2 колонки проверки\n'
-                                          ',внизу после окончания таблицы должна быть пустая строка.\n'
-                                          ' На 9 строке должна быть строка с номерами колонок.\n'
-                                          'В форме 2 должно быть 10 колонок',
-                                     width=60)
-    lbl_hello_employment_opk.pack(side=LEFT, anchor=N, ipadx=25, ipady=10)
-
-    # Картинка
-    path_to_img_employment_opk = resource_path('logo.png')
-    img_employment_opk = PhotoImage(file=path_to_img_employment_opk)
-    Label(employment_opk_frame_description,
-          image=img_employment_opk, padx=10, pady=10
-          ).pack(side=LEFT, anchor=E, ipadx=5, ipady=5)
-
-    # Создаем область для того чтобы поместить туда подготовительные кнопки(выбрать файл,выбрать папку и т.п.)
-    frame_data_employment_opk = LabelFrame(tab_employment_opk, text='Подготовка')
-    frame_data_employment_opk.pack(padx=10, pady=10)
-
-    btn_choose_data_employment_opk = Button(frame_data_employment_opk, text='1) Выберите папку с данными',
-                                            font=('Arial Bold', 20),
-                                            command=select_folder_data_opk
-                                            )
-    btn_choose_data_employment_opk.pack(padx=10, pady=10)
-
-    # Создаем кнопку для выбора папки куда будут генерироваться файлы
-
-    btn_choose_end_folder_employment_opk = Button(frame_data_employment_opk, text='2) Выберите конечную папку',
-                                                  font=('Arial Bold', 20),
-                                                  command=select_end_folder_opk
-                                                  )
-    btn_choose_end_folder_employment_opk.pack(padx=10, pady=10)
+    # """
+    # Вкладка для обработки отчетов центров карьеры
+    # """
+    # tab_employment_ck = ttk.Frame(tab_control)
+    # tab_control.add(tab_employment_ck, text='Отчет ЦК')
     #
-    # Создаем кнопку обработки данных
-
-    btn_proccessing_data_employment_opk = Button(tab_employment_opk, text='3) Обработать данные',
-                                                 font=('Arial Bold', 20),
-                                                 command=processing_opk_employment
-                                                 )
-    btn_proccessing_data_employment_opk.pack(padx=10, pady=10)
+    # employment_ck_frame_description = LabelFrame(tab_employment_ck)
+    # employment_ck_frame_description.pack()
+    #
+    # lbl_hello_employment_ck = Label(employment_ck_frame_description,
+    #                                 text='Центр опережающей профессиональной подготовки Республики Бурятия\n'
+    #                                      'Обработка данных центров карьеры по трудоустроенным выпускникам',
+    #                                 width=60)
+    # lbl_hello_employment_ck.pack(side=LEFT, anchor=N, ipadx=25, ipady=10)
+    #
+    # # Картинка
+    # path_to_img_employment_ck = resource_path('logo.png')
+    # img_employment_ck = PhotoImage(file=path_to_img_employment_ck)
+    # Label(employment_ck_frame_description,
+    #       image=img_employment_ck, padx=10, pady=10
+    #       ).pack(side=LEFT, anchor=E, ipadx=5, ipady=5)
+    #
+    # # Создаем область для того чтобы поместить туда подготовительные кнопки(выбрать файл,выбрать папку и т.п.)
+    # frame_data_employment_ck = LabelFrame(tab_employment_ck, text='Подготовка')
+    # frame_data_employment_ck.pack(padx=10, pady=10)
+    #
+    # btn_choose_data_employment_ck = Button(frame_data_employment_ck, text='1) Выберите папку с данными',
+    #                                        font=('Arial Bold', 20),
+    #                                        command=select_folder_data_ck
+    #                                        )
+    # btn_choose_data_employment_ck.pack(padx=10, pady=10)
+    #
+    # # Создаем кнопку для выбора папки куда будут генерироваться файлы
+    #
+    # btn_choose_end_folder_employment_ck = Button(frame_data_employment_ck, text='2) Выберите конечную папку',
+    #                                              font=('Arial Bold', 20),
+    #                                              command=select_end_folder_ck
+    #                                              )
+    # btn_choose_end_folder_employment_ck.pack(padx=10, pady=10)
+    # #
+    # # Создаем кнопку обработки данных
+    #
+    # btn_proccessing_data_employment_ck = Button(tab_employment_ck, text='3) Обработать данные',
+    #                                             font=('Arial Bold', 20),
+    #                                             command=processing_ck_employment
+    #                                             )
+    # btn_proccessing_data_employment_ck.pack(padx=10, pady=10)
+    #
+    #
+    #
+    # """
+    # Подсчет данных по трудоустройству ОПК
+    # """
+    # tab_employment_opk = ttk.Frame(tab_control)
+    # tab_control.add(tab_employment_opk, text='Отчет ОПК с отраслями')
+    #
+    # employment_opk_frame_description = LabelFrame(tab_employment_opk)
+    # employment_opk_frame_description.pack()
+    #
+    # lbl_hello_employment_opk = Label(employment_opk_frame_description,
+    #                                  text='Центр опережающей профессиональной подготовки Республики Бурятия\n'
+    #                                       'Обработка данных по трудоустройству ОПК (по отраслям)\n'
+    #                                       'В обрабатываемых файлах должны быть листы Форма 1 и Форма 2,\n'
+    #                                       'В Форме 1 должно быть 80 колонок включая 2 колонки проверки\n'
+    #                                       ',внизу после окончания таблицы должна быть пустая строка.\n'
+    #                                       ' На 9 строке должна быть строка с номерами колонок.\n'
+    #                                       'В форме 2 должно быть 10 колонок',
+    #                                  width=60)
+    # lbl_hello_employment_opk.pack(side=LEFT, anchor=N, ipadx=25, ipady=10)
+    #
+    # # Картинка
+    # path_to_img_employment_opk = resource_path('logo.png')
+    # img_employment_opk = PhotoImage(file=path_to_img_employment_opk)
+    # Label(employment_opk_frame_description,
+    #       image=img_employment_opk, padx=10, pady=10
+    #       ).pack(side=LEFT, anchor=E, ipadx=5, ipady=5)
+    #
+    # # Создаем область для того чтобы поместить туда подготовительные кнопки(выбрать файл,выбрать папку и т.п.)
+    # frame_data_employment_opk = LabelFrame(tab_employment_opk, text='Подготовка')
+    # frame_data_employment_opk.pack(padx=10, pady=10)
+    #
+    # btn_choose_data_employment_opk = Button(frame_data_employment_opk, text='1) Выберите папку с данными',
+    #                                         font=('Arial Bold', 20),
+    #                                         command=select_folder_data_opk
+    #                                         )
+    # btn_choose_data_employment_opk.pack(padx=10, pady=10)
+    #
+    # # Создаем кнопку для выбора папки куда будут генерироваться файлы
+    #
+    # btn_choose_end_folder_employment_opk = Button(frame_data_employment_opk, text='2) Выберите конечную папку',
+    #                                               font=('Arial Bold', 20),
+    #                                               command=select_end_folder_opk
+    #                                               )
+    # btn_choose_end_folder_employment_opk.pack(padx=10, pady=10)
+    # #
+    # # Создаем кнопку обработки данных
+    #
+    # btn_proccessing_data_employment_opk = Button(tab_employment_opk, text='3) Обработать данные',
+    #                                              font=('Arial Bold', 20),
+    #                                              command=processing_opk_employment
+    #                                              )
+    # btn_proccessing_data_employment_opk.pack(padx=10, pady=10)
 
 
 
@@ -644,6 +772,10 @@ if __name__ == '__main__':
                                    command=processing_diffrence
                                    )
     btn_data_do_diffrence.pack(padx=10, pady=10)
+
+
+
+
 
 
     # Создаем виджет для управления полосой прокрутки
