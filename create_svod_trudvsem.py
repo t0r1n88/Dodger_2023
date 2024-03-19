@@ -82,7 +82,7 @@ def clean_text(cell):
     Функция для очистки от незаписываемых символов
     """
     if isinstance(cell,str):
-        return re.sub(r'[^\d\w\s()=*+,.:;-]','',cell)
+        return re.sub(r'[^\d\w ()=*+,.:;-]','',cell)
     else:
         return cell
 
