@@ -256,6 +256,7 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
 
         lst_region = df['regionName'].unique() # Получаем список регионов
         # проверяем
+        print(region)
         if region not in lst_region:
             raise NotRegion
         df = df[df['regionName'] == region] # Фильтруем данные по региону
