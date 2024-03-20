@@ -299,7 +299,7 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
         # Сортируем по колонке Вакансия
         prepared_df.sort_values(by=['Вакансия'],inplace=True)
         all_status_prepared_df.sort_values(by=['Вакансия'],inplace=True)
-        union_company_df.sort_values(by=['Вакансия'],inplace=True)
+
 
         # Сохраняем общий файл с всеми вакансиями выбранных работодателей
         try:
@@ -314,6 +314,7 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
             all_status_prepared_df[lst_text_columns] = all_status_prepared_df[lst_text_columns].applymap(clean_equal)
 
             if len(union_company_df) != 0:
+                union_company_df.sort_values(by=['Вакансия'], inplace=True)
                 union_company_df[lst_text_columns] = union_company_df[lst_text_columns].applymap(clean_equal)
                 union_company_df.to_excel(f'{org_folder}/Общий файл.xlsx', index=False)
 
@@ -331,6 +332,7 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
             prepared_df[lst_text_columns] = prepared_df[lst_text_columns].applymap(clean_text)
             all_status_prepared_df[lst_text_columns] = all_status_prepared_df[lst_text_columns].applymap(clean_text)
             if len(union_company_df) != 0:
+                union_company_df.sort_values(by=['Вакансия'], inplace=True)
                 union_company_df[lst_text_columns] = union_company_df[lst_text_columns].applymap(clean_text)
                 union_company_df.to_excel(f'{org_folder}/Общий файл.xlsx', index=False)
 
