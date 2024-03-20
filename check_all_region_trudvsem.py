@@ -255,12 +255,9 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
                        'Профиль работодателя','Долгота адрес вакансии','Широта адрес вакансии']
 
         lst_region = df['regionName'].unique() # Получаем список регионов
-        print(region)
-        print(lst_region)
         # проверяем
         if region not in lst_region:
             raise NotRegion
-
         df = df[df['regionName'] == region] # Фильтруем данные по региону
 
         # получаем обработанный датафрейм со всеми статусами вакансий
@@ -281,22 +278,21 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
         if not os.path.exists(svod_region_folder):
             os.makedirs(svod_region_folder)
 
-        svod_org_folder = f'{end_folder}/Аналитика по вакансиям выбранных работодателей/{current_date}'  # создаем папку куда будем складывать аналитику по выбранным работодателям
-        if not os.path.exists(svod_org_folder):
-            os.makedirs(svod_org_folder)
 
             # Собираем датафреймы по ИНН
-        for idx, row in enumerate(company_df.itertuples()):
-            name_company = row[1]  # название компании
-            inn_company = row[2]  # инн компании
-            temp_df = prepared_df[prepared_df['ИНН работодателя'] == inn_company]  # фильтруем по инн
-            temp_df.sort_values(by=['Вакансия'], inplace=True)  # сортируем
-            name_company = re.sub(r'[\r\b\n\t<>:"?*|\\/]', '_', name_company)  # очищаем от лишних символов
 
-            temp_df.to_excel(f'{org_folder}/{name_company}.xlsx', index=False)  # сохраняем
-            # создаем отдельный файл в котором будут все вакансии по выбранным компаниям
-            temp_df.insert(0, 'Организация', name_company)
-            union_company_df = pd.concat([union_company_df, temp_df], ignore_index=True)
+        if len(company_df) != 0:
+            for idx, row in enumerate(company_df.itertuples()):
+                name_company = row[1]  # название компании
+                inn_company = row[2]  # инн компании
+                temp_df = prepared_df[prepared_df['ИНН работодателя'] == inn_company]  # фильтруем по инн
+                temp_df.sort_values(by=['Вакансия'], inplace=True)  # сортируем
+                name_company = re.sub(r'[\r\b\n\t<>:"?*|\\/]', '_', name_company)  # очищаем от лишних символов
+
+                temp_df.to_excel(f'{org_folder}/{name_company}.xlsx', index=False)  # сохраняем
+                # создаем отдельный файл в котором будут все вакансии по выбранным компаниям
+                temp_df.insert(0, 'Организация', name_company)
+                union_company_df = pd.concat([union_company_df, temp_df], ignore_index=True)
 
         # Сортируем по колонке Вакансия
         prepared_df.sort_values(by=['Вакансия'],inplace=True)
@@ -314,9 +310,10 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
             # потому что значение принимается за формулу
             prepared_df[lst_text_columns] = prepared_df[lst_text_columns].applymap(clean_equal)
             all_status_prepared_df[lst_text_columns] = all_status_prepared_df[lst_text_columns].applymap(clean_equal)
-            union_company_df[lst_text_columns] = union_company_df[lst_text_columns].applymap(clean_equal)
 
-            union_company_df.to_excel(f'{org_folder}/Общий файл.xlsx', index=False)
+            if len(union_company_df) != 0:
+                union_company_df[lst_text_columns] = union_company_df[lst_text_columns].applymap(clean_equal)
+                union_company_df.to_excel(f'{org_folder}/Общий файл.xlsx', index=False)
 
             with pd.ExcelWriter(f'{end_folder}/Вакансии по региону от {current_time}.xlsx') as writer:
                 prepared_df.to_excel(writer, sheet_name='Только подтвержденные вакансии', index=False)
@@ -331,13 +328,16 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
             # очищаем от неправильных символов
             prepared_df[lst_text_columns] = prepared_df[lst_text_columns].applymap(clean_text)
             all_status_prepared_df[lst_text_columns] = all_status_prepared_df[lst_text_columns].applymap(clean_text)
-            union_company_df[lst_text_columns] = union_company_df[lst_text_columns].applymap(clean_text)
-
-            union_company_df.to_excel(f'{org_folder}/Общий файл.xlsx', index=False)
+            if len(union_company_df) != 0:
+                union_company_df[lst_text_columns] = union_company_df[lst_text_columns].applymap(clean_text)
+                union_company_df.to_excel(f'{org_folder}/Общий файл.xlsx', index=False)
 
             with pd.ExcelWriter(f'{end_folder}/Вакансии по региону от {current_time}.xlsx') as writer:
                 prepared_df.to_excel(writer, sheet_name='Только подтвержденные вакансии', index=False)
                 all_status_prepared_df.to_excel(writer, sheet_name='Вакансии со всеми статусами', index=False)
+
+
+
 
         """
             Свод по региону
@@ -541,7 +541,11 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
         """
             Свод по выбранным работодателям
             """
+
         if len(union_company_df) != 0:
+            svod_org_folder = f'{end_folder}/Аналитика по вакансиям выбранных работодателей/{current_date}'  # создаем папку куда будем складывать аналитику по выбранным работодателям
+            if not os.path.exists(svod_org_folder):
+                os.makedirs(svod_org_folder)
 
             # Свод по вакансиям выбранных работодателей
 
@@ -738,8 +742,7 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
                 svod_soc_org_df.to_excel(writer, sheet_name='Вакансии для соц.кат.', index=False)
                 svod_shpere_exp_org_df.to_excel(writer, sheet_name='Требуемый опыт по отраслям', index=False)
                 svod_org_exp_org_df.to_excel(writer, sheet_name='Требуемый опыт по работодателям', index=False)
-        else:
-            union_company_df.to_excel(f'{svod_org_folder}/Проверьте правильность ИНН организаций {current_time}.xlsx')
+
     except NameError:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
                                  f'Выберите файлы с данными и папку куда будет генерироваться файл')
