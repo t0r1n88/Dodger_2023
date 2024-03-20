@@ -269,7 +269,8 @@ def processing_diff_svod_trudvsem():
     Функция для подсчета изменений
     """
     try:
-        prepare_diff_svod_trudvsem(file_frist_diff_svod_trudvsem, file_second_diff_svod_trudvsem,path_to_end_folder_diff_svod_trudvsem)
+        type_contrast = mode_region_value.get() # получаем значение режима сравнения
+        prepare_diff_svod_trudvsem(file_frist_diff_svod_trudvsem, file_second_diff_svod_trudvsem,path_to_end_folder_diff_svod_trudvsem,type_contrast)
 
     except NameError:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
@@ -713,6 +714,23 @@ if __name__ == '__main__':
                                                       command=select_end_folder_diff_svod_trudvsem
                                                       )
     btn_choose_end_folder_diff_svod_trudvsem.pack(padx=10, pady=10)
+
+    # Создаем чекбокс для режима подсчета изменений между регионами
+    # Создаем переменную для хранения результа переключения чекбокса
+    mode_region_value = StringVar()
+
+    # Устанавливаем значение по умолчанию для этой переменной. По умолчанию будет вестись подсчет числовых данных
+    mode_region_value.set('No')
+    # Создаем чекбокс для выбора режима подсчета
+
+    chbox_mode_contrast = Checkbutton(frame_data_diff_svod_trudvsem,
+                                       text='Поставьте галочку, если вам нужно сравнить данные 2 регионов,\n'
+                                            'сравнение будет идти только по отраслям',
+                                       variable=mode_region_value,
+                                       offvalue='No',
+                                       onvalue='Yes')
+    chbox_mode_contrast.pack(padx=10, pady=10)
+
 
     btn_proccessing_data_diff_svod_trudvsem = Button(tab_diff_svod_trudvsem, text='4) Обработать данные',
                                                      font=('Arial Bold', 20),
