@@ -256,7 +256,6 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
 
         lst_region = df['regionName'].unique() # Получаем список регионов
         # проверяем
-        print(region)
         if region not in lst_region:
             raise NotRegion
         df = df[df['regionName'] == region] # Фильтруем данные по региону
@@ -287,13 +286,14 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
                 name_company = row[1]  # название компании
                 inn_company = row[2]  # инн компании
                 temp_df = prepared_df[prepared_df['ИНН работодателя'] == inn_company]  # фильтруем по инн
-                temp_df.sort_values(by=['Вакансия'], inplace=True)  # сортируем
-                name_company = re.sub(r'[\r\b\n\t<>:"?*|\\/]', '_', name_company)  # очищаем от лишних символов
+                if len(temp_df) != 0:
+                    temp_df.sort_values(by=['Вакансия'], inplace=True)  # сортируем
+                    name_company = re.sub(r'[\r\b\n\t<>:"?*|\\/]', '_', name_company)  # очищаем от лишних символов
 
-                temp_df.to_excel(f'{org_folder}/{name_company}.xlsx', index=False)  # сохраняем
-                # создаем отдельный файл в котором будут все вакансии по выбранным компаниям
-                temp_df.insert(0, 'Организация', name_company)
-                union_company_df = pd.concat([union_company_df, temp_df], ignore_index=True)
+                    temp_df.to_excel(f'{org_folder}/{name_company}.xlsx', index=False)  # сохраняем
+                    # создаем отдельный файл в котором будут все вакансии по выбранным компаниям
+                    temp_df.insert(0, 'Организация', name_company)
+                    union_company_df = pd.concat([union_company_df, temp_df], ignore_index=True)
 
         # Сортируем по колонке Вакансия
         prepared_df.sort_values(by=['Вакансия'],inplace=True)
