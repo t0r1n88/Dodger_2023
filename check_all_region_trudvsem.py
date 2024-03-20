@@ -269,10 +269,7 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
         union_company_df_columns = list(prepared_df.columns).insert(0, 'Организация')
         union_company_df = pd.DataFrame(columns=union_company_df_columns)
 
-        # Создаем нужные папки
-        org_folder = f'{end_folder}/Вакансии по организациям/{current_date}'  # создаем папку куда будем складывать вакансии по организациям
-        if not os.path.exists(org_folder):
-            os.makedirs(org_folder)
+        # Создаем папку основную
 
         svod_region_folder = f'{end_folder}/Аналитика по вакансиям региона/{current_date}'  # создаем папку куда будем складывать аналитику по региону
         if not os.path.exists(svod_region_folder):
@@ -282,6 +279,10 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
             # Собираем датафреймы по ИНН
 
         if len(company_df) != 0:
+            org_folder = f'{end_folder}/Вакансии по организациям/{current_date}'  # создаем папку куда будем складывать вакансии по организациям
+            if not os.path.exists(org_folder):
+                os.makedirs(org_folder)
+
             for idx, row in enumerate(company_df.itertuples()):
                 name_company = row[1]  # название компании
                 inn_company = row[2]  # инн компании
