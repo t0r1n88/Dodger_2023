@@ -226,12 +226,12 @@ def prepare_diff_svod_trudvsem(first_file:str, second_file:str, end_folder:str,t
                 dct_change = {'number_column':3,'font':Font(color='FF000000'),
                               'fill':PatternFill(fill_type='solid', fgColor='ffa500'),
                               'find_value':'-'}
-                # Создаем словарь для отрицательных значений среднего арифметического
-                dct_mean = {'number_column':5,'font':Font(color='FF000000'),
-                              'fill':PatternFill(fill_type='solid', fgColor='ffa500'),
-                              'find_value':'-'}
+                dct_grow = {'number_column':3,'font':Font(color='FF000000'),
+                              'fill':PatternFill(fill_type='solid', fgColor='90ee90'),
+                              'find_value':'+'}
 
-                change_wb = write_df_to_excel_color_selection(dct_df,False,[dct_change,dct_mean],lst_not_standard_sheets)
+
+                change_wb = write_df_to_excel_color_selection(dct_df,False,[dct_change,dct_grow],lst_not_standard_sheets)
                 change_wb.save(f'{end_folder}/Изменения от {current_time}.xlsx')
         else:
             for name_sheet in lst_svod_sheets:
@@ -381,12 +381,11 @@ def prepare_diff_svod_trudvsem(first_file:str, second_file:str, end_folder:str,t
                     dct_change = {'number_column': 3, 'font': Font(color='FF000000'),
                                   'fill': PatternFill(fill_type='solid', fgColor='ffa500'),
                                   'find_value': '-'}
-                    # Создаем словарь для отрицательных значений среднего арифметического
-                    dct_mean = {'number_column': 5, 'font': Font(color='FF000000'),
-                                'fill': PatternFill(fill_type='solid', fgColor='ffa500'),
-                                'find_value': '-'}
+                    dct_grow = {'number_column': 3, 'font': Font(color='FF000000'),
+                                'fill': PatternFill(fill_type='solid', fgColor='90ee90'),
+                                'find_value': '+'}
 
-                    change_wb = write_df_to_excel_color_selection(dct_df, False, [dct_change, dct_mean],
+                    change_wb = write_df_to_excel_color_selection(dct_df, False, [dct_change, dct_grow],
                                                                   lst_not_standard_sheets)
                     change_wb.save(f'{end_folder}/Изменения от {current_time}.xlsx')
 
@@ -432,7 +431,7 @@ if __name__ == '__main__':
     main_second_file = 'data/Аналитика по вакансиям региона/19_03_2024/Свод по региону от 09_53_17.xlsx'
     main_end_folder = 'data'
 
-    prepare_diff_svod_trudvsem(main_first_file, main_second_file, main_end_folder,'No')
+    prepare_diff_svod_trudvsem(main_first_file, main_second_file, main_end_folder,'Yes')
 
     print('Lindy Booth !!!')
 

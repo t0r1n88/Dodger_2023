@@ -53,6 +53,17 @@ def write_df_to_excel_color_selection(dct_df:dict,write_index:bool,lst_color_sel
     """
     wb = openpyxl.Workbook() # создаем файл
     count_index = 0 # счетчик индексов создаваемых листов
+    # Создаем словарь для отрицательных значений среднего арифметического
+    dct_negative = {'number_column': 5, 'font': Font(color='FF000000'),
+                'fill': PatternFill(fill_type='solid', fgColor='ffa500'),
+                'find_value': '-'}
+    # Создаем словарь для положительных значений среднего арифметического
+    dct_positive = {'number_column': 5, 'font': Font(color='FF000000'),
+                'fill': PatternFill(fill_type='solid', fgColor='90ee90'),
+                'find_value': '-'}
+
+
+
     for name_sheet,df in dct_df.items():
         wb.create_sheet(title=name_sheet,index=count_index) # создаем лист
         # записываем данные в лист
@@ -102,16 +113,50 @@ def write_df_to_excel_color_selection(dct_df:dict,write_index:bool,lst_color_sel
 
         # Форматирование строк
         # Итерируемся по словарям с параметрами
-        for param_dct in lst_color_select:
-            font = param_dct['font']  # Получаем цвет шрифта
-            fill = param_dct['fill'] # получаем заливку
+        if name_sheet not in exlude_sheets:
+            for param_dct in lst_color_select:
+                if param_dct['find_value'] == '-': # если нужно выделить отрицательные значения
+                    font = param_dct['font']  # Получаем цвет шрифта
+                    fill = param_dct['fill'] # получаем заливку
 
+                    for row in wb[name_sheet].iter_rows(min_row=1, max_row=wb[name_sheet].max_row,
+                                                                    min_col=0, max_col=df.shape[1]):  # Перебираем строки
+                        if param_dct['find_value'] in str(row[param_dct['number_column']].value): # делаем ячейку строковой и проверяем наличие искомого слова
+                            for cell in row: # применяем стиль если условие сработало
+                                cell.font = font
+                                cell.fill = fill
+                elif param_dct['find_value'] == '+': # если нужно выделить значения больше нуля
+                    font = param_dct['font']  # Получаем цвет шрифта
+                    fill = param_dct['fill'] # получаем заливку
+
+                    for row in wb[name_sheet].iter_rows(min_row=1, max_row=wb[name_sheet].max_row,
+                                                                    min_col=0, max_col=df.shape[1]):  # Перебираем строки
+                        try:
+                            if int(row[param_dct['number_column']].value) > 0:
+                                for cell in row: # применяем стиль если условие сработало
+                                    cell.font = font
+                                    cell.fill = fill
+                        except:
+                            continue
+        else:
             for row in wb[name_sheet].iter_rows(min_row=1, max_row=wb[name_sheet].max_row,
-                                                            min_col=0, max_col=df.shape[1]+1):  # Перебираем строки
-                if param_dct['find_value'] in str(row[param_dct['number_column']].value): # делаем ячейку строковой и проверяем наличие искомого слова
-                    for cell in row: # применяем стиль если условие сработало
-                        cell.font = font
-                        cell.fill = fill
+                                                min_col=0, max_col=df.shape[1]):  # Перебираем строки
+                try:
+                    value = int(row[dct_negative['number_column']].value)
+                    if value > 0:
+                        for cell in row:  # применяем стиль если условие сработало
+                            cell.font = dct_positive['font']
+                            cell.fill = dct_positive['fill']
+                    elif value < 0:
+                        for cell in row:  # применяем стиль если условие сработало
+                            cell.font = dct_negative['font']
+                            cell.fill = dct_negative['fill']
+                    else:
+                        continue
+                except:
+                    continue
+
+
 
 
     return wb
