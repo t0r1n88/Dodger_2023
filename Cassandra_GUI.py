@@ -603,7 +603,7 @@ if __name__ == '__main__':
     lbl_hello_svod_trudvsem = Label(svod_trudvsem_frame_description,
                                     text='Центр опережающей профессиональной подготовки Республики Бурятия\n'
                                          'Аналитика по кадровой ситуации в регионе на основании данных \n'
-                                         'с сайта Работа в России (trudvsem.ru)',
+                                         'с сайта Работа в России (trudvsem.ru) https://trudvsem.ru/opendata',
                                     width=60)
     lbl_hello_svod_trudvsem.pack(side=LEFT, anchor=N, ipadx=25, ipady=10)
 
