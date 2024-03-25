@@ -240,7 +240,7 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
         current_date = time.strftime('%d_%m_%Y', t)
         # Получаем данные из csv
         df = pd.read_csv(file_data, encoding='UTF-8', sep='|', dtype=str, on_bad_lines='skip')
-        company_df = pd.read_excel(file_org, dtype=str) # получаем данные из файла с организациями
+        company_df = pd.read_excel(file_org, dtype=str,usecols='A:B') # получаем данные из файла с организациями
         company_df.dropna(inplace=True) # удаляем незаполненные строки
         # Список колонок итоговых таблиц с вакансиями
         lst_columns = ['Дата размещения вакансии','Дата изменения вакансии','Регион','Вакансия','Сфера деятельности','Количество рабочих мест',
@@ -773,6 +773,7 @@ if __name__ == '__main__':
     main_file_data = 'data/vacancy_7 (4).csv'
     main_file_data = 'data/vacancy all.csv'
     main_org_file = 'data/company.xlsx'
+    main_org_file = 'data/company Бурятия.xlsx'
     main_region = 'Республика Бурятия'
     main_region = 'Томская область'
     main_region = 'Иркутская область'
@@ -783,7 +784,7 @@ if __name__ == '__main__':
 
 
 
-    main_end_folder = 'data'
+    main_end_folder = 'data/Республика Бурятия'
 
     processing_data_trudvsem(main_file_data,main_org_file,main_end_folder,main_region)
 
