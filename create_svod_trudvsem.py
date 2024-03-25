@@ -370,6 +370,19 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
             svod_vac_org_region_df.rename(columns={'sum': 'Количество вакансий'}, inplace=True)
             svod_vac_org_region_df = svod_vac_org_region_df.reset_index()
 
+        # Свод по количеству вакансий для каждой конкретной вакансии работодателя в регионе
+        svod_vac_particular_org_region_df = pd.pivot_table(prepared_df,
+                                                           index=['Полное название работодателя', 'Вакансия'],
+                                                           values=['Количество рабочих мест'],
+                                                           aggfunc={'Количество рабочих мест': [np.sum]})
+        svod_vac_particular_org_region_df = svod_vac_particular_org_region_df.droplevel(level=0,
+                                                                                        axis=1)  # убираем мультииндекс
+        if len(svod_vac_particular_org_region_df) != 0:
+            svod_vac_particular_org_region_df.sort_values(by=['Полное название работодателя', 'Вакансия'],
+                                                          ascending=[True, True], inplace=True)
+            svod_vac_particular_org_region_df.rename(columns={'sum': 'Количество вакансий'}, inplace=True)
+            svod_vac_particular_org_region_df = svod_vac_particular_org_region_df.reset_index()
+
         # Свод по средней и медианной минимальной зарплате для сфер деятельности
         svod_shpere_pay_region_df = pd.pivot_table(prepared_df,
                                                    index=['Сфера деятельности'],
@@ -527,6 +540,7 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
         with pd.ExcelWriter(f'{svod_region_folder}/Свод по региону от {current_time}.xlsx') as writer:
             svod_vac_reg_region_df.to_excel(writer, sheet_name='Вакансии по отраслям', index=False)
             svod_vac_org_region_df.to_excel(writer, sheet_name='Вакансии по работодателям', index=False)
+            svod_vac_particular_org_region_df.to_excel(writer,sheet_name='Вакансии для динамики',index=False)
             svod_shpere_pay_region_df.to_excel(writer, sheet_name='Зарплата по отраслям', index=False)
             svod_org_pay_region_df.to_excel(writer, sheet_name='Зарплата по работодателям', index=False)
             svod_shpere_educ_region_df.to_excel(writer, sheet_name='Образование по отраслям', index=False)
@@ -576,6 +590,19 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
                 svod_vac_org_org_df.loc['Итого'] = svod_vac_org_org_df['sum'].sum()
                 svod_vac_org_org_df.rename(columns={'sum': 'Количество вакансий'}, inplace=True)
                 svod_vac_org_org_df = svod_vac_org_org_df.reset_index()
+
+            # Свод по количеству вакансий для каждой конкретной вакансии работодателя в регионе
+            svod_vac_particular_org_org_df = pd.pivot_table(union_company_df,
+                                                            index=['Полное название работодателя', 'Вакансия'],
+                                                            values=['Количество рабочих мест'],
+                                                            aggfunc={'Количество рабочих мест': [np.sum]})
+            svod_vac_particular_org_org_df = svod_vac_particular_org_org_df.droplevel(level=0,
+                                                                                      axis=1)  # убираем мультииндекс
+            if len(svod_vac_particular_org_org_df) != 0:
+                svod_vac_particular_org_org_df.sort_values(by=['Полное название работодателя', 'Вакансия'],
+                                                           ascending=[True, True], inplace=True)
+                svod_vac_particular_org_org_df.rename(columns={'sum': 'Количество вакансий'}, inplace=True)
+                svod_vac_particular_org_org_df = svod_vac_particular_org_org_df.reset_index()
 
             # Свод по средней и медианной минимальной зарплате для сфер деятельности
             svod_shpere_pay_org_df = pd.pivot_table(union_company_df,
@@ -732,6 +759,7 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
             with pd.ExcelWriter(f'{svod_org_folder}/Свод по выбранным работодателям от {current_time}.xlsx') as writer:
                 svod_vac_reg_org_df.to_excel(writer, sheet_name='Вакансии по отраслям', index=False)
                 svod_vac_org_org_df.to_excel(writer, sheet_name='Вакансии по работодателям', index=False)
+                svod_vac_particular_org_org_df.to_excel(writer,sheet_name='Вакансии для динамики',index=False)
                 svod_shpere_pay_org_df.to_excel(writer, sheet_name='Зарплата по отраслям', index=False)
                 svod_org_pay_org_df.to_excel(writer, sheet_name='Зарплата по работодателям', index=False)
                 svod_shpere_educ_org_df.to_excel(writer, sheet_name='Образование по отраслям', index=False)
