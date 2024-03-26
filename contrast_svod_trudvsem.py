@@ -34,7 +34,16 @@ class NotColumnPay(Exception):
     pass
 
 
-
+def split_cell(cell: str, user_sep: str, number_split: int):
+    """
+    Функция для извлечения части строки
+    """
+    lst_cell = str(cell).split(user_sep)  # получаем список
+    if len(lst_cell) >= number_split + 1:
+        out_value = lst_cell[number_split].strip()
+        return out_value
+    else:
+        return cell
 
 
 def sum_category(row: pd.Series, user_sep: str):
@@ -113,8 +122,8 @@ def prepare_diff_svod_trudvsem(first_file:str, second_file:str, end_folder:str,t
                     second_df[second_key_columns] = second_df[second_key_columns].astype(str)
 
                     # Создаем колонки по которым будет вестись объединение
-                    first_df['ID'] = first_df[first_key_columns].apply(lambda x: sum_category(x, '-'), axis=1)
-                    second_df['ID'] = second_df[second_key_columns].apply(lambda x: sum_category(x, '-'), axis=1)
+                    first_df['ID'] = first_df[first_key_columns].apply(lambda x: sum_category(x, '&'), axis=1)
+                    second_df['ID'] = second_df[second_key_columns].apply(lambda x: sum_category(x, '&'), axis=1)
 
                     # Проводим внешнее слияние
                     merge_df = first_df.merge(second_df, how='outer', left_on=['ID'], right_on=['ID'], indicator=True)
@@ -143,7 +152,17 @@ def prepare_diff_svod_trudvsem(first_file:str, second_file:str, end_folder:str,t
                         (merge_df['Вторая таблица'] / merge_df['Первая таблица']) * 100, 2)
 
                     merge_df.sort_values(by='Показатель', inplace=True)  # Сортируем по показателю
-                    dct_df[name_sheet] = merge_df  # сохраняем в словарь
+                    if name_sheet != 'Вакансии для динамики':
+                        dct_df[name_sheet] = merge_df  # сохраняем в словарь
+                    else: # Обрабатываем отдельно лист Вакансии для динамики, чтобы Работодатель и Вакансии были по отдельности
+                        merge_df['_Работодатель'] = merge_df['Показатель'].apply(lambda x: split_cell(x, '&', 0))
+                        merge_df['_Вакансия'] = merge_df['Показатель'].apply(lambda x: split_cell(x, '&', 1))
+
+                        merge_df.insert(0, 'Работодатель', merge_df['_Работодатель'])
+                        merge_df.insert(1, 'Вакансия', merge_df['_Вакансия'])
+
+                        merge_df.drop(columns=['Показатель', '_Работодатель', '_Вакансия'], inplace=True)
+                        dct_df[name_sheet] = merge_df  # сохраняем в словарь
 
                 else:
                     # обрабатываем нестандартные листы
@@ -256,8 +275,8 @@ def prepare_diff_svod_trudvsem(first_file:str, second_file:str, end_folder:str,t
                     second_df[second_key_columns] = second_df[second_key_columns].astype(str)
 
                     # Создаем колонки по которым будет вестись объединение
-                    first_df['ID'] = first_df[first_key_columns].apply(lambda x: sum_category(x, '-'), axis=1)
-                    second_df['ID'] = second_df[second_key_columns].apply(lambda x: sum_category(x, '-'), axis=1)
+                    first_df['ID'] = first_df[first_key_columns].apply(lambda x: sum_category(x, '&'), axis=1)
+                    second_df['ID'] = second_df[second_key_columns].apply(lambda x: sum_category(x, '&'), axis=1)
 
                     # Проводим внешнее слияние
                     merge_df = first_df.merge(second_df, how='outer', left_on=['ID'], right_on=['ID'], indicator=True)
@@ -427,8 +446,10 @@ def prepare_diff_svod_trudvsem(first_file:str, second_file:str, end_folder:str,t
 
 if __name__ == '__main__':
     main_first_file = 'data/Аналитика по вакансиям региона/15_03_2024/Свод по региону Бурятия от 14 марта.xlsx'
+    main_first_file = 'data/Красноярский край/Аналитика по вакансиям выбранных работодателей/25_03_2024/Свод по выбранным работодателям от 15_09_09.xlsx'
     main_second_file = 'data/Аналитика по вакансиям региона/16_03_2024/Свод по региону Бурятия от 16 марта.xlsx'
     main_second_file = 'data/Аналитика по вакансиям региона/19_03_2024/Свод по региону от 09_53_17.xlsx'
+    main_second_file = 'data/Красноярский край/25.05/Аналитика по вакансиям выбранных работодателей/25_03_2024/Свод по выбранным работодателям от 15_11_13.xlsx'
     main_end_folder = 'data'
 
     prepare_diff_svod_trudvsem(main_first_file, main_second_file, main_end_folder,'No')
