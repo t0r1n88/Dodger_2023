@@ -122,8 +122,8 @@ def prepare_diff_svod_trudvsem(first_file:str, second_file:str, end_folder:str,t
                     second_df[second_key_columns] = second_df[second_key_columns].astype(str)
 
                     # Создаем колонки по которым будет вестись объединение
-                    first_df['ID'] = first_df[first_key_columns].apply(lambda x: sum_category(x, '&'), axis=1)
-                    second_df['ID'] = second_df[second_key_columns].apply(lambda x: sum_category(x, '&'), axis=1)
+                    first_df['ID'] = first_df[first_key_columns].apply(lambda x: sum_category(x, '+&+'), axis=1)
+                    second_df['ID'] = second_df[second_key_columns].apply(lambda x: sum_category(x, '+&+'), axis=1)
 
                     # Проводим внешнее слияние
                     merge_df = first_df.merge(second_df, how='outer', left_on=['ID'], right_on=['ID'], indicator=True)
@@ -155,8 +155,8 @@ def prepare_diff_svod_trudvsem(first_file:str, second_file:str, end_folder:str,t
                     if name_sheet != 'Вакансии для динамики':
                         dct_df[name_sheet] = merge_df  # сохраняем в словарь
                     else: # Обрабатываем отдельно лист Вакансии для динамики, чтобы Работодатель и Вакансии были по отдельности
-                        merge_df['_Работодатель'] = merge_df['Показатель'].apply(lambda x: split_cell(x, '&', 0))
-                        merge_df['_Вакансия'] = merge_df['Показатель'].apply(lambda x: split_cell(x, '&', 1))
+                        merge_df['_Работодатель'] = merge_df['Показатель'].apply(lambda x: split_cell(x, '+&+', 0))
+                        merge_df['_Вакансия'] = merge_df['Показатель'].apply(lambda x: split_cell(x, '+&+', 1))
 
                         merge_df.insert(0, 'Работодатель', merge_df['_Работодатель'])
                         merge_df.insert(1, 'Вакансия', merge_df['_Вакансия'])
@@ -255,7 +255,7 @@ def prepare_diff_svod_trudvsem(first_file:str, second_file:str, end_folder:str,t
         else:
             for name_sheet in lst_svod_sheets:
                 # Если свод стандартный по количеству вакансий
-                if name_sheet not in lst_not_standard_sheets and 'работодателям' not in name_sheet:
+                if name_sheet not in lst_not_standard_sheets and 'работодателям' not in name_sheet and name_sheet !='Вакансии для динамики':
                     first_df = pd.read_excel(first_file, sheet_name=name_sheet)  # первый файл для сравнения
                     second_df = pd.read_excel(second_file, sheet_name=name_sheet)  # второй файл для сравнения
 
@@ -275,8 +275,8 @@ def prepare_diff_svod_trudvsem(first_file:str, second_file:str, end_folder:str,t
                     second_df[second_key_columns] = second_df[second_key_columns].astype(str)
 
                     # Создаем колонки по которым будет вестись объединение
-                    first_df['ID'] = first_df[first_key_columns].apply(lambda x: sum_category(x, '&'), axis=1)
-                    second_df['ID'] = second_df[second_key_columns].apply(lambda x: sum_category(x, '&'), axis=1)
+                    first_df['ID'] = first_df[first_key_columns].apply(lambda x: sum_category(x, '+&+'), axis=1)
+                    second_df['ID'] = second_df[second_key_columns].apply(lambda x: sum_category(x, '+&+'), axis=1)
 
                     # Проводим внешнее слияние
                     merge_df = first_df.merge(second_df, how='outer', left_on=['ID'], right_on=['ID'], indicator=True)
@@ -311,7 +311,7 @@ def prepare_diff_svod_trudvsem(first_file:str, second_file:str, end_folder:str,t
                     dct_df[name_sheet] = merge_df  # сохраняем в словарь
 
                 else:
-                    if 'работодателям' not in name_sheet:
+                    if 'работодателям' not in name_sheet and name_sheet!='Вакансии для динамики':
 
                         # обрабатываем нестандартные листы
                         first_df = pd.read_excel(first_file, sheet_name=name_sheet)  # первый файл для сравнения
