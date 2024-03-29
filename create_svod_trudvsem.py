@@ -288,7 +288,7 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
             org_folder = f'{end_folder}/Вакансии по организациям/{current_date}'  # создаем папку куда будем складывать вакансии по организациям
             if not os.path.exists(org_folder):
                 os.makedirs(org_folder)
-
+            count_exists_file = 0 # счетчик для уже созданных файлов чтобы не затирались
             for idx, row in enumerate(company_df.itertuples()):
                 name_company = row[1]  # название компании
                 inn_company = row[2]  # инн компании
@@ -298,8 +298,18 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
                     name_company = re.sub(r'[\r\b\n\t<>:"?*|\\/]', '_', name_company)  # очищаем название от лишних символов
                     temp_df[lst_text_columns] = temp_df[lst_text_columns].applymap(clean_equal) # очищаем от знака равно в начале
                     temp_df[lst_text_columns] = temp_df[lst_text_columns].applymap(clean_text) # очищаем от неправильных символов
+                    # считаем возможную длину названия файл с учетом слеша и расширения с точкой и порядковым номером файла
+                    threshold_name = 200 - (len(org_folder)+10)
+                    if threshold_name <= 0: # если путь к папке слшиком длинный вызываем исключение
+                        raise OSError
+                    name_company = name_company[:threshold_name] # ограничиваем название файла
+                    # сохраняем файл с проверкой на существующие файлы с таким же именем
+                    if not os.path.exists(f'{org_folder}/{name_company}.xlsx'):
+                        temp_df.to_excel(f'{org_folder}/{name_company}.xlsx', index=False)  # сохраняем
+                    else:
+                        temp_df.to_excel(f'{org_folder}/{name_company}_{count_exists_file}.xlsx', index=False)  # сохраняем
+                        count_exists_file += 1
 
-                    temp_df.to_excel(f'{org_folder}/{name_company}.xlsx', index=False)  # сохраняем
                     # создаем отдельный файл в котором будут все вакансии по выбранным компаниям
                     temp_df.insert(0, 'Организация', name_company)
                     union_company_df = pd.concat([union_company_df, temp_df], ignore_index=True)
@@ -779,18 +789,14 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
     except KeyError as e:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
                              f'Не найдено значение {e.args}')
-    except FileNotFoundError:
-        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
-                             f'Перенесите файлы которые вы хотите обработать в корень диска. Проблема может быть\n '
-                             f'в слишком длинном пути к обрабатываемым файлам')
 
     except PermissionError as e:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
                              f'Закройте открытые файлы Excel {e.args}')
     except OSError:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
-                             f'Укажите в качестве конечной папки, папку в корне диска. Проблема может быть\n '
-                             f'в слишком длинном пути к создаваемым файлам')
+                             f'Укажите в качестве конечной папки, папку в корне диска с коротким названием. Проблема может быть\n '
+                             f'в слишком длинном пути к создаваемому файлу')
 
     else:
         messagebox.showinfo('Кассандра Подсчет данных по трудоустройству выпускников',
@@ -813,7 +819,7 @@ if __name__ == '__main__':
 
 
 
-    main_end_folder = 'data/Республика Бурятия'
+    main_end_folder = 'c:/Users/1/PycharmProjects/Dodger_2023/data/Республика Бурятия'
 
     processing_data_trudvsem(main_file_data,main_org_file,main_end_folder,main_region)
 
