@@ -117,6 +117,14 @@ def convert_date(cell):
     except:
         return 'Не удалось обработать содержимое ячейки'
 
+def convert_int(value):
+    """
+    Функция для конвертации в инт
+    """
+    try:
+        return int(value)
+    except:
+        return 0
 
 def extract_soc_category(df: pd.DataFrame, name_column: str, user_sep: str):
     """
@@ -391,7 +399,10 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
             svod_vac_particular_org_region_df = svod_vac_particular_org_region_df.reset_index()
 
         # Свод по средней и медианной минимальной зарплате для сфер деятельности
-        svod_shpere_pay_region_df = pd.pivot_table(prepared_df,
+        prepared_df['Минимальная зарплата'] = prepared_df['Минимальная зарплата'].apply(convert_int)
+        pay_df = prepared_df[prepared_df['Минимальная зарплата'] > 0] # отбираем все вакансии с зп больше нуля
+
+        svod_shpere_pay_region_df = pd.pivot_table(pay_df,
                                                    index=['Сфера деятельности'],
                                                    values=['Минимальная зарплата'],
                                                    aggfunc={'Минимальная зарплата': [np.mean, np.median]},
@@ -403,7 +414,7 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
             svod_shpere_pay_region_df = svod_shpere_pay_region_df.reset_index()
 
         # Свод по средней и медианной минимальной зарплате для работодателей
-        svod_org_pay_region_df = pd.pivot_table(prepared_df,
+        svod_org_pay_region_df = pd.pivot_table(pay_df,
                                                 index=['Полное название работодателя', 'Сфера деятельности'],
                                                 values=['Минимальная зарплата'],
                                                 aggfunc={'Минимальная зарплата': [np.mean, np.median]},
@@ -612,7 +623,11 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
                 svod_vac_particular_org_org_df = svod_vac_particular_org_org_df.reset_index()
 
             # Свод по средней и медианной минимальной зарплате для сфер деятельности
-            svod_shpere_pay_org_df = pd.pivot_table(union_company_df,
+            union_company_df['Минимальная зарплата'] = union_company_df['Минимальная зарплата'].apply(convert_int)
+            pay_union_df = union_company_df[union_company_df['Минимальная зарплата'] > 0]
+
+
+            svod_shpere_pay_org_df = pd.pivot_table(pay_union_df,
                                                     index=['Сфера деятельности'],
                                                     values=['Минимальная зарплата'],
                                                     aggfunc={'Минимальная зарплата': [np.mean, np.median]},
@@ -624,7 +639,7 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
                 svod_shpere_pay_org_df = svod_shpere_pay_org_df.reset_index()
 
             # Свод по средней и медианной минимальной зарплате для работодателей
-            svod_org_pay_org_df = pd.pivot_table(union_company_df,
+            svod_org_pay_org_df = pd.pivot_table(pay_union_df,
                                                  index=['Полное название работодателя', 'Сфера деятельности'],
                                                  values=['Минимальная зарплата'],
                                                  aggfunc={'Минимальная зарплата': [np.mean, np.median]},
