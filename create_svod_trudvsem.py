@@ -82,7 +82,7 @@ def clean_text(cell):
     Функция для очистки от незаписываемых символов
     """
     if isinstance(cell,str):
-        return re.sub(r'[^\d\w ()=*+,.:;-]','',cell)
+        return re.sub(r'[^\d\w\s()=*+,.:;\"\'@-]','',cell)
     else:
         return cell
 
@@ -253,6 +253,12 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
                        'ИНН работодателя','КПП работодателя','ОГРН работодателя','Контактное лицо','Контактный телефон','Email работодателя',
                        'Профиль работодателя','Долгота адрес вакансии','Широта адрес вакансии']
 
+        # Список колонок с текстом
+        lst_text_columns = ['Вакансия', 'Требуемая специализация', 'Требования', 'Обязанности',
+                            'Бонусы', 'Дополнительные бонусы', 'Требуемые доп. документы',
+                            'Требуемые хардскиллы', 'Требуемые софтскиллы', 'Полное название работодателя',
+                            'Адрес вакансии', 'Доп информация по адресу вакансии', 'Email работодателя',
+                            'Контактное лицо']
         lst_region = df['regionName'].unique() # Получаем список регионов
         # проверяем
         if region not in lst_region:
@@ -288,7 +294,9 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
                 temp_df = prepared_df[prepared_df['ИНН работодателя'] == inn_company]  # фильтруем по инн
                 if len(temp_df) != 0:
                     temp_df.sort_values(by=['Вакансия'], inplace=True)  # сортируем
-                    name_company = re.sub(r'[\r\b\n\t<>:"?*|\\/]', '_', name_company)  # очищаем от лишних символов
+                    name_company = re.sub(r'[\r\b\n\t<>:"?*|\\/]', '_', name_company)  # очищаем название от лишних символов
+                    temp_df[lst_text_columns] = temp_df[lst_text_columns].applymap(clean_equal) # очищаем от знака равно в начале
+                    temp_df[lst_text_columns] = temp_df[lst_text_columns].applymap(clean_text) # очищаем от неправильных символов
 
                     temp_df.to_excel(f'{org_folder}/{name_company}.xlsx', index=False)  # сохраняем
                     # создаем отдельный файл в котором будут все вакансии по выбранным компаниям
@@ -302,11 +310,6 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
 
         # Сохраняем общий файл с всеми вакансиями выбранных работодателей
         try:
-            # Список колонок с текстом
-            lst_text_columns = ['Вакансия','Требуемая специализация','Требования','Обязанности',
-                                'Бонусы','Дополнительные бонусы','Требуемые доп. документы',
-                                'Требуемые хардскиллы','Требуемые софтскиллы','Полное название работодателя',
-                                'Адрес вакансии','Доп информация по адресу вакансии','Email работодателя','Контактное лицо']
             # очищаем текстовые колонки от возможного знака равно в начале ячейки, в таком случае возникает ошибка
             # потому что значение принимается за формулу
             prepared_df[lst_text_columns] = prepared_df[lst_text_columns].applymap(clean_equal)
@@ -321,12 +324,7 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
                 prepared_df.to_excel(writer, sheet_name='Только подтвержденные вакансии', index=False)
                 all_status_prepared_df.to_excel(writer, sheet_name='Вакансии со всеми статусами', index=False)
         except IllegalCharacterError:
-            # Список колонок с текстом
-            lst_text_columns = ['Вакансия','Требуемая специализация','Требования','Обязанности',
-                                'Бонусы','Дополнительные бонусы','Требуемые доп. документы',
-                                'Требуемые хардскиллы','Требуемые софтскиллы','Полное название работодателя',
-                                'Адрес вакансии','Доп информация по адресу вакансии','Email работодателя','Контактное лицо']
-
+            # Если в тексте есть ошибочные символы то очищаем данные
             # очищаем от неправильных символов
             prepared_df[lst_text_columns] = prepared_df[lst_text_columns].applymap(clean_text)
             all_status_prepared_df[lst_text_columns] = all_status_prepared_df[lst_text_columns].applymap(clean_text)
@@ -338,8 +336,6 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
             with pd.ExcelWriter(f'{end_folder}/Вакансии по региону от {current_time}.xlsx') as writer:
                 prepared_df.to_excel(writer, sheet_name='Только подтвержденные вакансии', index=False)
                 all_status_prepared_df.to_excel(writer, sheet_name='Вакансии со всеми статусами', index=False)
-
-
 
 
         """
