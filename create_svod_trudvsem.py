@@ -239,7 +239,7 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
         current_time = time.strftime('%H_%M_%S', t)
         current_date = time.strftime('%d_%m_%Y', t)
         # Получаем данные из csv
-        df = pd.read_csv(file_data, encoding='UTF-8', sep='|', dtype=str, on_bad_lines='skip')
+        main_df = pd.read_csv(file_data, encoding='UTF-8', sep='|', dtype=str, on_bad_lines='skip')
         company_df = pd.read_excel(file_org, dtype=str,usecols='A:B') # получаем данные из файла с организациями
         company_df.dropna(inplace=True) # удаляем незаполненные строки
         # Список колонок итоговых таблиц с вакансиями
@@ -259,12 +259,13 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
                             'Требуемые хардскиллы', 'Требуемые софтскиллы', 'Полное название работодателя',
                             'Адрес вакансии', 'Доп информация по адресу вакансии', 'Email работодателя',
                             'Контактное лицо']
-        lst_region = df['regionName'].unique() # Получаем список регионов
+        lst_region = main_df['regionName'].unique() # Получаем список регионов
         # проверяем
         if region not in lst_region:
             raise NotRegion
-        df = df[df['regionName'] == region] # Фильтруем данные по региону
+        df = main_df[main_df['regionName'] == region] # Фильтруем данные по региону
 
+        del main_df # очищаем память
         # получаем обработанный датафрейм со всеми статусами вакансий
         all_status_prepared_df = prepare_data_vacancy(df, dct_name_columns,lst_columns)
 
