@@ -776,9 +776,9 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
     except NotRegion:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
                                  f'Не найден регион! Проверьте написание региона в соответствии с правилами сайта Работа в России')
-    # except KeyError as e:
-    #     messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
-    #                          f'Не найдено значение {e.args}')
+    except KeyError as e:
+        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
+                             f'Не найдено значение {e.args}')
     except FileNotFoundError:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
                              f'Перенесите файлы которые вы хотите обработать в корень диска. Проблема может быть\n '
@@ -787,6 +787,10 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
     except PermissionError as e:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
                              f'Закройте открытые файлы Excel {e.args}')
+    except OSError:
+        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
+                             f'Укажите в качестве конечной папки, папку в корне диска. Проблема может быть\n '
+                             f'в слишком длинном пути к создаваемым файлам')
 
     else:
         messagebox.showinfo('Кассандра Подсчет данных по трудоустройству выпускников',
