@@ -7,7 +7,7 @@ from form_two_fifteen_row_nose import prepare_form_two_employment  # импор�
 from form_three_expected_release import prepare_form_three_employment # импортируем функцию для обработки Формы 3 Ожидаемый выпуск
 from ck_employment import prepare_ck_employment  # импортируем функцию для обработки данных для отчета центров карьеры
 from opk_employment import prepare_opk_employment  # импортируем функцию для обработки данных по ОПК
-from create_svod_trudvsem import processing_data_trudvsem # импортируем функцию для обработки данных с трудвсем
+from vdnh_create_svod_trudvsem import vdnh_processing_data_trudvsem # импортируем функцию для обработки данных с трудвсем для ВДНХ
 from contrast_svod_trudvsem import prepare_diff_svod_trudvsem # импортируем функцию для измерения разницы между двумя сводами
 from difference import prepare_diffrence  # импортируем функцию для нахождения разницы между двумя таблицами
 
@@ -257,7 +257,7 @@ def processing_svod_trudvsem():
     """
     try:
         name_region = str(entry_region.get()) # Получаем название региона
-        processing_data_trudvsem(file_csv_svod_trudvsem, file_org_svod_trudvsem,path_to_end_folder_svod_trudvsem,name_region)
+        vdnh_processing_data_trudvsem(file_csv_svod_trudvsem, file_org_svod_trudvsem,path_to_end_folder_svod_trudvsem,name_region)
 
     except NameError:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',

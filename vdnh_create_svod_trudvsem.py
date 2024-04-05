@@ -206,7 +206,7 @@ def prepare_data_vacancy(df: pd.DataFrame, dct_name_columns: dict, lst_columns: 
     return df
 
 
-def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:str):
+def vdnh_processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:str):
     """
     Основная функция для обработки данных
     :param file_data: файл в формате csv с данными вакансий
@@ -334,14 +334,29 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
             prepared_df[lst_text_columns] = prepared_df[lst_text_columns].applymap(clean_equal)
             all_status_prepared_df[lst_text_columns] = all_status_prepared_df[lst_text_columns].applymap(clean_equal)
 
+            # Создаем список колонок который будем сохранять для варианта с ВДНХ
+            lst_vdnh = ['Вакансия','Сфера деятельности','Количество рабочих мест','Зарплата','График работы','Тип занятости',
+                        'Образование','Квотируемое место','Социально защищенная категория','Требуемый опыт работы в годах',
+                        'Полное название работодателя','Контактное лицо','Контактный телефон','Email работодателя']
+
             if len(union_company_df) != 0:
                 union_company_df.sort_values(by=['Вакансия'], inplace=True)
                 union_company_df[lst_text_columns] = union_company_df[lst_text_columns].applymap(clean_equal)
                 union_company_df.to_excel(f'{org_folder}/Общий файл.xlsx', index=False)
+                # Отбираем нужные колонки
+                vdnh_union_company_df = union_company_df[lst_vdnh]
+                vdnh_union_company_df.to_csv(f'{end_folder}/Вакансии выбранных работодателей от {current_time}.csv', encoding='UTF-8', sep='|')
+                vdnh_union_company_df.to_json(f'{end_folder}/Вакансии выбранных работодателей от {current_time}.json')
 
             with pd.ExcelWriter(f'{end_folder}/Вакансии по региону от {current_time}.xlsx') as writer:
                 prepared_df.to_excel(writer, sheet_name='Только подтвержденные вакансии', index=False)
                 all_status_prepared_df.to_excel(writer, sheet_name='Вакансии со всеми статусами', index=False)
+                # Сохранение в разных форматах
+                vdnh_df = prepared_df[lst_vdnh]
+                vdnh_df.to_excel(f'{end_folder}/Вакансии без второго листа {current_time}.xlsx',index=False)
+                vdnh_df.to_csv(f'{end_folder}/Вакансии по региону от {current_time}.csv', encoding='UTF-8', sep='|')
+                vdnh_df.to_json(f'{end_folder}/Вакансии по региону от {current_time}.json')
+
         except IllegalCharacterError:
             # Если в тексте есть ошибочные символы то очищаем данные
             # очищаем от неправильных символов
@@ -355,6 +370,9 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
             with pd.ExcelWriter(f'{end_folder}/Вакансии по региону от {current_time}.xlsx') as writer:
                 prepared_df.to_excel(writer, sheet_name='Только подтвержденные вакансии', index=False)
                 all_status_prepared_df.to_excel(writer, sheet_name='Вакансии со всеми статусами', index=False)
+            vdnh_df = prepared_df[lst_vdnh]
+            vdnh_df.to_csv(f'{end_folder}/Вакансии по региону от {current_time}.csv',encoding='UTF-8',sep='|')
+            vdnh_df.to_json(f'{end_folder}/Вакансии по региону от {current_time}.json')
 
 
         """
@@ -821,21 +839,16 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
 if __name__ == '__main__':
     main_file_data = 'data/vacancy.csv'
     main_file_data = 'data/vacancy_7 (4).csv'
-    main_file_data = 'data/vacancy all.csv'
+    main_file_data = 'data/04_04.csv'
     main_org_file = 'data/company.xlsx'
     main_org_file = 'data/company Бурятия.xlsx'
-    main_region = 'Республика Бурятия'
-    main_region = 'Томская область'
-    main_region = 'Иркутская область'
-    main_region = 'Город Санкт-Петербург'
-    main_region = 'Кемеровская область - Кузбасс'
-    main_region = 'Город Москва'
+
     main_region = 'Республика Бурятия'
 
 
 
     main_end_folder = 'c:/Users/1/PycharmProjects/Dodger_2023/data/Республика Бурятия'
 
-    processing_data_trudvsem(main_file_data,main_org_file,main_end_folder,main_region)
+    vdnh_processing_data_trudvsem(main_file_data,main_org_file,main_end_folder,main_region)
 
     print('Lindy Booth !!!')
