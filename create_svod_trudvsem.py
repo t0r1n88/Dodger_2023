@@ -82,7 +82,7 @@ def clean_text(cell):
     Функция для очистки от незаписываемых символов
     """
     if isinstance(cell,str):
-        return re.sub(r'[^\d\w\s()=*+,.:;\"\'@-]','',cell)
+        return re.sub(r'[^\d\w ()=*+,.:;\"\'@-]','',cell)
     else:
         return cell
 
@@ -333,27 +333,48 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
             # потому что значение принимается за формулу
             prepared_df[lst_text_columns] = prepared_df[lst_text_columns].applymap(clean_equal)
             all_status_prepared_df[lst_text_columns] = all_status_prepared_df[lst_text_columns].applymap(clean_equal)
+            # создаем 2 датафрейма для квотируемых и вакансий для соц категорий
+            quote_df = prepared_df[prepared_df['Квотируемое место'] == 'Квотируемое место']
+            soc_df = prepared_df[~prepared_df['Социально защищенная категория'].isna()]
 
             if len(union_company_df) != 0:
                 union_company_df.sort_values(by=['Вакансия'], inplace=True)
                 union_company_df[lst_text_columns] = union_company_df[lst_text_columns].applymap(clean_equal)
-                union_company_df.to_excel(f'{org_folder}/Общий файл.xlsx', index=False)
+                company_quote_df = union_company_df[union_company_df['Квотируемое место'] == 'Квотируемое место']
+                company_soc_df = union_company_df[~union_company_df['Социально защищенная категория'].isna()]
+                with pd.ExcelWriter(f'{org_folder}/Общий файл.xlsx') as writer:
+                    union_company_df.to_excel(writer, sheet_name='Общий список', index=False)
+                    company_quote_df.to_excel(writer, sheet_name='Квотируемые', index=False)
+                    company_soc_df.to_excel(writer, sheet_name='Для соц категорий', index=False)
 
             with pd.ExcelWriter(f'{end_folder}/Вакансии по региону от {current_time}.xlsx') as writer:
                 prepared_df.to_excel(writer, sheet_name='Только подтвержденные вакансии', index=False)
+                quote_df.to_excel(writer, sheet_name='Квотируемые', index=False)
+                soc_df.to_excel(writer, sheet_name='Для соц категорий', index=False)
                 all_status_prepared_df.to_excel(writer, sheet_name='Вакансии со всеми статусами', index=False)
         except IllegalCharacterError:
             # Если в тексте есть ошибочные символы то очищаем данные
             # очищаем от неправильных символов
             prepared_df[lst_text_columns] = prepared_df[lst_text_columns].applymap(clean_text)
             all_status_prepared_df[lst_text_columns] = all_status_prepared_df[lst_text_columns].applymap(clean_text)
+
+            quote_df = prepared_df[prepared_df['Квотируемое место'] == 'Квотируемое место']
+            soc_df = prepared_df[~prepared_df['Социально защищенная категория'].isna()]
+
             if len(union_company_df) != 0:
                 union_company_df.sort_values(by=['Вакансия'], inplace=True)
                 union_company_df[lst_text_columns] = union_company_df[lst_text_columns].applymap(clean_text)
-                union_company_df.to_excel(f'{org_folder}/Общий файл.xlsx', index=False)
+                company_quote_df = union_company_df[union_company_df['Квотируемое место'] == 'Квотируемое место']
+                company_soc_df = union_company_df[~union_company_df['Социально защищенная категория'].isna()]
+                with pd.ExcelWriter(f'{org_folder}/Общий файл.xlsx') as writer:
+                    union_company_df.to_excel(writer, sheet_name='Общий список', index=False)
+                    company_quote_df.to_excel(writer, sheet_name='Квотируемые', index=False)
+                    company_soc_df.to_excel(writer, sheet_name='Для соц категорий', index=False)
 
             with pd.ExcelWriter(f'{end_folder}/Вакансии по региону от {current_time}.xlsx') as writer:
                 prepared_df.to_excel(writer, sheet_name='Только подтвержденные вакансии', index=False)
+                quote_df.to_excel(writer, sheet_name='Квотируемые', index=False)
+                soc_df.to_excel(writer, sheet_name='Для соц категорий', index=False)
                 all_status_prepared_df.to_excel(writer, sheet_name='Вакансии со всеми статусами', index=False)
 
 

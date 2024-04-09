@@ -83,7 +83,7 @@ def clean_text(cell):
     Функция для очистки от незаписываемых символов
     """
     if isinstance(cell,str):
-        return re.sub(r'[^\d\w ()=*+,.:;-]','',cell)
+        return re.sub(r'[^\d\w ()=*+,.:;\"\'@-]','',cell)
     else:
         return cell
 
@@ -118,6 +118,14 @@ def convert_date(cell):
     except:
         return 'Не удалось обработать содержимое ячейки'
 
+def convert_int(value):
+    """
+    Функция для конвертации в инт
+    """
+    try:
+        return int(value)
+    except:
+        return 0
 
 def extract_soc_category(df: pd.DataFrame, name_column: str, user_sep: str):
     """
@@ -241,24 +249,36 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
         current_date = time.strftime('%d_%m_%Y', t)
         # Получаем данные из csv
         # df = pd.read_csv(file_data, encoding='UTF-8', sep='|', dtype=str, on_bad_lines='skip')
-        company_df = pd.read_excel(file_org, dtype=str) # получаем данные из файла с организациями
-        company_df.dropna(inplace=True) # удаляем незаполненные строки
+        company_df = pd.read_excel(file_org, dtype=str, usecols='A:B')  # получаем данные из файла с организациями
+        company_df.dropna(inplace=True)  # удаляем незаполненные строки
         # Список колонок итоговых таблиц с вакансиями
-        lst_columns = ['Дата размещения вакансии','Дата изменения вакансии','Регион','Вакансия','Сфера деятельности','Количество рабочих мест',
-                       'Зарплата','Минимальная зарплата','Максимальная зарплата','График работы','Тип занятости','Образование','Требуемая специализация',
-                       'Требования','Обязанности','Бонусы','Дополнительные бонусы','Возможность переподготовки','Стипендия','Размер стипендии','Компенсация транспорт',
-                       'Квотируемое место','Социально защищенная категория',
-                       'Требуемый опыт работы в годах','Требуется медкнижка','Требуемые доп. документы','Требуемые водительские права',
-                       'Требуемые языки','Требуемые хардскиллы','Требуемые софтскиллы',
-                       'Источник вакансии','Статус проверки вакансии','Полное название работодателя','Адрес вакансии','Доп информация по адресу вакансии',
-                       'ИНН работодателя','КПП работодателя','ОГРН работодателя','Контактное лицо','Контактный телефон','Email работодателя',
-                       'Профиль работодателя','Долгота адрес вакансии','Широта адрес вакансии']
+        lst_columns = ['Дата размещения вакансии', 'Дата изменения вакансии', 'Регион', 'Вакансия',
+                       'Сфера деятельности', 'Количество рабочих мест',
+                       'Зарплата', 'Минимальная зарплата', 'Максимальная зарплата', 'График работы', 'Тип занятости',
+                       'Образование', 'Требуемая специализация',
+                       'Требования', 'Обязанности', 'Бонусы', 'Дополнительные бонусы', 'Возможность переподготовки',
+                       'Стипендия', 'Размер стипендии', 'Компенсация транспорт',
+                       'Квотируемое место', 'Социально защищенная категория',
+                       'Требуемый опыт работы в годах', 'Требуется медкнижка', 'Требуемые доп. документы',
+                       'Требуемые водительские права',
+                       'Требуемые языки', 'Требуемые хардскиллы', 'Требуемые софтскиллы',
+                       'Источник вакансии', 'Статус проверки вакансии', 'Полное название работодателя',
+                       'Адрес вакансии', 'Доп информация по адресу вакансии',
+                       'ИНН работодателя', 'КПП работодателя', 'ОГРН работодателя', 'Контактное лицо',
+                       'Контактный телефон', 'Email работодателя',
+                       'Профиль работодателя', 'Долгота адрес вакансии', 'Широта адрес вакансии']
 
-        lst_region = df['regionName'].unique() # Получаем список регионов
+        # Список колонок с текстом
+        lst_text_columns = ['Вакансия', 'Требуемая специализация', 'Требования', 'Обязанности',
+                            'Бонусы', 'Дополнительные бонусы', 'Требуемые доп. документы',
+                            'Требуемые хардскиллы', 'Требуемые софтскиллы', 'Полное название работодателя',
+                            'Адрес вакансии', 'Доп информация по адресу вакансии', 'Email работодателя',
+                            'Контактное лицо']
+        lst_region = df['regionName'].unique()  # Получаем список регионов
         # проверяем
         if region not in lst_region:
             raise NotRegion
-        df = df[df['regionName'] == region] # Фильтруем данные по региону
+        df = df[df['regionName'] == region]  # Фильтруем данные по региону
 
         # получаем обработанный датафрейм со всеми статусами вакансий
         all_status_prepared_df = prepare_data_vacancy(df, dct_name_columns,lst_columns)
@@ -282,16 +302,28 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
             org_folder = f'{end_folder}/Вакансии по организациям/{current_date}'  # создаем папку куда будем складывать вакансии по организациям
             if not os.path.exists(org_folder):
                 os.makedirs(org_folder)
-
+            count_exists_file = 0 # счетчик для уже созданных файлов чтобы не затирались
             for idx, row in enumerate(company_df.itertuples()):
                 name_company = row[1]  # название компании
                 inn_company = row[2]  # инн компании
                 temp_df = prepared_df[prepared_df['ИНН работодателя'] == inn_company]  # фильтруем по инн
                 if len(temp_df) != 0:
                     temp_df.sort_values(by=['Вакансия'], inplace=True)  # сортируем
-                    name_company = re.sub(r'[\r\b\n\t<>:"?*|\\/]', '_', name_company)  # очищаем от лишних символов
+                    name_company = re.sub(r'[\r\b\n\t<>:"?*|\\/]', '_', name_company)  # очищаем название от лишних символов
+                    temp_df[lst_text_columns] = temp_df[lst_text_columns].applymap(clean_equal) # очищаем от знака равно в начале
+                    temp_df[lst_text_columns] = temp_df[lst_text_columns].applymap(clean_text) # очищаем от неправильных символов
+                    # считаем возможную длину названия файл с учетом слеша и расширения с точкой и порядковым номером файла
+                    threshold_name = 200 - (len(org_folder)+10)
+                    if threshold_name <= 0: # если путь к папке слшиком длинный вызываем исключение
+                        raise OSError
+                    name_company = name_company[:threshold_name] # ограничиваем название файла
+                    # сохраняем файл с проверкой на существующие файлы с таким же именем
+                    if not os.path.exists(f'{org_folder}/{name_company}.xlsx'):
+                        temp_df.to_excel(f'{org_folder}/{name_company}.xlsx', index=False)  # сохраняем
+                    else:
+                        temp_df.to_excel(f'{org_folder}/{name_company}_{count_exists_file}.xlsx', index=False)  # сохраняем
+                        count_exists_file += 1
 
-                    temp_df.to_excel(f'{org_folder}/{name_company}.xlsx', index=False)  # сохраняем
                     # создаем отдельный файл в котором будут все вакансии по выбранным компаниям
                     temp_df.insert(0, 'Организация', name_company)
                     union_company_df = pd.concat([union_company_df, temp_df], ignore_index=True)
@@ -303,44 +335,53 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
 
         # Сохраняем общий файл с всеми вакансиями выбранных работодателей
         try:
-            # Список колонок с текстом
-            lst_text_columns = ['Вакансия','Требуемая специализация','Требования','Обязанности',
-                                'Бонусы','Дополнительные бонусы','Требуемые доп. документы',
-                                'Требуемые хардскиллы','Требуемые софтскиллы','Полное название работодателя',
-                                'Адрес вакансии','Доп информация по адресу вакансии','Email работодателя','Контактное лицо']
             # очищаем текстовые колонки от возможного знака равно в начале ячейки, в таком случае возникает ошибка
             # потому что значение принимается за формулу
             prepared_df[lst_text_columns] = prepared_df[lst_text_columns].applymap(clean_equal)
             all_status_prepared_df[lst_text_columns] = all_status_prepared_df[lst_text_columns].applymap(clean_equal)
+            # создаем 2 датафрейма для квотируемых и вакансий для соц категорий
+            quote_df = prepared_df[prepared_df['Квотируемое место'] == 'Квотируемое место']
+            soc_df = prepared_df[~prepared_df['Социально защищенная категория'].isna()]
 
             if len(union_company_df) != 0:
                 union_company_df.sort_values(by=['Вакансия'], inplace=True)
                 union_company_df[lst_text_columns] = union_company_df[lst_text_columns].applymap(clean_equal)
-                union_company_df.to_excel(f'{org_folder}/Общий файл.xlsx', index=False)
+                company_quote_df = union_company_df[union_company_df['Квотируемое место'] == 'Квотируемое место']
+                company_soc_df = union_company_df[~union_company_df['Социально защищенная категория'].isna()]
+                with pd.ExcelWriter(f'{org_folder}/Общий файл.xlsx') as writer:
+                    union_company_df.to_excel(writer, sheet_name='Общий список', index=False)
+                    company_quote_df.to_excel(writer, sheet_name='Квотируемые', index=False)
+                    company_soc_df.to_excel(writer, sheet_name='Для соц категорий', index=False)
 
             with pd.ExcelWriter(f'{end_folder}/Вакансии по региону от {current_time}.xlsx') as writer:
                 prepared_df.to_excel(writer, sheet_name='Только подтвержденные вакансии', index=False)
+                quote_df.to_excel(writer, sheet_name='Квотируемые', index=False)
+                soc_df.to_excel(writer, sheet_name='Для соц категорий', index=False)
                 all_status_prepared_df.to_excel(writer, sheet_name='Вакансии со всеми статусами', index=False)
         except IllegalCharacterError:
-            # Список колонок с текстом
-            lst_text_columns = ['Вакансия','Требуемая специализация','Требования','Обязанности',
-                                'Бонусы','Дополнительные бонусы','Требуемые доп. документы',
-                                'Требуемые хардскиллы','Требуемые софтскиллы','Полное название работодателя',
-                                'Адрес вакансии','Доп информация по адресу вакансии','Email работодателя','Контактное лицо']
-
+            # Если в тексте есть ошибочные символы то очищаем данные
             # очищаем от неправильных символов
             prepared_df[lst_text_columns] = prepared_df[lst_text_columns].applymap(clean_text)
             all_status_prepared_df[lst_text_columns] = all_status_prepared_df[lst_text_columns].applymap(clean_text)
+
+            quote_df = prepared_df[prepared_df['Квотируемое место'] == 'Квотируемое место']
+            soc_df = prepared_df[~prepared_df['Социально защищенная категория'].isna()]
+
             if len(union_company_df) != 0:
                 union_company_df.sort_values(by=['Вакансия'], inplace=True)
                 union_company_df[lst_text_columns] = union_company_df[lst_text_columns].applymap(clean_text)
-                union_company_df.to_excel(f'{org_folder}/Общий файл.xlsx', index=False)
+                company_quote_df = union_company_df[union_company_df['Квотируемое место'] == 'Квотируемое место']
+                company_soc_df = union_company_df[~union_company_df['Социально защищенная категория'].isna()]
+                with pd.ExcelWriter(f'{org_folder}/Общий файл.xlsx') as writer:
+                    union_company_df.to_excel(writer, sheet_name='Общий список', index=False)
+                    company_quote_df.to_excel(writer, sheet_name='Квотируемые', index=False)
+                    company_soc_df.to_excel(writer, sheet_name='Для соц категорий', index=False)
 
             with pd.ExcelWriter(f'{end_folder}/Вакансии по региону от {current_time}.xlsx') as writer:
                 prepared_df.to_excel(writer, sheet_name='Только подтвержденные вакансии', index=False)
+                quote_df.to_excel(writer, sheet_name='Квотируемые', index=False)
+                soc_df.to_excel(writer, sheet_name='Для соц категорий', index=False)
                 all_status_prepared_df.to_excel(writer, sheet_name='Вакансии со всеми статусами', index=False)
-
-
 
 
         """
@@ -371,12 +412,28 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
             svod_vac_org_region_df.rename(columns={'sum': 'Количество вакансий'}, inplace=True)
             svod_vac_org_region_df = svod_vac_org_region_df.reset_index()
 
+        # Свод по количеству вакансий для каждой конкретной вакансии работодателя в регионе
+        svod_vac_particular_org_region_df = pd.pivot_table(prepared_df,
+                                                           index=['Полное название работодателя', 'Вакансия'],
+                                                           values=['Количество рабочих мест'],
+                                                           aggfunc={'Количество рабочих мест': [np.sum]})
+        svod_vac_particular_org_region_df = svod_vac_particular_org_region_df.droplevel(level=0,
+                                                                                        axis=1)  # убираем мультииндекс
+        if len(svod_vac_particular_org_region_df) != 0:
+            svod_vac_particular_org_region_df.sort_values(by=['Полное название работодателя', 'Вакансия'],
+                                                          ascending=[True, True], inplace=True)
+            svod_vac_particular_org_region_df.rename(columns={'sum': 'Количество вакансий'}, inplace=True)
+            svod_vac_particular_org_region_df = svod_vac_particular_org_region_df.reset_index()
+
         # Свод по средней и медианной минимальной зарплате для сфер деятельности
-        svod_shpere_pay_region_df = pd.pivot_table(prepared_df,
+        prepared_df['Минимальная зарплата'] = prepared_df['Минимальная зарплата'].apply(convert_int)
+        pay_df = prepared_df[prepared_df['Минимальная зарплата'] > 0] # отбираем все вакансии с зп больше нуля
+
+        svod_shpere_pay_region_df = pd.pivot_table(pay_df,
                                                    index=['Сфера деятельности'],
                                                    values=['Минимальная зарплата'],
-                                                   aggfunc={'Минимальная зарплата': [np.mean, np.median]},
-                                                   fill_value=0)
+                                                   aggfunc={'Минимальная зарплата': [np.mean, np.median]}
+                                                   )
         svod_shpere_pay_region_df = svod_shpere_pay_region_df.droplevel(level=0, axis=1)  # убираем мультииндекс
         if len(svod_shpere_pay_region_df) != 0:
             svod_shpere_pay_region_df = svod_shpere_pay_region_df.astype(int, errors='ignore')
@@ -384,11 +441,11 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
             svod_shpere_pay_region_df = svod_shpere_pay_region_df.reset_index()
 
         # Свод по средней и медианной минимальной зарплате для работодателей
-        svod_org_pay_region_df = pd.pivot_table(prepared_df,
+        svod_org_pay_region_df = pd.pivot_table(pay_df,
                                                 index=['Полное название работодателя', 'Сфера деятельности'],
                                                 values=['Минимальная зарплата'],
-                                                aggfunc={'Минимальная зарплата': [np.mean, np.median]},
-                                                fill_value=0)
+                                                aggfunc={'Минимальная зарплата': [np.mean, np.median]}
+                                                )
         svod_org_pay_region_df = svod_org_pay_region_df.droplevel(level=0, axis=1)  # убираем мультииндекс
         if len(svod_org_pay_region_df) !=0:
             svod_org_pay_region_df = svod_org_pay_region_df.astype(int, errors='ignore')
@@ -528,6 +585,7 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
         with pd.ExcelWriter(f'{svod_region_folder}/Свод по региону от {current_time}.xlsx') as writer:
             svod_vac_reg_region_df.to_excel(writer, sheet_name='Вакансии по отраслям', index=False)
             svod_vac_org_region_df.to_excel(writer, sheet_name='Вакансии по работодателям', index=False)
+            svod_vac_particular_org_region_df.to_excel(writer,sheet_name='Вакансии для динамики',index=False)
             svod_shpere_pay_region_df.to_excel(writer, sheet_name='Зарплата по отраслям', index=False)
             svod_org_pay_region_df.to_excel(writer, sheet_name='Зарплата по работодателям', index=False)
             svod_shpere_educ_region_df.to_excel(writer, sheet_name='Образование по отраслям', index=False)
@@ -578,12 +636,29 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
                 svod_vac_org_org_df.rename(columns={'sum': 'Количество вакансий'}, inplace=True)
                 svod_vac_org_org_df = svod_vac_org_org_df.reset_index()
 
+            # Свод по количеству вакансий для каждой конкретной вакансии работодателя в регионе
+            svod_vac_particular_org_org_df = pd.pivot_table(union_company_df,
+                                                            index=['Полное название работодателя', 'Вакансия'],
+                                                            values=['Количество рабочих мест'],
+                                                            aggfunc={'Количество рабочих мест': [np.sum]})
+            svod_vac_particular_org_org_df = svod_vac_particular_org_org_df.droplevel(level=0,
+                                                                                      axis=1)  # убираем мультииндекс
+            if len(svod_vac_particular_org_org_df) != 0:
+                svod_vac_particular_org_org_df.sort_values(by=['Полное название работодателя', 'Вакансия'],
+                                                           ascending=[True, True], inplace=True)
+                svod_vac_particular_org_org_df.rename(columns={'sum': 'Количество вакансий'}, inplace=True)
+                svod_vac_particular_org_org_df = svod_vac_particular_org_org_df.reset_index()
+
             # Свод по средней и медианной минимальной зарплате для сфер деятельности
-            svod_shpere_pay_org_df = pd.pivot_table(union_company_df,
+            union_company_df['Минимальная зарплата'] = union_company_df['Минимальная зарплата'].apply(convert_int)
+            pay_union_df = union_company_df[union_company_df['Минимальная зарплата'] > 0]
+
+
+            svod_shpere_pay_org_df = pd.pivot_table(pay_union_df,
                                                     index=['Сфера деятельности'],
                                                     values=['Минимальная зарплата'],
-                                                    aggfunc={'Минимальная зарплата': [np.mean, np.median]},
-                                                    fill_value=0)
+                                                    aggfunc={'Минимальная зарплата': [np.mean, np.median]}
+                                                   )
             svod_shpere_pay_org_df = svod_shpere_pay_org_df.droplevel(level=0, axis=1)  # убираем мультииндекс
             if len(svod_shpere_pay_org_df) !=0:
                 svod_shpere_pay_org_df = svod_shpere_pay_org_df.astype(int, errors='ignore')
@@ -591,11 +666,11 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
                 svod_shpere_pay_org_df = svod_shpere_pay_org_df.reset_index()
 
             # Свод по средней и медианной минимальной зарплате для работодателей
-            svod_org_pay_org_df = pd.pivot_table(union_company_df,
+            svod_org_pay_org_df = pd.pivot_table(pay_union_df,
                                                  index=['Полное название работодателя', 'Сфера деятельности'],
                                                  values=['Минимальная зарплата'],
-                                                 aggfunc={'Минимальная зарплата': [np.mean, np.median]},
-                                                 fill_value=0)
+                                                 aggfunc={'Минимальная зарплата': [np.mean, np.median]}
+                                                 )
             svod_org_pay_org_df = svod_org_pay_org_df.droplevel(level=0, axis=1)  # убираем мультииндекс
             if len(svod_org_pay_org_df) != 0:
                 svod_org_pay_org_df = svod_org_pay_org_df.astype(int, errors='ignore')
@@ -733,6 +808,7 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
             with pd.ExcelWriter(f'{svod_org_folder}/Свод по выбранным работодателям от {current_time}.xlsx') as writer:
                 svod_vac_reg_org_df.to_excel(writer, sheet_name='Вакансии по отраслям', index=False)
                 svod_vac_org_org_df.to_excel(writer, sheet_name='Вакансии по работодателям', index=False)
+                svod_vac_particular_org_org_df.to_excel(writer,sheet_name='Вакансии для динамики',index=False)
                 svod_shpere_pay_org_df.to_excel(writer, sheet_name='Зарплата по отраслям', index=False)
                 svod_org_pay_org_df.to_excel(writer, sheet_name='Зарплата по работодателям', index=False)
                 svod_shpere_educ_org_df.to_excel(writer, sheet_name='Образование по отраслям', index=False)
@@ -771,13 +847,13 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
 
 
 if __name__ == '__main__':
-    main_file_data = 'data/vacancy all.csv'
+    main_file_data = 'data/vacancy.csv'
     main_org_file = 'data/company.xlsx'
     df = pd.read_csv(main_file_data, encoding='UTF-8', sep='|', dtype=str, on_bad_lines='skip')
     temp_df = pd.read_excel('data/Список регионов.xlsx')
     lst_region = temp_df['Регион'].tolist()
     for region in lst_region:
-        main_end_folder = f'data/Test/{region}'
+        main_end_folder = f'data/Finish/{region}'
 
         if not os.path.exists(main_end_folder):
             os.makedirs(main_end_folder)
