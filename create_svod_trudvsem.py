@@ -405,8 +405,8 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
         svod_shpere_pay_region_df = pd.pivot_table(pay_df,
                                                    index=['Сфера деятельности'],
                                                    values=['Минимальная зарплата'],
-                                                   aggfunc={'Минимальная зарплата': [np.mean, np.median]},
-                                                   fill_value=0)
+                                                   aggfunc={'Минимальная зарплата': [np.mean, np.median]}
+                                                   )
         svod_shpere_pay_region_df = svod_shpere_pay_region_df.droplevel(level=0, axis=1)  # убираем мультииндекс
         if len(svod_shpere_pay_region_df) != 0:
             svod_shpere_pay_region_df = svod_shpere_pay_region_df.astype(int, errors='ignore')
@@ -417,8 +417,8 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
         svod_org_pay_region_df = pd.pivot_table(pay_df,
                                                 index=['Полное название работодателя', 'Сфера деятельности'],
                                                 values=['Минимальная зарплата'],
-                                                aggfunc={'Минимальная зарплата': [np.mean, np.median]},
-                                                fill_value=0)
+                                                aggfunc={'Минимальная зарплата': [np.mean, np.median]}
+                                                )
         svod_org_pay_region_df = svod_org_pay_region_df.droplevel(level=0, axis=1)  # убираем мультииндекс
         if len(svod_org_pay_region_df) !=0:
             svod_org_pay_region_df = svod_org_pay_region_df.astype(int, errors='ignore')
@@ -630,8 +630,8 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
             svod_shpere_pay_org_df = pd.pivot_table(pay_union_df,
                                                     index=['Сфера деятельности'],
                                                     values=['Минимальная зарплата'],
-                                                    aggfunc={'Минимальная зарплата': [np.mean, np.median]},
-                                                    fill_value=0)
+                                                    aggfunc={'Минимальная зарплата': [np.mean, np.median]}
+                                                   )
             svod_shpere_pay_org_df = svod_shpere_pay_org_df.droplevel(level=0, axis=1)  # убираем мультииндекс
             if len(svod_shpere_pay_org_df) !=0:
                 svod_shpere_pay_org_df = svod_shpere_pay_org_df.astype(int, errors='ignore')
@@ -642,8 +642,8 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
             svod_org_pay_org_df = pd.pivot_table(pay_union_df,
                                                  index=['Полное название работодателя', 'Сфера деятельности'],
                                                  values=['Минимальная зарплата'],
-                                                 aggfunc={'Минимальная зарплата': [np.mean, np.median]},
-                                                 fill_value=0)
+                                                 aggfunc={'Минимальная зарплата': [np.mean, np.median]}
+                                                 )
             svod_org_pay_org_df = svod_org_pay_org_df.droplevel(level=0, axis=1)  # убираем мультииндекс
             if len(svod_org_pay_org_df) != 0:
                 svod_org_pay_org_df = svod_org_pay_org_df.astype(int, errors='ignore')
@@ -822,6 +822,7 @@ if __name__ == '__main__':
     main_file_data = 'data/vacancy.csv'
     main_file_data = 'data/vacancy_7 (4).csv'
     main_file_data = 'data/vacancy all.csv'
+    main_file_data = 'data/vacancy_7 (10).csv'
     main_org_file = 'data/company.xlsx'
     main_org_file = 'data/company Бурятия.xlsx'
     main_region = 'Республика Бурятия'
@@ -830,7 +831,7 @@ if __name__ == '__main__':
     main_region = 'Город Санкт-Петербург'
     main_region = 'Кемеровская область - Кузбасс'
     main_region = 'Город Москва'
-    main_region = 'Республика Бурятия'
+    main_region = 'Красноярский край'
 
 
 
