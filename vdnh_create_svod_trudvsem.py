@@ -6,6 +6,7 @@ import numpy as np
 from openpyxl.utils.exceptions import IllegalCharacterError
 import json
 import ast
+import qrcode
 import re
 import os
 from tkinter import messagebox
@@ -149,6 +150,15 @@ def extract_soc_category(df: pd.DataFrame, name_column: str, user_sep: str):
 
     return dct_value
 
+def extract_id_company(cell):
+    """
+    Для извления айди компании
+    """
+    if isinstance(cell,str):
+        lst_org = cell.split('/')
+        return lst_org[-1]
+
+
 
 def prepare_data_vacancy(df: pd.DataFrame, dct_name_columns: dict, lst_columns: list) -> pd.DataFrame:
     """
@@ -189,6 +199,9 @@ def prepare_data_vacancy(df: pd.DataFrame, dct_name_columns: dict, lst_columns: 
     df['Контактный телефон'] = df['Данные компании'].apply(lambda x: json.loads(x).get('phone', 'Не указано'))
     df['Email работодателя'] = df['Данные компании'].apply(lambda x: json.loads(x).get('email', 'Не указано'))
     df['Профиль работодателя'] = df['Данные компании'].apply(lambda x: json.loads(x).get('url', 'Не указано'))
+    df['ID_работодателя'] = df['Профиль работодателя'].apply(extract_id_company)
+    df['URL_for_qr'] = df['ID_работодателя'] + '/' +  df['ID']
+
 
     # Обрабатываем колонку с языками
     df['Требуемые языки'] = df['Данные по языкам'].apply(
@@ -215,7 +228,7 @@ def vdnh_processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,regi
     :param end_folder: конечная папка
     """
     # колонки которые нужно оставить и переименовать
-    dct_name_columns = {'busy_type': 'Тип занятости', 'contact_person': 'Контактное лицо',
+    dct_name_columns = {'id':'ID','busy_type': 'Тип занятости', 'contact_person': 'Контактное лицо',
                         'date_create': 'Дата размещения вакансии',
                         'date_modify': 'Дата изменения вакансии', 'education': 'Образование',
                         'education_speciality': 'Требуемая специализация', 'is_quoted': 'Квотируемое место',
@@ -259,7 +272,7 @@ def vdnh_processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,regi
                        'Требуемые языки','Требуемые хардскиллы','Требуемые софтскиллы',
                        'Источник вакансии','Статус проверки вакансии','Полное название работодателя','Адрес вакансии','Доп информация по адресу вакансии',
                        'ИНН работодателя','КПП работодателя','ОГРН работодателя','Контактное лицо','Контактный телефон','Email работодателя',
-                       'Профиль работодателя','Долгота адрес вакансии','Широта адрес вакансии']
+                       'Профиль работодателя','Долгота адрес вакансии','Широта адрес вакансии','ID','ID_работодателя','URL_for_qr']
 
         # Список колонок с текстом
         lst_text_columns = ['Вакансия', 'Требуемая специализация', 'Требования', 'Обязанности',
@@ -294,6 +307,7 @@ def vdnh_processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,regi
 
         if len(company_df) != 0:
             org_folder = f'{end_folder}/Вакансии по организациям/{current_date}'  # создаем папку куда будем складывать вакансии по организациям
+            qr_folder = f'{end_folder}/QR по организациям/{current_date}'  # создаем папку куда будем складывать qr по организациям
             if not os.path.exists(org_folder):
                 os.makedirs(org_folder)
             count_exists_file = 0 # счетчик для уже созданных файлов чтобы не затирались
@@ -321,6 +335,31 @@ def vdnh_processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,regi
                     # создаем отдельный файл в котором будут все вакансии по выбранным компаниям
                     temp_df.insert(0, 'Организация', name_company)
                     union_company_df = pd.concat([union_company_df, temp_df], ignore_index=True)
+
+                    # Создаем QR коды
+
+                    for row in temp_df.itertuples():
+                        print(row)
+                        name_file = row[5]
+                        qr = qrcode.QRCode(box_size=2)  # создаем экземпляр класса
+                        base_url = 'https://trudvsem.ru/vacancy/card/'
+                        url_vac = row[48]
+                        finish_url = base_url+url_vac
+                        qr.add_data(url_vac)  # добавляем данные
+                        # # # создаем картинку
+                        img = qr.make_image(fill_color="black", back_color="white")
+                        # меняем размер
+                        img = img.resize((110, 110))
+                        # очищаем от запрещенных символов
+                        id_qr = re.sub(r'[<> :"?*|\\/]', ' ', id_qr)
+                        # # проверяем наличие такого файла
+                        # if os.path.isfile(f'{path_to_end_folder}/{id_qr}.png'):
+                        #     # если такой файл есть то добавляем постфикс в виде индекса строки
+                        #     img.save(f'{path_to_end_folder}/{id_qr}_{row[0]}.png')
+                        # else:
+                        #     img.save(f'{path_to_end_folder}/{id_qr}.png')
+
+
 
         # Сортируем по колонке Вакансия
         prepared_df.sort_values(by=['Вакансия'],inplace=True)
