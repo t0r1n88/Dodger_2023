@@ -150,10 +150,21 @@ def extract_soc_category(df: pd.DataFrame, name_column: str, user_sep: str):
     return dct_value
 
 
+def extract_id_company(cell):
+    """
+    Для извления айди компании
+    """
+    if isinstance(cell,str):
+        lst_org = cell.split('/')
+        return lst_org[-1]
+
+
 def prepare_data_vacancy(df: pd.DataFrame, dct_name_columns: dict, lst_columns: list) -> pd.DataFrame:
     """
     Функция для обработки датафрейма с данными работы в России
     """
+    base_url = 'https://trudvsem.ru/vacancy/card/' # базовая ссылка для формирования ссылки на вакансию
+
     # Словарь для замены статусов подтверждения вакансии
     dct_status_vacancy = {'ACCEPTED':'Данные вакансии проверены работодателем','AUTOMODERATION':'Автомодерация',
                       'REJECTED':'Отклонено','CHANGED':'Статус вакансии изменен',
@@ -189,6 +200,9 @@ def prepare_data_vacancy(df: pd.DataFrame, dct_name_columns: dict, lst_columns: 
     df['Контактный телефон'] = df['Данные компании'].apply(lambda x: json.loads(x).get('phone', 'Не указано'))
     df['Email работодателя'] = df['Данные компании'].apply(lambda x: json.loads(x).get('email', 'Не указано'))
     df['Профиль работодателя'] = df['Данные компании'].apply(lambda x: json.loads(x).get('url', 'Не указано'))
+    df['ID работодателя'] = df['Профиль работодателя'].apply(extract_id_company)
+    df['Ссылка на вакансию'] = base_url + df['ID работодателя'] + '/' + df['ID вакансии']
+
 
     # Обрабатываем колонку с языками
     df['Требуемые языки'] = df['Данные по языкам'].apply(
@@ -215,7 +229,7 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
     :param end_folder: конечная папка
     """
     # колонки которые нужно оставить и переименовать
-    dct_name_columns = {'busy_type': 'Тип занятости', 'contact_person': 'Контактное лицо',
+    dct_name_columns = {'id':'ID вакансии','busy_type': 'Тип занятости', 'contact_person': 'Контактное лицо',
                         'date_create': 'Дата размещения вакансии',
                         'date_modify': 'Дата изменения вакансии', 'education': 'Образование',
                         'education_speciality': 'Требуемая специализация', 'is_quoted': 'Квотируемое место',
@@ -259,7 +273,7 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
                        'Требуемые языки','Требуемые хардскиллы','Требуемые софтскиллы',
                        'Источник вакансии','Статус проверки вакансии','Полное название работодателя','Адрес вакансии','Доп информация по адресу вакансии',
                        'ИНН работодателя','КПП работодателя','ОГРН работодателя','Контактное лицо','Контактный телефон','Email работодателя',
-                       'Профиль работодателя','Долгота адрес вакансии','Широта адрес вакансии']
+                       'Профиль работодателя','Долгота адрес вакансии','Широта адрес вакансии','ID вакансии','ID работодателя','Ссылка на вакансию']
 
         # Список колонок с текстом
         lst_text_columns = ['Вакансия', 'Требуемая специализация', 'Требования', 'Обязанности',
