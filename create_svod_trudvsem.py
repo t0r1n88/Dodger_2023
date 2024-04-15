@@ -857,7 +857,7 @@ if __name__ == '__main__':
     main_file_data = 'data/vacancy.csv'
     main_file_data = 'data/vacancy_7 (4).csv'
     main_file_data = 'data/vacancy all.csv'
-    main_file_data = 'data/vacancy_7 (10).csv'
+    main_file_data = 'data/Вакансии СФО 09_04_2024.csv'
     main_org_file = 'data/company.xlsx'
     main_org_file = 'data/company Бурятия.xlsx'
     main_region = 'Республика Бурятия'
@@ -867,6 +867,7 @@ if __name__ == '__main__':
     main_region = 'Кемеровская область - Кузбасс'
     main_region = 'Город Москва'
     main_region = 'Красноярский край'
+    main_region = 'Республика Бурятия'
 
 
 
