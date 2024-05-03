@@ -166,33 +166,22 @@ def write_df_to_excel_color_selection(dct_df:dict,write_index:bool,lst_color_sel
                             # Поскольку на этом листе колонка разницы не третья а четвертая то добавляем единицу
                         for row in wb[name_sheet].iter_rows(min_row=1, max_row=wb[name_sheet].max_row,
                                                                         min_col=0, max_col=df.shape[1]):  # Перебираем строки
-                            if param_dct['find_value'] in str(row[param_dct['number_column'] + 2].value): # делаем ячейку строковой и проверяем наличие искомого слова
+                            if param_dct['find_value'] in str(row[param_dct['number_column'] + 1].value): # делаем ячейку строковой и проверяем наличие искомого слова
                                 for cell in row: # применяем стиль если условие сработало
                                     cell.font = font
                                     cell.fill = fill
                     elif param_dct['find_value'] == '+': # если нужно выделить значения больше нуля
                         font = param_dct['font']  # Получаем цвет шрифта
                         fill = param_dct['fill'] # получаем заливку
-                        if name_sheet != 'Вакансии для динамики':
-                            for row in wb[name_sheet].iter_rows(min_row=1, max_row=wb[name_sheet].max_row,
-                                                                            min_col=0, max_col=df.shape[1]):  # Перебираем строки
-                                try:
-                                    if int(row[param_dct['number_column']+2].value) > 0:
-                                        for cell in row: # применяем стиль если условие сработало
-                                            cell.font = font
-                                            cell.fill = fill
-                                except:
-                                    continue
-                        else:
-                            for row in wb[name_sheet].iter_rows(min_row=1, max_row=wb[name_sheet].max_row,
-                                                                            min_col=0, max_col=df.shape[1]):  # Перебираем строки
-                                try:
-                                    if int(row[param_dct['number_column'] + 2].value) > 0:
-                                        for cell in row: # применяем стиль если условие сработало
-                                            cell.font = font
-                                            cell.fill = fill
-                                except:
-                                    continue
+                        for row in wb[name_sheet].iter_rows(min_row=1, max_row=wb[name_sheet].max_row,
+                                                                        min_col=0, max_col=df.shape[1]):  # Перебираем строки
+                            try:
+                                if int(row[param_dct['number_column'] + 1].value) > 0:
+                                    for cell in row: # применяем стиль если условие сработало
+                                        cell.font = font
+                                        cell.fill = fill
+                            except:
+                                continue
             else:
                 # Обрабатываем листы с зарплатой
                 for row in wb[name_sheet].iter_rows(min_row=1, max_row=wb[name_sheet].max_row,
