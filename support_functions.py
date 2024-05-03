@@ -44,7 +44,7 @@ class ColumnsDifference(Exception):
 
 def write_df_to_excel_color_selection(dct_df:dict,write_index:bool,lst_color_select:list,exlude_sheets:list)->openpyxl.Workbook:
     """
-    Функция для записи датафрейма в файл Excel отчета по стандарту БРИТ
+    Функция для записи датафрейма в файл Excel с выделением цветом нужных строк
     :param dct_df: словарь где ключе это название создаваемого листа а значение датафрейм который нужно записать
     :param write_index: нужно ли записывать индекс датафрейма True or False
     :param lst_color_select: параметры для выделение цветом строк по значению. Список словарей

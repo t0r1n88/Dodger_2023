@@ -1,10 +1,13 @@
 """
 Скрипт для подсчета изменения в сводных таблицах данных полученных с помощью Кассандры
 """
+import pandas
+
 from support_functions import write_df_to_excel_color_selection # получаем функцию для записи в листы Excel
 import pandas as pd
 from tkinter import messagebox
 import math
+import numpy as np
 import time
 import openpyxl
 from openpyxl.styles import Font, PatternFill
@@ -68,17 +71,16 @@ def union_column(row):
     """
     Функция для преобразования двух колонок получившихся после мерджа в одну
     """
-    out_value = None
-    first_value = str(row[0])
-    second_value = str(row[1])
-    lst_value = [value for value in (row[0],row[1]) if not math.isnan(value)]
-    print(lst_value)
-
-
-
-    print(out_value)
-    print(2/0)
-
+    # убираем нан
+    lst_value = [value for value in (row[0],row[1]) if not pandas.isna(value)]
+    # если значение есть в первой или во второй таблице
+    if len(lst_value) == 1:
+        return lst_value[0]
+    elif len(lst_value) == 2:
+        # возвращаем значение из второй таблицы
+        return row[1]
+    else:
+        return 'Проверьте количество передаваемых колонок в коде'
 
 
 def prepare_diff_svod_trudvsem(first_file:str, second_file:str, end_folder:str,type_contrast:str):
@@ -178,17 +180,6 @@ def prepare_diff_svod_trudvsem(first_file:str, second_file:str, end_folder:str,t
 
                     merge_df.sort_values(by='Показатель', inplace=True)  # Сортируем по показателю
                     dct_df[name_sheet] = merge_df  # сохраняем в словарь
-                    # if name_sheet != 'Вакансии для динамики':
-                    #     dct_df[name_sheet] = merge_df  # сохраняем в словарь
-                    # else: # Обрабатываем отдельно лист Вакансии для динамики, чтобы Работодатель и Вакансии были по отдельности
-                    #     merge_df['_Работодатель'] = merge_df['Показатель'].apply(lambda x: split_cell(x, '+&+', 0))
-                    #     merge_df['_Вакансия'] = merge_df['Показатель'].apply(lambda x: split_cell(x, '+&+', 1))
-                    #
-                    #     merge_df.insert(0, 'Работодатель', merge_df['_Работодатель'])
-                    #     merge_df.insert(1, 'Вакансия', merge_df['_Вакансия'])
-                    #
-                    #     merge_df.drop(columns=['Показатель', '_Работодатель', '_Вакансия'], inplace=True)
-                    #     dct_df[name_sheet] = merge_df  # сохраняем в словарь
 
                 else:
                     # вычисляем динамику изменения вакансий
@@ -197,17 +188,38 @@ def prepare_diff_svod_trudvsem(first_file:str, second_file:str, end_folder:str,t
                         second_df = pd.read_excel(second_file, sheet_name=name_sheet)  # второй файл для сравнения
                         # Проводим внешнее слияние
                         merge_df = first_df.merge(second_df, how='outer', left_on=['ID вакансии'], right_on=['ID вакансии'], indicator=True)
-                        #merge_df.drop(columns=['ID вакансии','_merge'],inplace=True) # удаляем лишние колонки
+
                         # Создаем объединенные колонки
                         merge_df['Работодатель'] = merge_df[['Полное название работодателя_x','Полное название работодателя_y']].apply(union_column,axis=1)
+                        merge_df['Вакансия'] = merge_df[['Вакансия_x','Вакансия_y']].apply(union_column,axis=1)
+                        merge_df['Ссылка на вакансию'] = merge_df[['Ссылка на вакансию_x','Ссылка на вакансию_y']].apply(union_column,axis=1)
+                        merge_df.drop(columns=['ID вакансии','_merge','Полное название работодателя_x','Полное название работодателя_y',
+                                               'Вакансия_x','Вакансия_y','Ссылка на вакансию_x','Ссылка на вакансию_y'],inplace=True) # удаляем лишние колонки
 
-                        print(merge_df.columns)
+                        # Переименовываем колонки
+                        merge_df.rename(columns={'Количество рабочих мест_x':'Первая таблица','Количество рабочих мест_y':'Вторая таблица'},inplace=True)
+                        merge_df.fillna(0, inplace=True)  # заполняем наны
+
+                        merge_df[['Первая таблица', 'Вторая таблица']] = merge_df[
+                            ['Первая таблица', 'Вторая таблица']].applymap(
+                            convert_int)  # приводим колонки с числами к флоат
+
+                        # Создаем колонки с подчетом разниц
+                        merge_df['Разница'] = merge_df['Вторая таблица'] - merge_df['Первая таблица']
+                        merge_df['Абсолютная разница'] = abs(merge_df['Вторая таблица'] - merge_df['Первая таблица'])
+                        merge_df['Изменение в %'] = round(
+                            ((merge_df['Вторая таблица'] - merge_df['Первая таблица']) / merge_df[
+                                'Первая таблица']) * 100, 2)
+
+                        merge_df['Отношение второй таблицы к первой %'] = round(
+                            (merge_df['Вторая таблица'] / merge_df['Первая таблица']) * 100, 2)
+
+                        merge_df.sort_values(by='Работодатель', inplace=True)  # Сортируем по показателю
+                        merge_df = merge_df.reindex(columns=['Работодатель','Вакансия','Первая таблица','Вторая таблица','Разница',
+                                                  'Абсолютная разница','Изменение в %','Отношение второй таблицы к первой %','Ссылка на вакансию'])
 
 
-                        merge_df.to_excel('data/fdsfd.xlsx',index=False)
-
-
-
+                        dct_df[name_sheet] = merge_df  # сохраняем в словарь
 
                     else:
                         # обрабатываем листы с зарплатой
@@ -292,7 +304,6 @@ def prepare_diff_svod_trudvsem(first_file:str, second_file:str, end_folder:str,t
                 dct_grow = {'number_column':3,'font':Font(color='FF000000'),
                               'fill':PatternFill(fill_type='solid', fgColor='90ee90'),
                               'find_value':'+'}
-
 
                 change_wb = write_df_to_excel_color_selection(dct_df,False,[dct_change,dct_grow],lst_not_standard_sheets)
                 change_wb.save(f'{end_folder}/Изменения от {current_time}.xlsx')
