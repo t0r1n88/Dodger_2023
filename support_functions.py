@@ -51,6 +51,7 @@ def write_df_to_excel_color_selection(dct_df:dict,write_index:bool,lst_color_sel
     :param exlude_sheets: список листов для которых нужна особая обработка без расширения колонок
     :return: объект Workbook с записанными датафреймами
     """
+
     wb = openpyxl.Workbook() # создаем файл
     count_index = 0 # счетчик индексов создаваемых листов
     # Создаем словарь для отрицательных значений среднего арифметического
@@ -76,7 +77,7 @@ def write_df_to_excel_color_selection(dct_df:dict,write_index:bool,lst_color_sel
                 wb[name_sheet].append(row)
         if none_check:
             wb[name_sheet].delete_rows(2)
-
+        count_index += 1
         # ширина по содержимому
         # сохраняем по ширине колонок
         if name_sheet not in exlude_sheets:
@@ -91,7 +92,7 @@ def write_df_to_excel_color_selection(dct_df:dict,write_index:bool,lst_color_sel
                         pass
                 adjusted_width = (max_length + 2)
                 wb[name_sheet].column_dimensions[column_name].width = adjusted_width
-            count_index += 1
+
         else:
             # делаем перенос строк чтобы было удобнее
             wb[name_sheet].column_dimensions['A'].width = 50 #
@@ -173,25 +174,6 @@ def write_df_to_excel_color_selection(dct_df:dict,write_index:bool,lst_color_sel
                         continue
                 except:
                     continue
-
-    # # Получение списка всех листов в книге
-    # sheets = wb.get_sheet_names()
-    # print(sheets)
-    # if 'Sheet' in sheets:
-    #     # удаляем пустой лист
-    #     del wb['Sheet']
-    #
-    # # Перестановка листов в новом порядке
-    # new_order = ['Вакансии по отраслям', 'Вакансии по работодателям', 'Вакансии для динамики','Зарплата по отраслям',
-    #              'Зарплата по работодателям','Образование по отраслям','Образование по работодателям',
-    #              'Вакансии для соц.кат.','Квоты по отраслям','Квоты по работодателям',
-    #              'График работы по отраслям','График работы по работодателям','Тип занятости по отраслям','Тип занятости по работодателям',
-    #              'Требуемый опыт по отраслям','Требуемый опыт по работодателям']  # Новый порядок листов
-    #
-    # # Установка нового порядка листов
-    # for i, sheet_name in enumerate(new_order):
-    #     sheet = wb.get_sheet_by_name(sheet_name)
-    #     wb.worksheets.append(sheet)
 
     return wb
 

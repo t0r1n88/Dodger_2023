@@ -125,7 +125,6 @@ def prepare_diff_svod_trudvsem(first_file:str, second_file:str, end_folder:str,t
         diff_second_file_sheets = set(lst_svod_sheets).difference(set(second_wb_sheets))
         if len(diff_second_file_sheets) != 0:
             raise SecondNotSheets
-
         if type_contrast == 'No':
             # Обрабатываем листы
             for name_sheet in lst_svod_sheets:
@@ -297,16 +296,16 @@ def prepare_diff_svod_trudvsem(first_file:str, second_file:str, end_folder:str,t
 
 
 
-                # Создаем словарь с параметрами записи
-                dct_change = {'number_column':3,'font':Font(color='FF000000'),
-                              'fill':PatternFill(fill_type='solid', fgColor='ffa500'),
-                              'find_value':'-'}
-                dct_grow = {'number_column':3,'font':Font(color='FF000000'),
-                              'fill':PatternFill(fill_type='solid', fgColor='90ee90'),
-                              'find_value':'+'}
+            # Создаем словарь с параметрами записи
+            dct_change = {'number_column':3,'font':Font(color='FF000000'),
+                          'fill':PatternFill(fill_type='solid', fgColor='ffa500'),
+                          'find_value':'-'}
+            dct_grow = {'number_column':3,'font':Font(color='FF000000'),
+                          'fill':PatternFill(fill_type='solid', fgColor='90ee90'),
+                          'find_value':'+'}
 
-                change_wb = write_df_to_excel_color_selection(dct_df,False,[dct_change,dct_grow],lst_not_standard_sheets)
-                change_wb.save(f'{end_folder}/Изменения от {current_time}.xlsx')
+            change_wb = write_df_to_excel_color_selection(dct_df,False,[dct_change,dct_grow],lst_not_standard_sheets)
+            change_wb.save(f'{end_folder}/Изменения от {current_time}.xlsx')
         else:
             for name_sheet in lst_svod_sheets:
                 # Если свод стандартный по количеству вакансий
@@ -449,17 +448,17 @@ def prepare_diff_svod_trudvsem(first_file:str, second_file:str, end_folder:str,t
                         merge_df.sort_values(by='Показатель', inplace=True)  # Сортируем по показателю
                         dct_df[name_sheet] = merge_df  # сохраняем в словарь
 
-        # Создаем словарь с параметрами записи
-        dct_change = {'number_column': 3, 'font': Font(color='FF000000'),
-                      'fill': PatternFill(fill_type='solid', fgColor='ffa500'),
-                      'find_value': '-'}
-        dct_grow = {'number_column': 3, 'font': Font(color='FF000000'),
-                    'fill': PatternFill(fill_type='solid', fgColor='90ee90'),
-                    'find_value': '+'}
+            # Создаем словарь с параметрами записи
+            dct_change = {'number_column': 3, 'font': Font(color='FF000000'),
+                          'fill': PatternFill(fill_type='solid', fgColor='ffa500'),
+                          'find_value': '-'}
+            dct_grow = {'number_column': 3, 'font': Font(color='FF000000'),
+                        'fill': PatternFill(fill_type='solid', fgColor='90ee90'),
+                        'find_value': '+'}
 
-        change_wb = write_df_to_excel_color_selection(dct_df, False, [dct_change, dct_grow],
-                                                      lst_not_standard_sheets)
-        change_wb.save(f'{end_folder}/Изменения от {current_time}.xlsx')
+            change_wb = write_df_to_excel_color_selection(dct_df, False, [dct_change, dct_grow],
+                                                          lst_not_standard_sheets)
+            change_wb.save(f'{end_folder}/Изменения от {current_time}.xlsx')
 
     except FirstNotSheets:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
