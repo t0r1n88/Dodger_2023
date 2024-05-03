@@ -158,22 +158,59 @@ def write_df_to_excel_color_selection(dct_df:dict,write_index:bool,lst_color_sel
                             except:
                                 continue
         else:
-            for row in wb[name_sheet].iter_rows(min_row=1, max_row=wb[name_sheet].max_row,
-                                                min_col=0, max_col=df.shape[1]):  # Перебираем строки
-                try:
-                    value = int(row[dct_negative['number_column']].value)
-                    if value > 0:
-                        for cell in row:  # применяем стиль если условие сработало
-                            cell.font = dct_positive['font']
-                            cell.fill = dct_positive['fill']
-                    elif value < 0:
-                        for cell in row:  # применяем стиль если условие сработало
-                            cell.font = dct_negative['font']
-                            cell.fill = dct_negative['fill']
-                    else:
+            if name_sheet == 'Вакансии для динамики':
+                for param_dct in lst_color_select:
+                    if param_dct['find_value'] == '-': # если нужно выделить отрицательные значения
+                        font = param_dct['font']  # Получаем цвет шрифта
+                        fill = param_dct['fill'] # получаем заливку
+                            # Поскольку на этом листе колонка разницы не третья а четвертая то добавляем единицу
+                        for row in wb[name_sheet].iter_rows(min_row=1, max_row=wb[name_sheet].max_row,
+                                                                        min_col=0, max_col=df.shape[1]):  # Перебираем строки
+                            if param_dct['find_value'] in str(row[param_dct['number_column'] + 2].value): # делаем ячейку строковой и проверяем наличие искомого слова
+                                for cell in row: # применяем стиль если условие сработало
+                                    cell.font = font
+                                    cell.fill = fill
+                    elif param_dct['find_value'] == '+': # если нужно выделить значения больше нуля
+                        font = param_dct['font']  # Получаем цвет шрифта
+                        fill = param_dct['fill'] # получаем заливку
+                        if name_sheet != 'Вакансии для динамики':
+                            for row in wb[name_sheet].iter_rows(min_row=1, max_row=wb[name_sheet].max_row,
+                                                                            min_col=0, max_col=df.shape[1]):  # Перебираем строки
+                                try:
+                                    if int(row[param_dct['number_column']+2].value) > 0:
+                                        for cell in row: # применяем стиль если условие сработало
+                                            cell.font = font
+                                            cell.fill = fill
+                                except:
+                                    continue
+                        else:
+                            for row in wb[name_sheet].iter_rows(min_row=1, max_row=wb[name_sheet].max_row,
+                                                                            min_col=0, max_col=df.shape[1]):  # Перебираем строки
+                                try:
+                                    if int(row[param_dct['number_column'] + 2].value) > 0:
+                                        for cell in row: # применяем стиль если условие сработало
+                                            cell.font = font
+                                            cell.fill = fill
+                                except:
+                                    continue
+            else:
+                # Обрабатываем листы с зарплатой
+                for row in wb[name_sheet].iter_rows(min_row=1, max_row=wb[name_sheet].max_row,
+                                                    min_col=0, max_col=df.shape[1]):  # Перебираем строки
+                    try:
+                        value = int(row[dct_negative['number_column']].value)
+                        if value > 0:
+                            for cell in row:  # применяем стиль если условие сработало
+                                cell.font = dct_positive['font']
+                                cell.fill = dct_positive['fill']
+                        elif value < 0:
+                            for cell in row:  # применяем стиль если условие сработало
+                                cell.font = dct_negative['font']
+                                cell.fill = dct_negative['fill']
+                        else:
+                            continue
+                    except:
                         continue
-                except:
-                    continue
 
     return wb
 
