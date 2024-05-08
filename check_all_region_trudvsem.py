@@ -424,17 +424,8 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
             svod_vac_org_region_df = svod_vac_org_region_df.reset_index()
 
         # Свод по количеству вакансий для каждой конкретной вакансии работодателя в регионе
-        svod_vac_particular_org_region_df = pd.pivot_table(prepared_df,
-                                                           index=['Полное название работодателя', 'Вакансия'],
-                                                           values=['Количество рабочих мест'],
-                                                           aggfunc={'Количество рабочих мест': [np.sum]})
-        svod_vac_particular_org_region_df = svod_vac_particular_org_region_df.droplevel(level=0,
-                                                                                        axis=1)  # убираем мультииндекс
-        if len(svod_vac_particular_org_region_df) != 0:
-            svod_vac_particular_org_region_df.sort_values(by=['Полное название работодателя', 'Вакансия'],
-                                                          ascending=[True, True], inplace=True)
-            svod_vac_particular_org_region_df.rename(columns={'sum': 'Количество вакансий'}, inplace=True)
-            svod_vac_particular_org_region_df = svod_vac_particular_org_region_df.reset_index()
+        # Список вакансий для последующего отслеживания динамики
+        svod_vac_particular_org_region_df = prepared_df[['Полное название работодателя','Вакансия','Количество рабочих мест','ID вакансии','Ссылка на вакансию']]
 
         # Свод по средней и медианной минимальной зарплате для сфер деятельности
         prepared_df['Минимальная зарплата'] = prepared_df['Минимальная зарплата'].apply(convert_int)
@@ -647,18 +638,10 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
                 svod_vac_org_org_df.rename(columns={'sum': 'Количество вакансий'}, inplace=True)
                 svod_vac_org_org_df = svod_vac_org_org_df.reset_index()
 
-            # Свод по количеству вакансий для каждой конкретной вакансии работодателя в регионе
-            svod_vac_particular_org_org_df = pd.pivot_table(union_company_df,
-                                                            index=['Полное название работодателя', 'Вакансия'],
-                                                            values=['Количество рабочих мест'],
-                                                            aggfunc={'Количество рабочих мест': [np.sum]})
-            svod_vac_particular_org_org_df = svod_vac_particular_org_org_df.droplevel(level=0,
-                                                                                      axis=1)  # убираем мультииндекс
-            if len(svod_vac_particular_org_org_df) != 0:
-                svod_vac_particular_org_org_df.sort_values(by=['Полное название работодателя', 'Вакансия'],
-                                                           ascending=[True, True], inplace=True)
-                svod_vac_particular_org_org_df.rename(columns={'sum': 'Количество вакансий'}, inplace=True)
-                svod_vac_particular_org_org_df = svod_vac_particular_org_org_df.reset_index()
+            # список вакансий выбранных работодателей для отслеживания динамики
+            svod_vac_particular_org_org_df = union_company_df[
+                ['Полное название работодателя', 'Вакансия', 'Количество рабочих мест', 'ID вакансии',
+                 'Ссылка на вакансию']]
 
             # Свод по средней и медианной минимальной зарплате для сфер деятельности
             union_company_df['Минимальная зарплата'] = union_company_df['Минимальная зарплата'].apply(convert_int)
@@ -843,10 +826,10 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
     # except KeyError as e:
     #     messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
     #                          f'Не найдено значение {e.args}')
-    except FileNotFoundError:
-        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
-                             f'Перенесите файлы которые вы хотите обработать в корень диска. Проблема может быть\n '
-                             f'в слишком длинном пути к обрабатываемым файлам')
+    # except FileNotFoundError:
+    #     messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
+    #                          f'Перенесите файлы которые вы хотите обработать в корень диска. Проблема может быть\n '
+    #                          f'в слишком длинном пути к обрабатываемым файлам')
 
     except PermissionError as e:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
