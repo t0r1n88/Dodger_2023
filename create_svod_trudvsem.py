@@ -247,8 +247,8 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
                         'transport_compensation': 'Компенсация транспорт',
                         'vacancy_address_additional_info': 'Доп информация по адресу вакансии',
                         'vacancy_address': 'Адрес вакансии',
-                        'vacancy_address_latitude': 'Долгота адрес вакансии',
-                        'vacancy_address_longitude': 'Широта адрес вакансии',
+                        'vacancy_address_latitude': 'Широта адрес вакансии',
+                        'vacancy_address_longitude': 'Долгота адрес вакансии',
                         'vacancy_benefit_ids': 'Бонусы', 'vacancy_name': 'Вакансия',
                         'work_places': 'Количество рабочих мест', 'professionalSphereName': 'Сфера деятельности',
                         'full_company_name': 'Полное название работодателя', 'company_inn': 'ИНН работодателя',
@@ -273,7 +273,7 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
                        'Требуемые языки','Требуемые хардскиллы','Требуемые софтскиллы',
                        'Источник вакансии','Статус проверки вакансии','Полное название работодателя','Адрес вакансии','Доп информация по адресу вакансии',
                        'ИНН работодателя','КПП работодателя','ОГРН работодателя','Контактное лицо','Контактный телефон','Email работодателя',
-                       'Профиль работодателя','Долгота адрес вакансии','Широта адрес вакансии','ID вакансии','ID работодателя','Ссылка на вакансию']
+                       'Профиль работодателя','Широта адрес вакансии','Долгота адрес вакансии','ID вакансии','ID работодателя','Ссылка на вакансию']
 
         # Список колонок с текстом
         lst_text_columns = ['Вакансия', 'Требуемая специализация', 'Требования', 'Обязанности',
@@ -837,18 +837,9 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
 
 if __name__ == '__main__':
     main_file_data = 'data/vacancy.csv'
-    main_file_data = 'data/vacancy_7 (4).csv'
-    main_file_data = 'data/vacancy all.csv'
     main_file_data = 'data/Вакансии СФО 09_04_2024.csv'
     main_org_file = 'data/company.xlsx'
-    main_org_file = 'data/company Бурятия.xlsx'
-    main_region = 'Республика Бурятия'
-    main_region = 'Томская область'
-    main_region = 'Иркутская область'
-    main_region = 'Город Санкт-Петербург'
-    main_region = 'Кемеровская область - Кузбасс'
-    main_region = 'Город Москва'
-    main_region = 'Красноярский край'
+    main_org_file = 'data/Организации Бурятия.xlsx'
     main_region = 'Республика Бурятия'
 
 
