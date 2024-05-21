@@ -429,10 +429,31 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
         # Список вакансий для последующего отслеживания динамики
         svod_vac_particular_org_region_df = prepared_df[['Полное название работодателя','Вакансия','Количество рабочих мест','ID вакансии','Ссылка на вакансию']]
 
-        # Свод по средней и медианной минимальной зарплате для сфер деятельности
+        # Своды по минимальной зарплате
         prepared_df['Минимальная зарплата'] = prepared_df['Минимальная зарплата'].apply(convert_int)
         pay_df = prepared_df[prepared_df['Минимальная зарплата'] > 0] # отбираем все вакансии с зп больше нуля
 
+        # Свод по категориям минимальной заработной платы для сфеф деятельности
+        svod_shpere_category_pay_region_df = pd.pivot_table(pay_df,
+                                                index=['Сфера деятельности','Категория минимальной зарплаты'],
+                                                values=['Количество рабочих мест'],
+                                                aggfunc={'Количество рабочих мест': 'sum'}
+                                                )
+
+        if len(svod_shpere_category_pay_region_df) !=0:
+            svod_shpere_category_pay_region_df = svod_shpere_category_pay_region_df.reset_index()
+
+        # Свод по категориям минимальной заработной платы для работодателей
+        svod_org_category_pay_region_df = pd.pivot_table(pay_df,
+                                                index=['Полное название работодателя','Категория минимальной зарплаты'],
+                                                values=['Количество рабочих мест'],
+                                                aggfunc={'Количество рабочих мест': 'sum'}
+                                                )
+
+        if len(svod_org_category_pay_region_df) !=0:
+            svod_org_category_pay_region_df = svod_org_category_pay_region_df.reset_index()
+
+        # Средняя и медианная зарплата по сфере деятельности
         svod_shpere_pay_region_df = pd.pivot_table(pay_df,
                                                    index=['Сфера деятельности'],
                                                    values=['Минимальная зарплата'],
@@ -455,6 +476,11 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
             svod_org_pay_region_df = svod_org_pay_region_df.astype(int, errors='ignore')
             svod_org_pay_region_df.columns = ['Средняя ариф. минимальная зп', 'Медианная минимальная зп']
             svod_org_pay_region_df = svod_org_pay_region_df.reset_index()
+
+
+
+
+
 
         # Свод по требуемому образованию для сфер деятельности
         svod_shpere_educ_region_df = pd.pivot_table(prepared_df,
@@ -591,7 +617,9 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
             svod_vac_org_region_df.to_excel(writer, sheet_name='Вакансии по работодателям', index=False)
             svod_vac_particular_org_region_df.to_excel(writer,sheet_name='Вакансии для динамики',index=False)
             svod_shpere_pay_region_df.to_excel(writer, sheet_name='Зарплата по отраслям', index=False)
+            svod_shpere_category_pay_region_df.to_excel(writer,sheet_name='Категории ЗП по отраслям',index=False)
             svod_org_pay_region_df.to_excel(writer, sheet_name='Зарплата по работодателям', index=False)
+            svod_org_category_pay_region_df.to_excel(writer, sheet_name='Категории ЗП по работодателям', index=False)
             svod_shpere_educ_region_df.to_excel(writer, sheet_name='Образование по отраслям', index=False)
             svod_org_educ_region_df.to_excel(writer, sheet_name='Образование по работодателям', index=False)
             svod_shpere_schedule_region_df.to_excel(writer, sheet_name='График работы по отраслям', index=False)
@@ -648,6 +676,28 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
             # Свод по средней и медианной минимальной зарплате для сфер деятельности
             union_company_df['Минимальная зарплата'] = union_company_df['Минимальная зарплата'].apply(convert_int)
             pay_union_df = union_company_df[union_company_df['Минимальная зарплата'] > 0]
+
+            # Свод по категориям минимальной заработной платы для сфеф деятельности
+            svod_shpere_category_pay_org_df = pd.pivot_table(pay_union_df,
+                                                                index=['Сфера деятельности',
+                                                                       'Категория минимальной зарплаты'],
+                                                                values=['Количество рабочих мест'],
+                                                                aggfunc={'Количество рабочих мест': 'sum'}
+                                                                )
+
+            if len(svod_shpere_category_pay_org_df) != 0:
+                svod_shpere_category_pay_org_df = svod_shpere_category_pay_org_df.reset_index()
+
+            # Свод по категориям минимальной заработной платы для работодателей
+            svod_org_category_pay_org_df = pd.pivot_table(pay_union_df,
+                                                             index=['Полное название работодателя',
+                                                                    'Категория минимальной зарплаты'],
+                                                             values=['Количество рабочих мест'],
+                                                             aggfunc={'Количество рабочих мест': 'sum'}
+                                                             )
+
+            if len(svod_org_category_pay_org_df) != 0:
+                svod_org_category_pay_org_df = svod_org_category_pay_org_df.reset_index()
 
 
             svod_shpere_pay_org_df = pd.pivot_table(pay_union_df,
@@ -806,7 +856,9 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
                 svod_vac_org_org_df.to_excel(writer, sheet_name='Вакансии по работодателям', index=False)
                 svod_vac_particular_org_org_df.to_excel(writer,sheet_name='Вакансии для динамики',index=False)
                 svod_shpere_pay_org_df.to_excel(writer, sheet_name='Зарплата по отраслям', index=False)
+                svod_shpere_category_pay_org_df.to_excel(writer, sheet_name='Категории ЗП по отраслям', index=False)
                 svod_org_pay_org_df.to_excel(writer, sheet_name='Зарплата по работодателям', index=False)
+                svod_org_category_pay_org_df.to_excel(writer, sheet_name='Категории ЗП по работодателям', index=False)
                 svod_shpere_educ_org_df.to_excel(writer, sheet_name='Образование по отраслям', index=False)
                 svod_org_educ_org_df.to_excel(writer, sheet_name='Образование по работодателям', index=False)
                 svod_shpere_schedule_org_df.to_excel(writer, sheet_name='График работы по отраслям', index=False)
