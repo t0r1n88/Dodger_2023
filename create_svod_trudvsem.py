@@ -442,6 +442,7 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
 
         if len(svod_shpere_category_pay_region_df) !=0:
             svod_shpere_category_pay_region_df = svod_shpere_category_pay_region_df.reset_index()
+            svod_shpere_category_pay_region_df.rename(columns={'Количество рабочих мест':'Количество вакансий'},inplace=True)
 
         # Свод по категориям минимальной заработной платы для работодателей
         svod_org_category_pay_region_df = pd.pivot_table(pay_df,
@@ -452,6 +453,8 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
 
         if len(svod_org_category_pay_region_df) !=0:
             svod_org_category_pay_region_df = svod_org_category_pay_region_df.reset_index()
+            svod_org_category_pay_region_df.rename(columns={'Количество рабочих мест':'Количество вакансий'},inplace=True)
+
 
         # Средняя и медианная зарплата по сфере деятельности
         svod_shpere_pay_region_df = pd.pivot_table(pay_df,
@@ -687,6 +690,8 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
 
             if len(svod_shpere_category_pay_org_df) != 0:
                 svod_shpere_category_pay_org_df = svod_shpere_category_pay_org_df.reset_index()
+                svod_shpere_category_pay_org_df.rename(columns={'Количество рабочих мест': 'Количество вакансий'},
+                                                       inplace=True)
 
             # Свод по категориям минимальной заработной платы для работодателей
             svod_org_category_pay_org_df = pd.pivot_table(pay_union_df,
@@ -698,7 +703,8 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
 
             if len(svod_org_category_pay_org_df) != 0:
                 svod_org_category_pay_org_df = svod_org_category_pay_org_df.reset_index()
-
+                svod_org_category_pay_org_df.rename(columns={'Количество рабочих мест': 'Количество вакансий'},
+                                                       inplace=True)
 
             svod_shpere_pay_org_df = pd.pivot_table(pay_union_df,
                                                     index=['Сфера деятельности'],
