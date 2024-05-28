@@ -230,6 +230,7 @@ def prepare_data_vacancy(df: pd.DataFrame, dct_name_columns: dict, lst_columns: 
     df['Требования'] = df['Требования'].apply(clear_tag)
     df['Обязанности'] = df['Обязанности'].apply(clear_tag)
     # Создаем краткие наименование работодателей создавая аббревиатуры
+    df['Полное название работодателя'] = df['Полное название работодателя'].fillna('Не заполнено название организации')
     df['Полное название работодателя'] = df['Полное название работодателя'].astype(str)
     # заменяем несколько пробелов на один
     df['Полное название работодателя'] = df['Полное название работодателя'].apply(lambda x:re.sub(r'\s+',' ',x))
@@ -475,7 +476,7 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
 
         # Свод по количеству рабочих мест по организациям
         svod_vac_org_region_df = pd.pivot_table(prepared_df,
-                                                index=['Полное название работодателя'],
+                                                index=['Краткое название работодателя'],
                                                 values=['Количество рабочих мест'],
                                                 aggfunc={'Количество рабочих мест': [np.sum]})
         svod_vac_org_region_df = svod_vac_org_region_df.droplevel(level=0, axis=1)  # убираем мультииндекс
@@ -486,7 +487,7 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
             svod_vac_org_region_df = svod_vac_org_region_df.reset_index()
 
         # Список вакансий для последующего отслеживания динамики
-        svod_vac_particular_org_region_df = prepared_df[['Полное название работодателя','Вакансия','Количество рабочих мест','ID вакансии','Ссылка на вакансию']]
+        svod_vac_particular_org_region_df = prepared_df[['Краткое название работодателя','Вакансия','Количество рабочих мест','ID вакансии','Ссылка на вакансию']]
 
         # Своды по минимальной зарплате
         prepared_df['Минимальная зарплата'] = prepared_df['Минимальная зарплата'].apply(convert_int)
@@ -505,7 +506,7 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
 
         # Свод по категориям минимальной заработной платы для работодателей
         svod_org_category_pay_region_df = pd.pivot_table(pay_df,
-                                                index=['Полное название работодателя','Категория минимальной зарплаты'],
+                                                index=['Краткое название работодателя','Категория минимальной зарплаты'],
                                                 values=['Количество рабочих мест'],
                                                 aggfunc={'Количество рабочих мест': 'sum'}
                                                 )
@@ -529,7 +530,7 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
 
         # Свод по средней и медианной минимальной зарплате для работодателей
         svod_org_pay_region_df = pd.pivot_table(pay_df,
-                                                index=['Полное название работодателя', 'Сфера деятельности'],
+                                                index=['Краткое название работодателя', 'Сфера деятельности'],
                                                 values=['Минимальная зарплата'],
                                                 aggfunc={'Минимальная зарплата': [np.mean, np.median]}
                                                 )
@@ -558,7 +559,7 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
 
         # Свод по требуемому образованию для работодателей
         svod_org_educ_region_df = pd.pivot_table(prepared_df,
-                                                 index=['Полное название работодателя', 'Образование'],
+                                                 index=['Краткое название работодателя', 'Образование'],
                                                  values=['Количество рабочих мест'],
                                                  aggfunc={'Количество рабочих мест': [np.sum]},
                                                  fill_value=0)
@@ -583,7 +584,7 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
 
         # Свод по графику работы для работодателей
         svod_org_schedule_region_df = pd.pivot_table(prepared_df,
-                                                     index=['Полное название работодателя', 'График работы'],
+                                                     index=['Краткое название работодателя', 'График работы'],
                                                      values=['Количество рабочих мест'],
                                                      aggfunc={'Количество рабочих мест': [np.sum]},
                                                      fill_value=0)
@@ -608,7 +609,7 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
 
         # Свод по типу занятости для работодателей
         svod_org_type_job_region_df = pd.pivot_table(prepared_df,
-                                                     index=['Полное название работодателя', 'Тип занятости'],
+                                                     index=['Краткое название работодателя', 'Тип занятости'],
                                                      values=['Количество рабочих мест'],
                                                      aggfunc={'Количество рабочих мест': [np.sum]},
                                                      fill_value=0)
@@ -632,7 +633,7 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
         svod_shpere_quote_region_df = svod_shpere_quote_region_df.reset_index()
         # Свод по квотируемым местам для работодателей
         svod_org_quote_region_df = pd.pivot_table(prepared_df,
-                                                  index=['Полное название работодателя', 'Квотируемое место'],
+                                                  index=['Краткое название работодателя', 'Квотируемое место'],
                                                   values=['Количество рабочих мест'],
                                                   aggfunc={'Количество рабочих мест': [np.sum]},
                                                   fill_value=0)
@@ -664,7 +665,7 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
 
         # Свод по требуемому опыту для работодателей
         svod_org_exp_region_df = pd.pivot_table(prepared_df,
-                                                index=['Полное название работодателя', 'Требуемый опыт работы в годах'],
+                                                index=['Краткое название работодателя', 'Требуемый опыт работы в годах'],
                                                 values=['Количество рабочих мест'],
                                                 aggfunc={'Количество рабочих мест': [np.sum]},
                                                 fill_value=0)
@@ -720,7 +721,7 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
 
             # Свод по количеству рабочих мест по организациям
             svod_vac_org_org_df = pd.pivot_table(union_company_df,
-                                                 index=['Полное название работодателя'],
+                                                 index=['Краткое название работодателя'],
                                                  values=['Количество рабочих мест'],
                                                  aggfunc={'Количество рабочих мест': [np.sum]})
             svod_vac_org_org_df = svod_vac_org_org_df.droplevel(level=0, axis=1)  # убираем мультииндекс
@@ -732,7 +733,7 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
 
             # список вакансий выбранных работодателей для отслеживания динамики
             svod_vac_particular_org_org_df = union_company_df[
-                ['Полное название работодателя', 'Вакансия', 'Количество рабочих мест', 'ID вакансии',
+                ['Краткое название работодателя', 'Вакансия', 'Количество рабочих мест', 'ID вакансии',
                  'Ссылка на вакансию']]
 
             # Свод по средней и медианной минимальной зарплате для сфер деятельности
@@ -754,7 +755,7 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
 
             # Свод по категориям минимальной заработной платы для работодателей
             svod_org_category_pay_org_df = pd.pivot_table(pay_union_df,
-                                                             index=['Полное название работодателя',
+                                                             index=['Краткое название работодателя',
                                                                     'Категория минимальной зарплаты'],
                                                              values=['Количество рабочих мест'],
                                                              aggfunc={'Количество рабочих мест': 'sum'}
@@ -778,7 +779,7 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
 
             # Свод по средней и медианной минимальной зарплате для работодателей
             svod_org_pay_org_df = pd.pivot_table(pay_union_df,
-                                                 index=['Полное название работодателя', 'Сфера деятельности'],
+                                                 index=['Краткое название работодателя', 'Сфера деятельности'],
                                                  values=['Минимальная зарплата'],
                                                  aggfunc={'Минимальная зарплата': [np.mean, np.median]}
                                                  )
@@ -802,7 +803,7 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
 
             # Свод по требуемому образованию для работодателей
             svod_org_educ_org_df = pd.pivot_table(union_company_df,
-                                                  index=['Полное название работодателя', 'Образование'],
+                                                  index=['Краткое название работодателя', 'Образование'],
                                                   values=['Количество рабочих мест'],
                                                   aggfunc={'Количество рабочих мест': [np.sum]},
                                                   fill_value=0)
@@ -826,7 +827,7 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
 
             # Свод по графику работы для работодателей
             svod_org_schedule_org_df = pd.pivot_table(union_company_df,
-                                                      index=['Полное название работодателя', 'График работы'],
+                                                      index=['Краткое название работодателя', 'График работы'],
                                                       values=['Количество рабочих мест'],
                                                       aggfunc={'Количество рабочих мест': [np.sum]},
                                                       fill_value=0)
@@ -850,7 +851,7 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
 
             # Свод по типу занятости для работодателей
             svod_org_type_job_org_df = pd.pivot_table(union_company_df,
-                                                      index=['Полное название работодателя', 'Тип занятости'],
+                                                      index=['Краткое название работодателя', 'Тип занятости'],
                                                       values=['Количество рабочих мест'],
                                                       aggfunc={'Количество рабочих мест': [np.sum]},
                                                       fill_value=0)
@@ -874,7 +875,7 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
 
             # Свод по квотируемым местам для работодателей
             svod_org_quote_org_df = pd.pivot_table(union_company_df,
-                                                   index=['Полное название работодателя', 'Квотируемое место'],
+                                                   index=['Краткое название работодателя', 'Квотируемое место'],
                                                    values=['Количество рабочих мест'],
                                                    aggfunc={'Количество рабочих мест': [np.sum]},
                                                    fill_value=0)
@@ -906,7 +907,7 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
 
             # Свод по требуемому опыту для работодателей
             svod_org_exp_org_df = pd.pivot_table(union_company_df,
-                                                 index=['Полное название работодателя', 'Требуемый опыт работы в годах'],
+                                                 index=['Краткое название работодателя', 'Требуемый опыт работы в годах'],
                                                  values=['Количество рабочих мест'],
                                                  aggfunc={'Количество рабочих мест': [np.sum]},
                                                  fill_value=0)

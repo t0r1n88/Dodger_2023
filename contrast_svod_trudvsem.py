@@ -190,10 +190,10 @@ def prepare_diff_svod_trudvsem(first_file:str, second_file:str, end_folder:str,t
                         merge_df = first_df.merge(second_df, how='outer', left_on=['ID вакансии'], right_on=['ID вакансии'], indicator=True)
 
                         # Создаем объединенные колонки
-                        merge_df['Работодатель'] = merge_df[['Полное название работодателя_x','Полное название работодателя_y']].apply(union_column,axis=1)
+                        merge_df['Работодатель'] = merge_df[['Краткое название работодателя_x','Краткое название работодателя_y']].apply(union_column,axis=1)
                         merge_df['Вакансия'] = merge_df[['Вакансия_x','Вакансия_y']].apply(union_column,axis=1)
                         merge_df['Ссылка на вакансию'] = merge_df[['Ссылка на вакансию_x','Ссылка на вакансию_y']].apply(union_column,axis=1)
-                        merge_df.drop(columns=['ID вакансии','_merge','Полное название работодателя_x','Полное название работодателя_y',
+                        merge_df.drop(columns=['ID вакансии','_merge','Краткое название работодателя_x','Краткое название работодателя_y',
                                                'Вакансия_x','Вакансия_y','Ссылка на вакансию_x','Ссылка на вакансию_y'],inplace=True) # удаляем лишние колонки
 
                         # Переименовываем колонки
@@ -497,9 +497,9 @@ def prepare_diff_svod_trudvsem(first_file:str, second_file:str, end_folder:str,t
 
 if __name__ == '__main__':
     main_first_file = 'data/Аналитика по вакансиям региона/15_03_2024/Свод по региону Бурятия от 14 марта.xlsx'
-    main_first_file = 'data/Республика Бурятия/Аналитика по вакансиям региона/21_05_2024/Свод по региону от 09_43_49.xlsx'
+    main_first_file = 'data/Республика Бурятия/Аналитика по вакансиям региона/28_05_2024/Свод по региону от 11_42_58.xlsx'
     main_second_file = 'data/Аналитика по вакансиям региона/16_03_2024/Свод по региону Бурятия от 16 марта.xlsx'
-    main_second_file = 'data/Республика Бурятия/Аналитика по вакансиям региона/21_05_2024/2 файл.xlsx'
+    main_second_file = 'data/Республика Бурятия/Аналитика по вакансиям региона/28_05_2024/2 файл.xlsx'
     main_end_folder = 'data'
 
     prepare_diff_svod_trudvsem(main_first_file, main_second_file, main_end_folder,'No')
