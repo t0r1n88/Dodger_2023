@@ -428,7 +428,7 @@ def show_textmenu(event):
 
 if __name__ == '__main__':
     window = Tk()
-    window.title('Кассандра Подсчет данных по трудоустройству выпускников ver 5.4')
+    window.title('Кассандра Подсчет данных по трудоустройству выпускников ver 5.5')
     # Устанавливаем размер и положение окна
     set_window_size(window)
     window.resizable(True, True)
