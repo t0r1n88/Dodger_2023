@@ -96,7 +96,7 @@ def prepare_diff_svod_trudvsem(first_file:str, second_file:str, end_folder:str,t
         current_time = time.strftime('%H_%M_%S', t)
         current_date = time.strftime('%d_%m_%Y', t)
         # Список обязательных листов которые должны быть в файле
-        lst_svod_sheets = ['Вакансии по отраслям', 'Вакансии по работодателям','Вакансии для динамики', 'Зарплата по отраслям',
+        lst_svod_sheets = ['Вакансии по отраслям','Вакансии по муниципалитетам', 'Вакансии по работодателям','Вакансии для динамики', 'Зарплата по отраслям',
                            'Категории ЗП по отраслям',
                            'Зарплата по работодателям','Категории ЗП по работодателям',
                            'Образование по отраслям', 'Образование по работодателям', 'График работы по отраслям',
@@ -310,7 +310,7 @@ def prepare_diff_svod_trudvsem(first_file:str, second_file:str, end_folder:str,t
         else:
             for name_sheet in lst_svod_sheets:
                 # Если свод стандартный по количеству вакансий
-                if name_sheet not in lst_not_standard_sheets and 'работодателям' not in name_sheet and name_sheet !='Вакансии для динамики':
+                if name_sheet not in lst_not_standard_sheets and 'работодателям' not in name_sheet and name_sheet !='Вакансии для динамики' and 'муниципалитетам' not in name_sheet:
                     first_df = pd.read_excel(first_file, sheet_name=name_sheet)  # первый файл для сравнения
                     second_df = pd.read_excel(second_file, sheet_name=name_sheet)  # второй файл для сравнения
 
@@ -365,7 +365,7 @@ def prepare_diff_svod_trudvsem(first_file:str, second_file:str, end_folder:str,t
                     dct_df[name_sheet] = merge_df  # сохраняем в словарь
 
                 else:
-                    if 'работодателям' not in name_sheet and name_sheet!='Вакансии для динамики':
+                    if 'работодателям' not in name_sheet and name_sheet!='Вакансии для динамики' and 'муниципалитетам' not in name_sheet:
 
                         # обрабатываем нестандартные листы
                         first_df = pd.read_excel(first_file, sheet_name=name_sheet)  # первый файл для сравнения
