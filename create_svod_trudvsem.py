@@ -171,6 +171,7 @@ def extract_municipality(cell):
             # проверяем на наличие слов город и район
             if 'город' not in name_municipality.lower() and 'район' not in name_municipality.lower():
                 return 'Не определен'
+            name_municipality = re.sub('\d','',name_municipality).strip() # очищаем от цифр
             return name_municipality
         else:
             return 'Не определен'
@@ -498,6 +499,19 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
             svod_vac_reg_region_df.rename(columns={'sum': 'Количество вакансий'}, inplace=True)
             svod_vac_reg_region_df = svod_vac_reg_region_df.reset_index()
 
+
+        # Свод по муниципалитам
+        svod_vac_mun_region_df = pd.pivot_table(prepared_df,
+                                                index=['Муниципалитет'],
+                                                values=['Количество рабочих мест'],
+                                                aggfunc={'Количество рабочих мест': [np.sum]})
+        svod_vac_mun_region_df = svod_vac_mun_region_df.droplevel(level=0, axis=1)  # убираем мультииндекс
+        if len(svod_vac_mun_region_df) !=0:
+            svod_vac_mun_region_df.sort_values(by=['sum'], ascending=False, inplace=True)
+            svod_vac_mun_region_df.loc['Итого'] = svod_vac_mun_region_df['sum'].sum()
+            svod_vac_mun_region_df.rename(columns={'sum': 'Количество вакансий'}, inplace=True)
+            svod_vac_mun_region_df = svod_vac_mun_region_df.reset_index()
+
         # Свод по количеству рабочих мест по организациям
         svod_vac_org_region_df = pd.pivot_table(prepared_df,
                                                 index=['Краткое название работодателя'],
@@ -701,6 +715,7 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
 
         with pd.ExcelWriter(f'{svod_region_folder}/Свод по региону от {current_time}.xlsx') as writer:
             svod_vac_reg_region_df.to_excel(writer, sheet_name='Вакансии по отраслям', index=False)
+            svod_vac_mun_region_df.to_excel(writer, sheet_name='Вакансии по муниципалитетам', index=False)
             svod_vac_org_region_df.to_excel(writer, sheet_name='Вакансии по работодателям', index=False)
             svod_vac_particular_org_region_df.to_excel(writer,sheet_name='Вакансии для динамики',index=False)
             svod_shpere_pay_region_df.to_excel(writer, sheet_name='Зарплата по отраслям', index=False)
@@ -742,6 +757,19 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
                 svod_vac_reg_org_df.loc['Итого'] = svod_vac_reg_org_df['sum'].sum()
                 svod_vac_reg_org_df.rename(columns={'sum': 'Количество вакансий'}, inplace=True)
                 svod_vac_reg_org_df = svod_vac_reg_org_df.reset_index()
+
+            # Свод по муниципалитетам для выбранных работодателей
+            svod_vac_mun_org_df = pd.pivot_table(union_company_df,
+                                                 index=['Муниципалитет'],
+                                                 values=['Количество рабочих мест'],
+                                                 aggfunc={'Количество рабочих мест': [np.sum]})
+            svod_vac_mun_org_df = svod_vac_mun_org_df.droplevel(level=0, axis=1)  # убираем мультииндекс
+            if len(svod_vac_mun_org_df) != 0:
+                svod_vac_mun_org_df.sort_values(by=['sum'], ascending=False, inplace=True)
+                svod_vac_mun_org_df.loc['Итого'] = svod_vac_mun_org_df['sum'].sum()
+                svod_vac_mun_org_df.rename(columns={'sum': 'Количество вакансий'}, inplace=True)
+                svod_vac_mun_org_df = svod_vac_mun_org_df.reset_index()
+
 
             # Свод по количеству рабочих мест по организациям
             svod_vac_org_org_df = pd.pivot_table(union_company_df,
@@ -943,6 +971,7 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
 
             with pd.ExcelWriter(f'{svod_org_folder}/Свод по выбранным работодателям от {current_time}.xlsx') as writer:
                 svod_vac_reg_org_df.to_excel(writer, sheet_name='Вакансии по отраслям', index=False)
+                svod_vac_mun_org_df.to_excel(writer, sheet_name='Вакансии по муниципалитетам', index=False)
                 svod_vac_org_org_df.to_excel(writer, sheet_name='Вакансии по работодателям', index=False)
                 svod_vac_particular_org_org_df.to_excel(writer,sheet_name='Вакансии для динамики',index=False)
                 svod_shpere_pay_org_df.to_excel(writer, sheet_name='Зарплата по отраслям', index=False)
@@ -989,6 +1018,7 @@ if __name__ == '__main__':
     main_org_file = 'data/company.xlsx'
     main_org_file = 'data/Организации Бурятия.xlsx'
     main_region = 'Республика Бурятия'
+    # main_region = 'Красноярский край'
 
 
 
