@@ -42,6 +42,18 @@ class ColumnsDifference(Exception):
     pass
 
 
+def convert_to_int(value):
+    """
+    Функция для конвертации в инт
+    """
+    try:
+        return int(value)
+    except ValueError:
+        return 0
+
+
+
+
 def write_df_to_excel_color_selection(dct_df:dict,write_index:bool,lst_color_select:list,exlude_sheets:list)->openpyxl.Workbook:
     """
     Функция для записи датафрейма в файл Excel с выделением цветом нужных строк

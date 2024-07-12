@@ -3,6 +3,7 @@
 Модуль для обработки таблиц мониторинга занятости выпускников используемого для загрузки на сайт СССР
 """
 from check_functions import base_check_file
+from support_functions import convert_to_int
 
 import pandas as pd
 import numpy as np
@@ -63,6 +64,19 @@ def prepare_graduate_employment(path_folder_data: str, path_result_folder: str):
                 if len(file_error_df) != 0:
                     continue
                 print(file)
+                # Обрабатываем данные с листа Выпуск-СПО
+                df_first_sheet = pd.read_excel(f'{path_folder_data}/{file}', sheet_name='Выпуск-СПО',
+                                               skiprows=check_required_dct['Выпуск-СПО']['Количество строк заголовка']) # Считываем прошедший базовую проверку файл
+                df_first_sheet.columns = list(map(str, df_first_sheet.columns))  # делаем названия колонок строковыми
+
+                # Приводим все колонки кроме первой к инту
+                df_first_sheet[requred_columns_first_sheet[1:]] = df_first_sheet[requred_columns_first_sheet[1:]].applymap(convert_to_int)
+                # очищаем первую колонку от пробельных символов вначаче и конце
+                df_first_sheet['1'] = df_first_sheet['1'].apply(lambda x:x.strip() if isinstance(x,str) else x)
+                print(df_first_sheet['1'])
+
+
+
 
 
         print(error_df)
