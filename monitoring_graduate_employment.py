@@ -56,9 +56,14 @@ def prepare_graduate_employment(path_folder_data: str, path_result_folder: str):
 
     try:
         for file in os.listdir(path_folder_data):
-            print(file)
-            # Проверяем файл на расширение, наличие нужных листов и колонок
-            error_df = base_check_file(file, error_df, path_folder_data, check_required_dct)
+            if not file.startswith('~$'):
+                # Проверяем файл на расширение, наличие нужных листов и колонок
+                file_error_df = base_check_file(file, path_folder_data, check_required_dct)
+                error_df = pd.concat([error_df, file_error_df], axis=0, ignore_index=True)
+                if len(file_error_df) != 0:
+                    continue
+                print(file)
+
 
         print(error_df)
         t = time.localtime()  # получаем текущее время

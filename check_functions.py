@@ -45,10 +45,11 @@ def check_data_note(cell):
         return 'Не заполнено'
     return str(cell)
 
-def base_check_file(file:str,error_df:pd.DataFrame,path_folder_data:str,checked_required_sheet:dict):
+def base_check_file(file:str,path_folder_data:str,checked_required_sheet:dict):
     """
     Функция для базовой проверки файла. Расширение,наличие нужных листов
     """
+    _error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
     if not file.startswith('~$') and not file.endswith('.xlsx'):
         # проверка файла на расширение xlsx
         name_file = file.split('.xls')[0]
@@ -56,7 +57,7 @@ def base_check_file(file:str,error_df:pd.DataFrame,path_folder_data:str,checked_
                                             'Расширение файла НЕ XLSX! Программа обрабатывает только XLSX ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!! ']],
                                      columns=['Название файла', 'Строка или колонка с ошибкой',
                                               'Описание ошибки'])
-        error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
+        _error_df = pd.concat([_error_df, temp_error_df], axis=0, ignore_index=True)
     if not file.startswith('~$') and file.endswith('.xlsx'):
         # Проверка файла на наличие требуемых листов
         name_file = file.split('.xlsx')[0]
@@ -70,7 +71,7 @@ def base_check_file(file:str,error_df:pd.DataFrame,path_folder_data:str,checked_
                                                     f'{dct_param["Не найден лист"]}']],
                                              columns=['Название файла', 'Строка или колонка с ошибкой',
                                                       'Описание ошибки'])
-                error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
+                _error_df = pd.concat([_error_df, temp_error_df], axis=0, ignore_index=True)
 
         # проверяем наличие требуемых колонок в файле
         for check_name_sheet, dct_param in checked_required_sheet.items():
@@ -85,8 +86,8 @@ def base_check_file(file:str,error_df:pd.DataFrame,path_folder_data:str,checked_
                                                         f' Строка с номерами колонок должны быть на строке {dct_param["Количество строк заголовка"] + 1} в исходном файле']],
                                                  columns=['Название файла', 'Строка или колонка с ошибкой',
                                                           'Описание ошибки'])
-                    error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
-    return error_df
+                    _error_df = pd.concat([_error_df, temp_error_df], axis=0, ignore_index=True)
+    return _error_df
 
 
 
