@@ -45,6 +45,39 @@ def check_data_note(cell):
         return 'Не заполнено'
     return str(cell)
 
+def base_check_file(file:str,error_df:pd.DataFrame,path_folder_data:str,checked_required_sheet:dict):
+    """
+    Функция для базовой проверки файла. Расширение,наличие нужных листов
+    """
+    if not file.startswith('~$') and not file.endswith('.xlsx'):
+        # проверка файла на расширение xlsx
+        name_file = file.split('.xls')[0]
+        temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
+                                            'Расширение файла НЕ XLSX! Программа обрабатывает только XLSX ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!! ']],
+                                     columns=['Название файла', 'Строка или колонка с ошибкой',
+                                              'Описание ошибки'])
+        error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
+    if not file.startswith('~$') and file.endswith('.xlsx'):
+        # Проверка файла на наличие требуемых листов
+        name_file = file.split('.xlsx')[0]
+        # получаем название первого листа
+        temp_wb = openpyxl.load_workbook(f'{path_folder_data}/{file}', read_only=True)
+        lst_temp_sheets = temp_wb.sheetnames  # получаем листы в файле
+        temp_wb.close()
+        for check_name_sheet,text_error in checked_required_sheet.items():
+            if check_name_sheet not in lst_temp_sheets:  # проверяем наличие листа с названием в файле
+                temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
+                                                    f'{text_error}']],
+                                             columns=['Название файла', 'Строка или колонка с ошибкой',
+                                                      'Описание ошибки'])
+                error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
+    return error_df
+
+
+
+
+
+
 def check_sameness_column(checked_lst:list,check_range:int,begin_border:int,quantity_check_value:int,tup_correct:tuple,correction:int,
                           name_file=None,name_column=None):
     """
