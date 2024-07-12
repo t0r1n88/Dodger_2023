@@ -80,7 +80,6 @@ def base_check_file(file:str,error_df:pd.DataFrame,path_folder_data:str,checked_
                 # находим разницу в колонках
                 diff_cols = set(dct_param['Обязательные колонки']).difference(set(temp_df.columns))
                 if len(diff_cols) != 0:
-                    print(diff_cols)
                     temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
                                                         f'{dct_param["Нет колонок"]} {";".join(diff_cols)}.'
                                                         f' Строка с номерами колонок должны быть на строке {dct_param["Количество строк заголовка"] + 1} в исходном файле']],

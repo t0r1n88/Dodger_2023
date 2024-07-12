@@ -57,6 +57,7 @@ def prepare_graduate_employment(path_folder_data: str, result_folder: str):
     try:
         for file in os.listdir(path_folder_data):
             print(file)
+            # Проверяем файл на расширение, наличие нужных листов и колонок
             error_df = base_check_file(file, error_df, path_folder_data, check_required_dct)
 
         print(error_df)
