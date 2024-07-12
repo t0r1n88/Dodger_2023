@@ -20,7 +20,7 @@ import openpyxl
 from openpyxl.utils.dataframe import dataframe_to_rows
 
 
-def prepare_graduate_employment(path_folder_data: str, result_folder: str):
+def prepare_graduate_employment(path_folder_data: str, path_result_folder: str):
     """
     Функция для обработки мониторинга занятости
     """
@@ -63,14 +63,14 @@ def prepare_graduate_employment(path_folder_data: str, result_folder: str):
         print(error_df)
         t = time.localtime()  # получаем текущее время
         current_time = time.strftime('%H_%M_%S', t)
-        error_df.to_excel(f'data/Мониторинг занятости выпускников/Результат/Ошибки {current_time}.xlsx',index=False)
+        error_df.to_excel(f'{path_result_folder}/Ошибки {current_time}.xlsx',index=False)
     except ZeroDivisionError:
         print('dssd')
 
 
 if __name__ == '__main__':
-    main_data_folder = 'data/Мониторинг занятости выпускников/Файлы'
-    main_result_folder = 'data/Мониторинг занятости выпускников/Результат'
+    main_data_folder = 'c:/Users/1/PycharmProjects/Dodger_2023/data/Мониторинг занятости выпускников/Файлы/'
+    main_result_folder = 'c:/Users/1/PycharmProjects/Dodger_2023/data/Мониторинг занятости выпускников/Результат'
     prepare_graduate_employment(main_data_folder, main_result_folder)
 
     print('Lindy Booth')
