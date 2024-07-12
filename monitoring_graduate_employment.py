@@ -10,6 +10,7 @@ import os
 import warnings
 from tkinter import messagebox
 import time
+
 pd.options.mode.chained_assignment = None  # default='warn'
 warnings.filterwarnings('ignore', category=UserWarning, module='openpyxl')
 warnings.filterwarnings('ignore', category=DeprecationWarning)
@@ -19,7 +20,7 @@ import openpyxl
 from openpyxl.utils.dataframe import dataframe_to_rows
 
 
-def prepare_graduate_employment(path_folder_data:str,result_folder:str):
+def prepare_graduate_employment(path_folder_data: str, result_folder: str):
     """
     Функция для обработки мониторинга занятости
     """
@@ -29,23 +30,46 @@ def prepare_graduate_employment(path_folder_data:str,result_folder:str):
     dct_code_and_name = dict()
     # создаем датафрейм для регистрации ошибок
     error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
-    check_required_dct = {'Выпуск-СПО':'В файле не найден лист с названием Выпуск-СПО', 'Выпуск-Целевое':'В файле не найден лист с названием Выпуск-Целевое',}
+    requred_columns_first_sheet = ['1', '1.1', '1.2', '2', '3', '3.1', '3.2', '4', '5', '6', '7', '8', '9', '10',
+                                   '11', '12', '13', '14', '15', '16', '17', '18', '19', '20',
+                                   '21', '22', '23', '24', '25', '26', '27', '28', '29', '30',
+                                   '31', '32', '33', '34', '35', '36', '37', '38', '39', '40',
+                                   '41', '42', '43', '44', '45', '46', '47', '48', '49', '50',
+                                   '51', '52', '53', '54', '55', '56', '57', '58', '59', '60',
+                                   '61', '62', '63', '64', '65', '66', '67', '68', '69', '70',
+                                   '71', '72', '73']
+
+    requred_columns_second_sheet = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13']
+
+    # Создаем словарь для базовой проверки файла (расширение, наличие листов, наличие колонок)
+    """
+    {Название листа:{Количество строк заголовка:int,'Обязательные колонки':список колонок,'Текст ошибки':'Описание ошибки'}}
+    """
+    check_required_dct = {'Выпуск-СПО': {'Количество строк заголовка': 2,
+                                         'Обязательные колонки':requred_columns_first_sheet,
+                                         'Не найден лист': 'В файле не найден лист с названием Выпуск-СПО',
+                                         'Нет колонок': 'На листе Выпуск-СПО не найдены колонки:'},
+                          'Выпуск-Целевое': {'Количество строк заголовка': 3,
+                                             'Обязательные колонки': requred_columns_second_sheet,
+                                          'Не найден лист': 'В файле не найден лист с названием Выпуск-Целевое',
+                                             'Нет колонок': 'На листе Выпуск-Целевое не найдены колонки:'}}
 
     try:
         for file in os.listdir(path_folder_data):
             print(file)
-            error_df = base_check_file(file,error_df,path_folder_data,check_required_dct)
+            error_df = base_check_file(file, error_df, path_folder_data, check_required_dct)
 
         print(error_df)
+        t = time.localtime()  # получаем текущее время
+        current_time = time.strftime('%H_%M_%S', t)
+        error_df.to_excel(f'data/Мониторинг занятости выпускников/Результат/Ошибки {current_time}.xlsx',index=False)
     except ZeroDivisionError:
         print('dssd')
-
-
 
 
 if __name__ == '__main__':
     main_data_folder = 'data/Мониторинг занятости выпускников/Файлы'
     main_result_folder = 'data/Мониторинг занятости выпускников/Результат'
-    prepare_graduate_employment(main_data_folder,main_result_folder)
+    prepare_graduate_employment(main_data_folder, main_result_folder)
 
     print('Lindy Booth')

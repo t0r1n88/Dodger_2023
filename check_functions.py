@@ -64,13 +64,29 @@ def base_check_file(file:str,error_df:pd.DataFrame,path_folder_data:str,checked_
         temp_wb = openpyxl.load_workbook(f'{path_folder_data}/{file}', read_only=True)
         lst_temp_sheets = temp_wb.sheetnames  # получаем листы в файле
         temp_wb.close()
-        for check_name_sheet,text_error in checked_required_sheet.items():
-            if check_name_sheet not in lst_temp_sheets:  # проверяем наличие листа с названием в файле
+        for check_name_sheet,dct_param in checked_required_sheet.items():
+            if check_name_sheet not in lst_temp_sheets:  # проверяем наличие требуемых листов в файле
                 temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
-                                                    f'{text_error}']],
+                                                    f'{dct_param["Не найден лист"]}']],
                                              columns=['Название файла', 'Строка или колонка с ошибкой',
                                                       'Описание ошибки'])
                 error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
+
+        # проверяем наличие требуемых колонок в файле
+        for check_name_sheet, dct_param in checked_required_sheet.items():
+            if check_name_sheet in lst_temp_sheets:
+                temp_df = pd.read_excel(f'{path_folder_data}/{file}',sheet_name=check_name_sheet,skiprows=dct_param['Количество строк заголовка'])
+                temp_df.columns = list(map(str,temp_df.columns)) # делаем названия колонок строковыми
+                # находим разницу в колонках
+                diff_cols = set(dct_param['Обязательные колонки']).difference(set(temp_df.columns))
+                if len(diff_cols) != 0:
+                    print(diff_cols)
+                    temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
+                                                        f'{dct_param["Нет колонок"]} {";".join(diff_cols)}.'
+                                                        f' Строка с номерами колонок должны быть на строке {dct_param["Количество строк заголовка"] + 1} в исходном файле']],
+                                                 columns=['Название файла', 'Строка или колонка с ошибкой',
+                                                          'Описание ошибки'])
+                    error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
     return error_df
 
 
