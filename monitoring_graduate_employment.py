@@ -73,7 +73,8 @@ def prepare_graduate_employment(path_folder_data: str, path_result_folder: str):
                 df_first_sheet[requred_columns_first_sheet[1:]] = df_first_sheet[requred_columns_first_sheet[1:]].applymap(convert_to_int)
                 # очищаем первую колонку от пробельных символов вначаче и конце
                 df_first_sheet['1'] = df_first_sheet['1'].apply(lambda x:x.strip() if isinstance(x,str) else x)
-                print(df_first_sheet['1'])
+                # Проверяем заполнение колонки 1
+
 
 
 
