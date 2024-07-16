@@ -2,7 +2,7 @@
 """
 Модуль для обработки таблиц мониторинга занятости выпускников используемого для загрузки на сайт СССР
 """
-from check_functions import base_check_file,extract_code_nose
+from check_functions import base_check_file, extract_code_nose
 from support_functions import convert_to_int
 
 from mon_grad_check_functions import create_check_tables_mon_grad
@@ -13,6 +13,7 @@ import os
 import warnings
 from tkinter import messagebox
 import time
+
 pd.options.mode.chained_assignment = None  # default='warn'
 warnings.filterwarnings('ignore', category=UserWarning, module='openpyxl')
 warnings.filterwarnings('ignore', category=DeprecationWarning)
@@ -35,7 +36,7 @@ def prepare_graduate_employment(path_folder_data: str, path_result_folder: str):
     requred_columns_first_sheet = ['1', '1.1', '1.2', '2', '3', '3.1', '3.2', '4', '5', '6', '7', '8', '9', '10',
                                    '11', '12', '13', '14', '15', '16', '17', '18', '19', '20',
                                    '21', '22', '23', '24', '25', '26', '27', '28', '29', '30',
-                                   '31', '32','32.1','32.2', '33', '34', '35', '36', '37', '38', '39', '40',
+                                   '31', '32', '32.1', '32.2', '33', '34', '35', '36', '37', '38', '39', '40',
                                    '41', '42', '43', '44', '45', '46', '47', '48', '49', '50',
                                    '51', '52', '53', '54', '55', '56', '57', '58', '59', '60',
                                    '61', '62', '63', '64', '65', '66', '67', '68', '69', '70',
@@ -48,12 +49,12 @@ def prepare_graduate_employment(path_folder_data: str, path_result_folder: str):
     {Название листа:{Количество строк заголовка:int,'Обязательные колонки':список колонок,'Текст ошибки':'Описание ошибки'}}
     """
     check_required_dct = {'Выпуск-СПО': {'Количество строк заголовка': 2,
-                                         'Обязательные колонки':requred_columns_first_sheet,
+                                         'Обязательные колонки': requred_columns_first_sheet,
                                          'Не найден лист': 'В файле не найден лист с названием Выпуск-СПО',
                                          'Нет колонок': 'На листе Выпуск-СПО не найдены колонки:'},
                           'Выпуск-Целевое': {'Количество строк заголовка': 3,
                                              'Обязательные колонки': requred_columns_second_sheet,
-                                          'Не найден лист': 'В файле не найден лист с названием Выпуск-Целевое',
+                                             'Не найден лист': 'В файле не найден лист с названием Выпуск-Целевое',
                                              'Нет колонок': 'На листе Выпуск-Целевое не найдены колонки:'}}
 
     try:
@@ -68,13 +69,15 @@ def prepare_graduate_employment(path_folder_data: str, path_result_folder: str):
                 name_file = file.split('.xlsx')[0]
                 # Обрабатываем данные с листа Выпуск-СПО
                 df_first_sheet = pd.read_excel(f'{path_folder_data}/{file}', sheet_name='Выпуск-СПО',
-                                               skiprows=check_required_dct['Выпуск-СПО']['Количество строк заголовка']) # Считываем прошедший базовую проверку файл
+                                               skiprows=check_required_dct['Выпуск-СПО'][
+                                                   'Количество строк заголовка'])  # Считываем прошедший базовую проверку файл
                 df_first_sheet.columns = list(map(str, df_first_sheet.columns))  # делаем названия колонок строковыми
 
                 # Приводим все колонки кроме первой к инту
-                df_first_sheet[requred_columns_first_sheet[1:]] = df_first_sheet[requred_columns_first_sheet[1:]].applymap(convert_to_int)
+                df_first_sheet[requred_columns_first_sheet[1:]] = df_first_sheet[
+                    requred_columns_first_sheet[1:]].applymap(convert_to_int)
                 # очищаем первую колонку от пробельных символов вначаче и конце
-                df_first_sheet['1'] = df_first_sheet['1'].apply(lambda x:x.strip() if isinstance(x,str) else x)
+                df_first_sheet['1'] = df_first_sheet['1'].apply(lambda x: x.strip() if isinstance(x, str) else x)
                 # TODO Проверки файлов
                 # Проверяем правильность заполнения колонки 1
                 df_first_sheet['Код'] = df_first_sheet['1'].apply(extract_code_nose)  # очищаем от текста в кодах
@@ -86,19 +89,21 @@ def prepare_graduate_employment(path_folder_data: str, path_result_folder: str):
                     error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
                     continue
 
-                df_first_sheet.drop(columns=['Код'],inplace=True)
-
+                df_first_sheet.drop(columns=['Код'], inplace=True)
 
                 # Заполняем словарь данными
                 # перебираем список словарей
                 # Создание словаря для хранения данных файла
-                code_spec = [spec for spec in df_first_sheet['1'].unique()]  # получаем список специальностей которые есть в файле
+                code_spec = [spec for spec in
+                             df_first_sheet['1'].unique()]  # получаем список специальностей которые есть в файле
                 # Создаем словарь нижнего уровня содержащий в себе все данные для каждой специальности
                 spec_dict = {}
                 for spec in code_spec:
-                    spec_dict[spec] = {key:0 for key in requred_columns_first_sheet}
+                    spec_dict[spec] = {key: 0 for key in requred_columns_first_sheet}
 
                 high_level_dct[name_file] = copy.deepcopy(spec_dict)
+
+                # превращаем в словарь
                 first_sheet_lst_dct = df_first_sheet.to_dict(orient='records')
 
                 # добавляем данные
@@ -112,17 +117,33 @@ def prepare_graduate_employment(path_folder_data: str, path_result_folder: str):
         wb_check_tables.save(
             f'{path_result_folder}/Данные для проверки правильности заполнения файлов от {current_time}.xlsx')
 
+        # Обрабатываем конечный файл
+        # Создаем словарь в котором будут храниться словари по специальностям
+        code_spec_dct = {}
 
+        # Создаем ключи для словаря
+        for poo, spec_data in high_level_dct.items():
+            for name_spec, row in spec_data.items():
+                code_spec_dct[name_spec] = {'1': name_spec}
+                code_spec_dct[name_spec].update({key: 0 for key in row.keys() if key != '1'})
+        # Суммируем значения из словаря
+        for poo, spec_data in high_level_dct.items():
+            for name_spec,row in spec_data.items():
+                for key,value in row.items():
+                    if 'Unnamed' not in key and key != '1':
+                        code_spec_dct[name_spec][key] += value
+        #Сортируем получившийся словарь по возрастанию для удобства использования
+        sort_code_spec_dct = sorted(code_spec_dct.items())
+        code_spec_dct = {dct[0]: dct[1] for dct in sort_code_spec_dct}
+        # Создаем датафрейм
+        out_df = pd.DataFrame.from_dict(code_spec_dct, orient='index')
+        # Удаляем лишние колонки
+        out_df.drop(columns=[name_column for name_column in out_df.columns if 'Unnamed' in name_column],inplace=True)
+        # Сохраняем файл
+        out_df.to_excel(f'{path_result_folder}/Итоговый файл от {current_time}.xlsx',index=False)
 
-
-
-
-        # print(error_df)
-
-
-
-
-        error_df.to_excel(f'{path_result_folder}/Ошибки {current_time}.xlsx',index=False)
+        # Сохраняем файл с ошибками
+        error_df.to_excel(f'{path_result_folder}/Ошибки {current_time}.xlsx', index=False)
     except ZeroDivisionError:
         print('dssd')
 
