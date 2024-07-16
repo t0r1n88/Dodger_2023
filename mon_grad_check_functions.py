@@ -71,10 +71,34 @@ def check_first_error_grad(df: pd.DataFrame, name_file: str, number_row: int):
     if df.iloc[0, -1] == 'Неправильно':
         temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки'],
                                      data=[[name_file,f'Строка {number_row+3}- {name_spec}','Не выполняется условие: Графа 2 = 3 + 31 + 32 + 60 + 61 + 62+ 63 + 64 + 65 + 66 + 67 + 68 + 69 + 70']])
-        print(temp_error_df)
         return temp_error_df
 
     return temp_error_df
+
+
+def check_second_error_grad(df: pd.DataFrame, name_file: str, number_row: int):
+    """
+    Функция для проверки условия Графа 3 = сумма значений граф с 4 по 30
+    """
+    temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки'])
+
+    check_sum_columns = ['4','5','6','7','8','9',
+                         '10','11','12','13','14','15',
+                         '16','17','18','19','20','21',
+                         '22','23','24','25','26','27','28','29','30']
+    df['Сумма'] = df[check_sum_columns].sum(axis=1)
+    df['Результат'] = df['3'] == df['Сумма']
+    df['Результат'] = df['Результат'].apply(lambda x: 'Правильно' if x else 'Неправильно')
+    name_spec = df.iloc[0, 0]
+    if df.iloc[0, -1] == 'Неправильно':
+        temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки'],
+                                     data=[[name_file,f'Строка {number_row+3}- {name_spec}','Не выполняется условие: Графа 3 = сумма значений граф с 4 по 30']])
+        return temp_error_df
+
+    return temp_error_df
+
+
+
 
 
 def check_error_mon_grad(df: pd.DataFrame, name_file: str):
@@ -90,6 +114,9 @@ def check_error_mon_grad(df: pd.DataFrame, name_file: str):
         # Проводим проверку Графа 2 = 3 + 31 + 32 + 60 + 61 + 62+ 63 + 64 + 65 + 66 + 67 + 68 + 69 + 70.
         first_error_df_grad = check_first_error_grad(row_df.copy(), name_file, i)
         error_df = pd.concat([error_df, first_error_df_grad], axis=0, ignore_index=True)
+        # Проводим проверку Графа 3 = сумма значений граф с 4 по 30.
+        second_error_df_grad = check_second_error_grad(row_df.copy(), name_file, i)
+        error_df = pd.concat([error_df, second_error_df_grad], axis=0, ignore_index=True)
 
 
 
