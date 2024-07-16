@@ -57,9 +57,45 @@ def create_check_tables_mon_grad(high_level_dct: dict):
     return wb
 
 
-def check_error_mon_grad(df: pd.DataFrame):
+def check_first_error_grad(df: pd.DataFrame, name_file: str, number_row: int):
+    """
+    Функция для проверки условия Графа 2 = 3 + 31 + 32 + 60 + 61 + 62+ 63 + 64 + 65 + 66 + 67 + 68 + 69 + 70.
+    """
+    temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки'])
+
+    check_sum_columns = ['3', '31', '32', '60', '61', '62', '63', '64', '65', '66', '67', '68', '69', '70']
+    df['Сумма'] = df[check_sum_columns].sum(axis=1)
+    df['Результат'] = df['2'] == df['Сумма']
+    df['Результат'] = df['Результат'].apply(lambda x: 'Правильно' if x else 'Неправильно')
+    name_spec = df.iloc[0, 0]
+    if df.iloc[0, -1] == 'Неправильно':
+        temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки'],
+                                     data=[[name_file,f'Строка {number_row+3}- {name_spec}','Не выполняется условие: Графа 2 = 3 + 31 + 32 + 60 + 61 + 62+ 63 + 64 + 65 + 66 + 67 + 68 + 69 + 70']])
+        print(temp_error_df)
+        return temp_error_df
+
+    return temp_error_df
+
+
+def check_error_mon_grad(df: pd.DataFrame, name_file: str):
     """
     Точка входа для проверки датафрейма занятости выпускников на арифметические ошибки
     """
-    print(df.columns)
+    # создаем датафрейм для регистрации ошибок
+    error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
+    border = 0
+    for i in range(1, len(df) + 1):
+        row_df = df.iloc[border, :].to_frame().transpose()  # получаем датафрейм строку
+        border += 1
+        # Проводим проверку Графа 2 = 3 + 31 + 32 + 60 + 61 + 62+ 63 + 64 + 65 + 66 + 67 + 68 + 69 + 70.
+        first_error_df_grad = check_first_error_grad(row_df.copy(), name_file, i)
+        error_df = pd.concat([error_df, first_error_df_grad], axis=0, ignore_index=True)
+
+
+
+
+
+
+    return error_df
+
 

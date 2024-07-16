@@ -97,12 +97,15 @@ def prepare_graduate_employment(path_folder_data: str, path_result_folder: str):
 
                 df_first_sheet.drop(columns=['Код'], inplace=True)
 
-                # # Убираем лишние колонки перед отправкой датафрейма на проверку
-                # checked_first_sheet_df = df_first_sheet.copy().drop(columns=text_required_columns_first_sheet)
-                # checked_first_sheet_df.drop(
-                #     columns=[name_column for name_column in checked_first_sheet_df.columns if 'Unnamed' in name_column],inplace=True)
-                #
-                # file_error_df = check_error_mon_grad(checked_first_sheet_df) # отправляем на проверку без колонки 1 и Unnamed
+                # Убираем лишние колонки перед отправкой датафрейма на проверку
+                checked_first_sheet_df = df_first_sheet.copy().drop(columns=text_required_columns_first_sheet)
+                checked_first_sheet_df.drop(
+                    columns=[name_column for name_column in checked_first_sheet_df.columns if 'Unnamed' in name_column],inplace=True)
+
+                file_error_df = check_error_mon_grad(checked_first_sheet_df,name_file) # отправляем на проверку без колонки 1 и Unnamed
+                error_df = pd.concat([error_df, file_error_df], axis=0, ignore_index=True)
+                if len(error_df) != 0:
+                    continue
 
 
                 # Заполняем словарь данными
