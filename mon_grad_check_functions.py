@@ -157,6 +157,40 @@ def check_fifth_error_grad(df: pd.DataFrame, name_file: str, number_row: int):
     return temp_error_df
 
 
+
+def check_six_error_grad(df: pd.DataFrame, name_file: str, number_row: int):
+    """
+    Функция для проверки условия Графа 32 >= графы 32.1
+    """
+    temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки'])
+    df['Результат'] = df['32'] >= df['32.1']
+    df['Результат'] = df['Результат'].apply(lambda x: 'Правильно' if x else 'Неправильно')
+    name_spec = df.iloc[0, 0]
+    if df.iloc[0, -1] == 'Неправильно':
+        temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки'],
+                                     data=[[name_file, f'Строка {number_row + 3}- {name_spec}',
+                                            'Не выполняется условие: Графа 32 больше или равно графы 32.1']])
+        return temp_error_df
+
+    return temp_error_df
+
+def check_seventh_error_grad(df: pd.DataFrame, name_file: str, number_row: int):
+    """
+    Функция для проверки условия Графа 32 >= графы 32.2
+    """
+    temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки'])
+    df['Результат'] = df['32'] >= df['32.2']
+    df['Результат'] = df['Результат'].apply(lambda x: 'Правильно' if x else 'Неправильно')
+    name_spec = df.iloc[0, 0]
+    if df.iloc[0, -1] == 'Неправильно':
+        temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки'],
+                                     data=[[name_file, f'Строка {number_row + 3}- {name_spec}',
+                                            'Не выполняется условие: Графа 32 больше или равно графы 32.2']])
+        return temp_error_df
+
+    return temp_error_df
+
+
 def check_error_mon_grad(df: pd.DataFrame, name_file: str):
     """
     Точка входа для проверки датафрейма занятости выпускников на арифметические ошибки
@@ -182,5 +216,11 @@ def check_error_mon_grad(df: pd.DataFrame, name_file: str):
         # Проводим проверку Графа 32 = сумма значений граф с 33 по 59
         fifth_error_df_grad = check_fifth_error_grad(row_df.copy(), name_file, i)
         error_df = pd.concat([error_df, fifth_error_df_grad], axis=0, ignore_index=True)
+        # Проводим проверку Графа 32 >= Графа 32.1
+        six_error_df_grad = check_six_error_grad(row_df.copy(), name_file, i)
+        error_df = pd.concat([error_df, six_error_df_grad], axis=0, ignore_index=True)
+        # Проводим проверку Графа 32 >= Графа 32.2
+        seventh_error_df_grad = check_seventh_error_grad(row_df.copy(), name_file, i)
+        error_df = pd.concat([error_df, seventh_error_df_grad], axis=0, ignore_index=True)
 
     return error_df

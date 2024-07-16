@@ -46,8 +46,6 @@ def prepare_graduate_employment(path_folder_data: str, path_result_folder: str):
 
     requred_columns_second_sheet = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13']
 
-
-
     # Создаем словарь для базовой проверки файла (расширение, наличие листов, наличие колонок)
     """
     {Название листа:{Количество строк заголовка:int,'Обязательные колонки':список колонок,'Текст ошибки':'Описание ошибки'}}
@@ -100,13 +98,14 @@ def prepare_graduate_employment(path_folder_data: str, path_result_folder: str):
                 # Убираем лишние колонки перед отправкой датафрейма на проверку
                 checked_first_sheet_df = df_first_sheet.copy().drop(columns=text_required_columns_first_sheet)
                 checked_first_sheet_df.drop(
-                    columns=[name_column for name_column in checked_first_sheet_df.columns if 'Unnamed' in name_column],inplace=True)
+                    columns=[name_column for name_column in checked_first_sheet_df.columns if 'Unnamed' in name_column],
+                    inplace=True)
 
-                file_error_df = check_error_mon_grad(checked_first_sheet_df,name_file) # отправляем на проверку без колонки 1 и Unnamed
+                file_error_df = check_error_mon_grad(checked_first_sheet_df,
+                                                     name_file)  # отправляем на проверку без колонки 1 и Unnamed
                 error_df = pd.concat([error_df, file_error_df], axis=0, ignore_index=True)
-                if len(error_df) != 0:
+                if len(file_error_df) != 0:
                     continue
-
 
                 # Заполняем словарь данными
                 # перебираем список словарей
@@ -131,9 +130,12 @@ def prepare_graduate_employment(path_folder_data: str, path_result_folder: str):
         current_time = time.strftime('%H_%M_%S', t)
 
         wb_check_tables = create_check_tables_mon_grad(high_level_dct)  # проверяем данные по каждой специальности
-        wb_check_tables.save(
-            f'{path_result_folder}/Данные для проверки правильности заполнения файлов от {current_time}.xlsx')
-
+        if len(wb_check_tables.sheetnames) != 0:
+            wb_check_tables.save(
+                f'{path_result_folder}/Данные для проверки правильности заполнения файлов от {current_time}.xlsx')
+        else:
+            empty_wb = openpyxl.Workbook()
+            empty_wb.save(f'{path_result_folder}/Отсутствуют файлы без ошибок {current_time}.xlsx')
         # Обрабатываем конечный файл
         # Создаем словарь в котором будут храниться словари по специальностям
         code_spec_dct = {}
@@ -146,23 +148,23 @@ def prepare_graduate_employment(path_folder_data: str, path_result_folder: str):
                 code_spec_dct[name_spec]['73'] = ''
         # Суммируем значения из словаря
         for poo, spec_data in high_level_dct.items():
-            for name_spec,row in spec_data.items():
-                for key,value in row.items():
+            for name_spec, row in spec_data.items():
+                for key, value in row.items():
                     if 'Unnamed' not in key and key != '1':
                         if key == '73':
                             code_spec_dct[name_spec][key] += f';{str(value)}'
                         else:
                             code_spec_dct[name_spec][key] += value
-        #Сортируем получившийся словарь по возрастанию для удобства использования
+        # Сортируем получившийся словарь по возрастанию для удобства использования
         sort_code_spec_dct = sorted(code_spec_dct.items())
         code_spec_dct = {dct[0]: dct[1] for dct in sort_code_spec_dct}
         # Создаем датафрейм
         out_df = pd.DataFrame.from_dict(code_spec_dct, orient='index')
         # Удаляем лишние колонки
-        out_df.drop(columns=[name_column for name_column in out_df.columns if 'Unnamed' in name_column],inplace=True)
+        out_df.drop(columns=[name_column for name_column in out_df.columns if 'Unnamed' in name_column], inplace=True)
         # очищаем от лишней точки с запятой в колонке 73 с описанием
         # Сохраняем файл
-        out_df.to_excel(f'{path_result_folder}/Итоговый файл от {current_time}.xlsx',index=False)
+        out_df.to_excel(f'{path_result_folder}/Итоговый файл от {current_time}.xlsx', index=False)
 
         # Сохраняем файл с ошибками
         error_df.to_excel(f'{path_result_folder}/Ошибки {current_time}.xlsx', index=False)
