@@ -7,7 +7,6 @@ from openpyxl.utils.dataframe import dataframe_to_rows
 import pandas as pd
 
 
-
 def create_check_tables_mon_grad(high_level_dct: dict):
     """
     Функция для создания файла с данными по каждой специальности чтобы можно было проверить правильность внесенных
@@ -56,3 +55,11 @@ def create_check_tables_mon_grad(high_level_dct: dict):
     if 'Sheet' in wb.sheetnames:
         del wb['Sheet']
     return wb
+
+
+def check_error_mon_grad(df: pd.DataFrame):
+    """
+    Точка входа для проверки датафрейма занятости выпускников на арифметические ошибки
+    """
+    print(df.columns)
+

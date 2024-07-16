@@ -5,7 +5,7 @@
 from check_functions import base_check_file, extract_code_nose
 from support_functions import convert_to_int
 
-from mon_grad_check_functions import create_check_tables_mon_grad
+from mon_grad_check_functions import create_check_tables_mon_grad, check_error_mon_grad
 
 import pandas as pd
 import numpy as np
@@ -42,7 +42,11 @@ def prepare_graduate_employment(path_folder_data: str, path_result_folder: str):
                                    '61', '62', '63', '64', '65', '66', '67', '68', '69', '70',
                                    '71', '72', '73']
 
+    text_required_columns_first_sheet = ['73']
+
     requred_columns_second_sheet = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13']
+
+
 
     # Создаем словарь для базовой проверки файла (расширение, наличие листов, наличие колонок)
     """
@@ -74,11 +78,13 @@ def prepare_graduate_employment(path_folder_data: str, path_result_folder: str):
                 df_first_sheet.columns = list(map(str, df_first_sheet.columns))  # делаем названия колонок строковыми
 
                 # Приводим все колонки кроме первой к инту
-                df_first_sheet[requred_columns_first_sheet[1:]] = df_first_sheet[
-                    requred_columns_first_sheet[1:]].applymap(convert_to_int)
+                df_first_sheet[requred_columns_first_sheet[1:-1]] = df_first_sheet[
+                    requred_columns_first_sheet[1:-1]].applymap(convert_to_int)
                 # очищаем первую колонку от пробельных символов вначаче и конце
                 df_first_sheet['1'] = df_first_sheet['1'].apply(lambda x: x.strip() if isinstance(x, str) else x)
-                # TODO Проверки файлов
+                """
+                Начинаем проверку содержания файла и арифметических формул
+                """
                 # Проверяем правильность заполнения колонки 1
                 df_first_sheet['Код'] = df_first_sheet['1'].apply(extract_code_nose)  # очищаем от текста в кодах
                 if 'error' in df_first_sheet['Код'].values:
@@ -90,6 +96,14 @@ def prepare_graduate_employment(path_folder_data: str, path_result_folder: str):
                     continue
 
                 df_first_sheet.drop(columns=['Код'], inplace=True)
+
+                # # Убираем лишние колонки перед отправкой датафрейма на проверку
+                # checked_first_sheet_df = df_first_sheet.copy().drop(columns=text_required_columns_first_sheet)
+                # checked_first_sheet_df.drop(
+                #     columns=[name_column for name_column in checked_first_sheet_df.columns if 'Unnamed' in name_column],inplace=True)
+                #
+                # file_error_df = check_error_mon_grad(checked_first_sheet_df) # отправляем на проверку без колонки 1 и Unnamed
+
 
                 # Заполняем словарь данными
                 # перебираем список словарей
@@ -126,12 +140,16 @@ def prepare_graduate_employment(path_folder_data: str, path_result_folder: str):
             for name_spec, row in spec_data.items():
                 code_spec_dct[name_spec] = {'1': name_spec}
                 code_spec_dct[name_spec].update({key: 0 for key in row.keys() if key != '1'})
+                code_spec_dct[name_spec]['73'] = ''
         # Суммируем значения из словаря
         for poo, spec_data in high_level_dct.items():
             for name_spec,row in spec_data.items():
                 for key,value in row.items():
                     if 'Unnamed' not in key and key != '1':
-                        code_spec_dct[name_spec][key] += value
+                        if key == '73':
+                            code_spec_dct[name_spec][key] += f';{str(value)}'
+                        else:
+                            code_spec_dct[name_spec][key] += value
         #Сортируем получившийся словарь по возрастанию для удобства использования
         sort_code_spec_dct = sorted(code_spec_dct.items())
         code_spec_dct = {dct[0]: dct[1] for dct in sort_code_spec_dct}
@@ -139,6 +157,7 @@ def prepare_graduate_employment(path_folder_data: str, path_result_folder: str):
         out_df = pd.DataFrame.from_dict(code_spec_dct, orient='index')
         # Удаляем лишние колонки
         out_df.drop(columns=[name_column for name_column in out_df.columns if 'Unnamed' in name_column],inplace=True)
+        # очищаем от лишней точки с запятой в колонке 73 с описанием
         # Сохраняем файл
         out_df.to_excel(f'{path_result_folder}/Итоговый файл от {current_time}.xlsx',index=False)
 
