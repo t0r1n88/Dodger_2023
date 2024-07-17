@@ -5,7 +5,7 @@
 from check_functions import base_check_file, extract_code_nose
 from support_functions import convert_to_int
 
-from mon_grad_check_functions import create_check_tables_mon_grad, check_error_mon_grad_spo
+from mon_grad_check_functions import create_check_tables_mon_grad, check_error_mon_grad_spo, check_error_mon_grad_target
 
 import pandas as pd
 import numpy as np
@@ -45,6 +45,9 @@ def prepare_graduate_employment(path_folder_data: str, path_result_folder: str):
     text_required_columns_first_sheet = ['73']
 
     requred_columns_second_sheet = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13']
+
+    # создаем базовый датафрейм для данных второго листа
+    main_second_df = pd.DataFrame(columns=requred_columns_second_sheet)
 
 
 
@@ -131,7 +134,13 @@ def prepare_graduate_employment(path_folder_data: str, path_result_folder: str):
                                                skiprows=check_required_dct['Выпуск-Целевое'][
                                                    'Количество строк заголовка'])
 
-                print(df_second_sheet)
+                # проводим обработку только если лист заполнен данными
+                if len(df_second_sheet) != 0:
+                    file_error_df = check_error_mon_grad_target(df_first_sheet.copy(),df_second_sheet.copy(),name_file)  # отправляем на проверку без 73 и Unnamed
+                    error_df = pd.concat([error_df, file_error_df], axis=0, ignore_index=True)
+                    if len(file_error_df) != 0:
+                        continue
+
 
 
                 # Заполняем словарь данными

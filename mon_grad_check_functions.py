@@ -248,3 +248,48 @@ def check_error_mon_grad_spo(df: pd.DataFrame, name_file: str,correction:int):
         border += 1
 
     return error_df
+
+
+
+
+
+
+
+def check_error_mon_grad_target(spo_df:pd.DataFrame, target_df:pd.DataFrame,name_file):
+    """
+    Функция для проверки правильности заполнения листа 2 Целевой выпуск
+    """
+    # создаем датафрейм для регистрации ошибок
+    error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
+
+    group_first_check_df = target_df.groupby('1').agg({'5':'sum','6':'sum'}).reset_index()
+    group_first_check_df.rename(columns={'1':'Код и наименование','5':'Численность целевиков','6':'Трудоустроено целевиков'},inplace=True)
+    print(group_first_check_df)
+    spo_df = spo_df[['1','2','3']]
+    spo_df.rename(
+        columns={'1': 'Код и наименование', '2': 'Суммарный выпуск', '3': 'Всего трудоустроено'}, inplace=True)
+    print(spo_df)
+    # проверяем на совпадение специальностей
+    both_in_two_tables_df = pd.merge(group_first_check_df,spo_df,how='outer',left_on='Код и наименование',
+                                     right_on='Код и наименование',indicator=True)
+    both_in_two_tables_df.to_excel(f'data/dsfds.xlsx',index=False)
+    # получаем все специальности которых нет на листе СПО-1
+    not_spo_sheet_df = both_in_two_tables_df[both_in_two_tables_df['_merge'] == 'left_only']
+    if len(not_spo_sheet_df) != 0:
+        # Получаем строку с перечислением ошибочных специальностей
+        error_lst = not_spo_sheet_df['Код и наименование'].tolist()
+        for error_spec in error_lst:
+            temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки'],
+                                         data=[[name_file, f'{error_spec}',
+                                                f'Профессия, специальность отсутствует на листе Выпуск-СПО']])
+            error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
+
+
+
+
+
+
+
+    print(error_df)
+    error_df.to_excel('data/fsgdg.xlsx',index=False)
+    return error_df
