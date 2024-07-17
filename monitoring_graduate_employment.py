@@ -59,7 +59,7 @@ def prepare_graduate_employment(path_folder_data: str, path_result_folder: str):
                 """
                 {Название листа:{Количество строк заголовка:int,'Обязательные колонки':список колонок,'Текст ошибки':'Описание ошибки'}}
                 """
-                check_required_dct = {'Выпуск-СПО': {'Количество строк заголовка': 4,
+                check_required_dct = {'Выпуск-СПО': {'Количество строк заголовка': 2,
                                                      'Название листа': 'Выпуск-СПО',
                                                      'Реальное название листа': None,
                                                      'Обязательные колонки': requred_columns_first_sheet,
@@ -93,6 +93,8 @@ def prepare_graduate_employment(path_folder_data: str, path_result_folder: str):
                 # Если есть колонка с нулем где записан регион или название техникума то удаляем
                 if '0' in df_first_sheet.columns:
                     df_first_sheet.drop(columns=['0'],inplace=True)
+                # удаляем строки с суммами
+                df_first_sheet = df_first_sheet[df_first_sheet['1'].notna()]
 
                 # Приводим все колонки кроме первой к инту
                 df_first_sheet[requred_columns_first_sheet[1:-1]] = df_first_sheet[
