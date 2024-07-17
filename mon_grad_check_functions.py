@@ -251,11 +251,35 @@ def check_error_mon_grad_spo(df: pd.DataFrame, name_file: str,correction:int):
 
 
 
+def check_first_error_grad_target(df: pd.DataFrame, name_file: str, number_row: int):
+    """
+    Функция для проверки условия Графа 5 = сумма граф 6 + 7 + 8 + 9 + 10 + 11 + 12.
+    """
+    temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки'])
+
+    check_sum_columns = ['6', '7', '8', '9', '10', '11',
+                         '12']
+    df['Сумма'] = df[check_sum_columns].sum(axis=1)
+    df['Результат'] = df['5'] == df['Сумма']
+    df['Результат'] = df['Результат'].apply(lambda x: 'Правильно' if x else 'Неправильно')
+    name_spec = df['1'].tolist()[0]
+    if df.iloc[0, -1] == 'Неправильно':
+        first_value = df['5'].tolist()[0]
+        second_value = df['Сумма'].tolist()[0]
+        temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки'],
+                                     data=[[name_file, f'Строка {number_row}- {name_spec}',
+                                            f'Лист Выпуск-Целевое. Не выполняется условие: Графа 5 = сумма значений граф с 6 по 12. Графа 5 = {first_value}, сумма граф = {second_value}']])
+        return temp_error_df
+
+    return temp_error_df
 
 
 
 
-def check_error_mon_grad_target(spo_df:pd.DataFrame, target_df:pd.DataFrame,name_file):
+
+
+
+def check_error_mon_grad_target(spo_df:pd.DataFrame, target_df:pd.DataFrame,name_file,correction):
     """
     Функция для проверки правильности заполнения листа 2 Целевой выпуск
     """
@@ -264,15 +288,12 @@ def check_error_mon_grad_target(spo_df:pd.DataFrame, target_df:pd.DataFrame,name
 
     group_first_check_df = target_df.groupby('1').agg({'5':'sum','6':'sum'}).reset_index()
     group_first_check_df.rename(columns={'1':'Код и наименование','5':'Численность целевиков','6':'Трудоустроено целевиков'},inplace=True)
-    print(group_first_check_df)
     spo_df = spo_df[['1','2','3']]
     spo_df.rename(
         columns={'1': 'Код и наименование', '2': 'Суммарный выпуск', '3': 'Всего трудоустроено'}, inplace=True)
-    print(spo_df)
     # проверяем на совпадение специальностей
     both_in_two_tables_df = pd.merge(group_first_check_df,spo_df,how='outer',left_on='Код и наименование',
                                      right_on='Код и наименование',indicator=True)
-    both_in_two_tables_df.to_excel(f'data/dsfds.xlsx',index=False)
     # получаем все специальности которых нет на листе СПО-1
     not_spo_sheet_df = both_in_two_tables_df[both_in_two_tables_df['_merge'] == 'left_only']
     if len(not_spo_sheet_df) != 0:
@@ -284,12 +305,62 @@ def check_error_mon_grad_target(spo_df:pd.DataFrame, target_df:pd.DataFrame,name
                                                 f'Профессия, специальность отсутствует на листе Выпуск-СПО']])
             error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
 
+    # Проверяем на размер суммарного выпуска
+    # получаем все специальности которые есть в обоих листах
+    both_spec_df = both_in_two_tables_df[both_in_two_tables_df['_merge'] == 'both']
+    if len(both_spec_df) != 0:
+        # Перебираем построчно
+        for row in both_spec_df.itertuples():
+            name_spec = row[1]
+            quantity_target = int(row[2]) # численость целевиков по специальности
+            worker_target = int(row[3]) # трудоустроено целевиков по специальности
+            all_release = int(row[4]) # суммарный выпуск по специальности
+            all_worker = int(row[5]) # всего трудоустроено
+            # Проверки
+            """
+            Суммарная численность выпускников по каждой профессии, специальности на вкладке «2. Выпуск – Целевое» 
+            не может превышать суммарный выпуск
+             по этой профессии, специальности на вкладке «1. Выпуск – СПО»
+            """
+            if quantity_target > all_release:
+                temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки'],
+                                             data=[[name_file, f'{name_spec}',
+                                                    f'Лист Выпуск-Целевое. Суммарная численность целевиков по специальности больше чем суммарный выпуск специальности '
+                                                    f'указанный в графе 2 на листе Выпуск-СПО. Целевиков- {quantity_target} а суммарная численность - {all_release}']])
+                error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
+            """
+            Численность трудоустроенных выпускников по каждой профессии, специальности на вкладке «2. Выпуск – Целевое» 
+            не может превышать численность трудоустроенных выпускников по этой профессии, специальности на вкладке «1. Выпуск – СПО».
+            """
+
+            if worker_target > all_worker:
+                temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки'],
+                                             data=[[name_file, f'{name_spec}',
+                                                    f'Лист Выпуск-Целевое. Численность  трудоустроенных целевиков по специальности в графе 6 больше чем количество трудоустроенных '
+                                                    f'указанное в графе 3 на листе Выпуск-СПО. Трудоустроено целевиков- {worker_target} всего трудоустроено - {all_worker}']])
+                error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
+    # Проверяем сумму целевиков
+    """
+    Графа 5 = сумма граф 6 + 7 + 8 + 9 + 10 + 11 + 12.
+    """
+    border = 0
+    for i in range(1, len(target_df) + 1):
+        row_df = target_df.iloc[border, :].to_frame().transpose()  # получаем датафрейм строку
+        first_error_df_grad_target = check_first_error_grad_target(row_df.copy(), name_file, correction+i)
+        error_df = pd.concat([error_df, first_error_df_grad_target], axis=0, ignore_index=True)
 
 
 
 
 
 
-    print(error_df)
+
+
+
+
+
+
+
+
     error_df.to_excel('data/fsgdg.xlsx',index=False)
     return error_df

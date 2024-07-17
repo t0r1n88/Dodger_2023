@@ -136,7 +136,10 @@ def prepare_graduate_employment(path_folder_data: str, path_result_folder: str):
 
                 # проводим обработку только если лист заполнен данными
                 if len(df_second_sheet) != 0:
-                    file_error_df = check_error_mon_grad_target(df_first_sheet.copy(),df_second_sheet.copy(),name_file)  # отправляем на проверку без 73 и Unnamed
+                    lst_int_columns_second_sheet = ['5','6','7','8','9','10','11','12']
+                    df_second_sheet[lst_int_columns_second_sheet] = df_second_sheet[lst_int_columns_second_sheet].applymap(convert_to_int)
+                    file_error_df = check_error_mon_grad_target(df_first_sheet.copy(),df_second_sheet.copy(),name_file,
+                                                                check_required_dct['Выпуск-Целевое']['Количество строк заголовка']+1)  # отправляем на проверку без 73 и Unnamed
                     error_df = pd.concat([error_df, file_error_df], axis=0, ignore_index=True)
                     if len(file_error_df) != 0:
                         continue
