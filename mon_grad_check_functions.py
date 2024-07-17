@@ -71,11 +71,16 @@ def check_first_error_grad(df: pd.DataFrame, name_file: str, number_row: int):
     df['Сумма'] = df[check_sum_columns].sum(axis=1)
     df['Результат'] = df['2'] == df['Сумма']
     df['Результат'] = df['Результат'].apply(lambda x: 'Правильно' if x else 'Неправильно')
-    name_spec = df.iloc[0, 0]
+    name_spec = df.iloc[0, 0]   # получаем значение проверки
     if df.iloc[0, -1] == 'Неправильно':
+        # получаем значения из колонок сумма и проверочной колонки
+        first_value = df['2'].tolist()[0]
+        second_value = df['Сумма'].tolist()[0]
+
         temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки'],
                                      data=[[name_file, f'Строка {number_row}- {name_spec}',
-                                            'Не выполняется условие: Графа 2 = 3 + 31 + 32 + 60 + 61 + 62+ 63 + 64 + 65 + 66 + 67 + 68 + 69 + 70']])
+                                            f'Не выполняется условие: Графа 2 = 3 + 31 + 32 + 60 + 61 + 62+ 63 + 64 + 65 + 66 + 67 + 68 + 69 + 70.'
+                                            f' Графа 2 = {first_value} ,сумма граф = {second_value}']])
         return temp_error_df
 
     return temp_error_df
@@ -96,9 +101,11 @@ def check_second_error_grad(df: pd.DataFrame, name_file: str, number_row: int):
     df['Результат'] = df['Результат'].apply(lambda x: 'Правильно' if x else 'Неправильно')
     name_spec = df.iloc[0, 0]
     if df.iloc[0, -1] == 'Неправильно':
+        first_value = df['3'].tolist()[0]
+        second_value = df['Сумма'].tolist()[0]
         temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки'],
                                      data=[[name_file, f'Строка {number_row}- {name_spec}',
-                                            'Не выполняется условие: Графа 3 = сумма значений граф с 4 по 30']])
+                                            f'Не выполняется условие: Графа 3 = сумма значений граф с 4 по 30. Графа 3 = {first_value}, сумма граф = {second_value}']])
         return temp_error_df
 
     return temp_error_df
@@ -113,9 +120,11 @@ def check_third_error_grad(df: pd.DataFrame, name_file: str, number_row: int):
     df['Результат'] = df['Результат'].apply(lambda x: 'Правильно' if x else 'Неправильно')
     name_spec = df.iloc[0, 0]
     if df.iloc[0, -1] == 'Неправильно':
+        first_value = df['3'].tolist()[0]
+        second_value = df['3.1'].tolist()[0]
         temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки'],
                                      data=[[name_file, f'Строка {number_row}- {name_spec}',
-                                            'Не выполняется условие: Графа 3 больше или равно графы 3.1']])
+                                            f'Не выполняется условие: Графа 3 больше или равно графы 3.1. Графа 3 = {first_value}, графа 3.1 = {second_value}']])
         return temp_error_df
 
     return temp_error_df
@@ -130,9 +139,11 @@ def check_fourth_error_grad(df: pd.DataFrame, name_file: str, number_row: int):
     df['Результат'] = df['Результат'].apply(lambda x: 'Правильно' if x else 'Неправильно')
     name_spec = df.iloc[0, 0]
     if df.iloc[0, -1] == 'Неправильно':
+        first_value = df['3'].tolist()[0]
+        second_value = df['3.2'].tolist()[0]
         temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки'],
                                      data=[[name_file, f'Строка {number_row}- {name_spec}',
-                                            'Не выполняется условие: Графа 3 больше или равно графы 3.2']])
+                                            f'Не выполняется условие: Графа 3 больше или равно графы 3.2. Графа 3 = {first_value}, графа 3.2 = {second_value}']])
         return temp_error_df
 
     return temp_error_df
@@ -153,9 +164,11 @@ def check_fifth_error_grad(df: pd.DataFrame, name_file: str, number_row: int):
     df['Результат'] = df['Результат'].apply(lambda x: 'Правильно' if x else 'Неправильно')
     name_spec = df.iloc[0, 0]
     if df.iloc[0, -1] == 'Неправильно':
+        first_value = df['32'].tolist()[0]
+        second_value = df['Сумма'].tolist()[0]
         temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки'],
                                      data=[[name_file, f'Строка {number_row}- {name_spec}',
-                                            'Не выполняется условие: Графа 32 = сумма значений граф с 33 по 59']])
+                                            f'Не выполняется условие: Графа 32 = сумма значений граф с 33 по 59. Графа 32 = {first_value}, сумма граф = {second_value}']])
         return temp_error_df
 
     return temp_error_df
@@ -171,9 +184,11 @@ def check_six_error_grad(df: pd.DataFrame, name_file: str, number_row: int):
     df['Результат'] = df['Результат'].apply(lambda x: 'Правильно' if x else 'Неправильно')
     name_spec = df.iloc[0, 0]
     if df.iloc[0, -1] == 'Неправильно':
+        first_value = df['32'].tolist()[0]
+        second_value = df['32.1'].tolist()[0]
         temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки'],
                                      data=[[name_file, f'Строка {number_row}- {name_spec}',
-                                            'Не выполняется условие: Графа 32 больше или равно графы 32.1']])
+                                            f'Не выполняется условие: Графа 32 больше или равно графы 32.1. Графа 32 = {first_value}, графа 32.1 = {second_value}']])
         return temp_error_df
 
     return temp_error_df
@@ -187,9 +202,11 @@ def check_seventh_error_grad(df: pd.DataFrame, name_file: str, number_row: int):
     df['Результат'] = df['Результат'].apply(lambda x: 'Правильно' if x else 'Неправильно')
     name_spec = df.iloc[0, 0]
     if df.iloc[0, -1] == 'Неправильно':
+        first_value = df['32'].tolist()[0]
+        second_value = df['32.2'].tolist()[0]
         temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки'],
                                      data=[[name_file, f'Строка {number_row}- {name_spec}',
-                                            'Не выполняется условие: Графа 32 больше или равно графы 32.2']])
+                                            f'Не выполняется условие: Графа 32 больше или равно графы 32.2. Графа 32 = {first_value}, графа 32.2 = {second_value}']])
         return temp_error_df
 
     return temp_error_df
