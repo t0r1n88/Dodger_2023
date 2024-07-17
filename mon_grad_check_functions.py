@@ -25,14 +25,19 @@ def create_check_tables_mon_grad(high_level_dct: dict):
     sort_code_spec_dct = sorted(code_spec_dct.items())
     code_spec_dct = {dct[0]: dct[1] for dct in sort_code_spec_dct}
 
+    used_name_sheet = set() # Множество для хранения названий листов
     # Создаем файл
     wb = openpyxl.Workbook()
     # Создаем листы
     for idx, code_spec in enumerate(code_spec_dct.keys()):
         if code_spec != 'nan':
             code = extract_code_nose(code_spec)
-            wb.create_sheet(title=code, index=idx)
+            # проверяем есть ли такой лист. На случай когда коды одинаковые а описание специальности разное
+            if code not in used_name_sheet:
+                wb.create_sheet(title=code, index=idx)
+                used_name_sheet.add(code)
 
+    print(code_spec_dct)
     for code_spec in code_spec_dct.keys():
         if code_spec != 'nan':
             code = extract_code_nose(code_spec)
@@ -70,7 +75,7 @@ def check_first_error_grad(df: pd.DataFrame, name_file: str, number_row: int):
     name_spec = df.iloc[0, 0]
     if df.iloc[0, -1] == 'Неправильно':
         temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки'],
-                                     data=[[name_file, f'Строка {number_row + 3}- {name_spec}',
+                                     data=[[name_file, f'Строка {number_row}- {name_spec}',
                                             'Не выполняется условие: Графа 2 = 3 + 31 + 32 + 60 + 61 + 62+ 63 + 64 + 65 + 66 + 67 + 68 + 69 + 70']])
         return temp_error_df
 
@@ -93,7 +98,7 @@ def check_second_error_grad(df: pd.DataFrame, name_file: str, number_row: int):
     name_spec = df.iloc[0, 0]
     if df.iloc[0, -1] == 'Неправильно':
         temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки'],
-                                     data=[[name_file, f'Строка {number_row + 3}- {name_spec}',
+                                     data=[[name_file, f'Строка {number_row}- {name_spec}',
                                             'Не выполняется условие: Графа 3 = сумма значений граф с 4 по 30']])
         return temp_error_df
 
@@ -110,7 +115,7 @@ def check_third_error_grad(df: pd.DataFrame, name_file: str, number_row: int):
     name_spec = df.iloc[0, 0]
     if df.iloc[0, -1] == 'Неправильно':
         temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки'],
-                                     data=[[name_file, f'Строка {number_row + 3}- {name_spec}',
+                                     data=[[name_file, f'Строка {number_row}- {name_spec}',
                                             'Не выполняется условие: Графа 3 больше или равно графы 3.1']])
         return temp_error_df
 
@@ -127,7 +132,7 @@ def check_fourth_error_grad(df: pd.DataFrame, name_file: str, number_row: int):
     name_spec = df.iloc[0, 0]
     if df.iloc[0, -1] == 'Неправильно':
         temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки'],
-                                     data=[[name_file, f'Строка {number_row + 3}- {name_spec}',
+                                     data=[[name_file, f'Строка {number_row}- {name_spec}',
                                             'Не выполняется условие: Графа 3 больше или равно графы 3.2']])
         return temp_error_df
 
@@ -150,7 +155,7 @@ def check_fifth_error_grad(df: pd.DataFrame, name_file: str, number_row: int):
     name_spec = df.iloc[0, 0]
     if df.iloc[0, -1] == 'Неправильно':
         temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки'],
-                                     data=[[name_file, f'Строка {number_row + 3}- {name_spec}',
+                                     data=[[name_file, f'Строка {number_row}- {name_spec}',
                                             'Не выполняется условие: Графа 32 = сумма значений граф с 33 по 59']])
         return temp_error_df
 
@@ -168,7 +173,7 @@ def check_six_error_grad(df: pd.DataFrame, name_file: str, number_row: int):
     name_spec = df.iloc[0, 0]
     if df.iloc[0, -1] == 'Неправильно':
         temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки'],
-                                     data=[[name_file, f'Строка {number_row + 3}- {name_spec}',
+                                     data=[[name_file, f'Строка {number_row}- {name_spec}',
                                             'Не выполняется условие: Графа 32 больше или равно графы 32.1']])
         return temp_error_df
 
@@ -184,43 +189,46 @@ def check_seventh_error_grad(df: pd.DataFrame, name_file: str, number_row: int):
     name_spec = df.iloc[0, 0]
     if df.iloc[0, -1] == 'Неправильно':
         temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки'],
-                                     data=[[name_file, f'Строка {number_row + 3}- {name_spec}',
+                                     data=[[name_file, f'Строка {number_row}- {name_spec}',
                                             'Не выполняется условие: Графа 32 больше или равно графы 32.2']])
         return temp_error_df
 
     return temp_error_df
 
 
-def check_error_mon_grad(df: pd.DataFrame, name_file: str):
+def check_error_mon_grad_spo(df: pd.DataFrame, name_file: str,correction:int):
     """
     Точка входа для проверки датафрейма занятости выпускников на арифметические ошибки
+    :param correction: число строк на которое нужно увеличить результат чтобы показывалась правильная строка у ошибки
     """
     # создаем датафрейм для регистрации ошибок
     error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
     border = 0
     for i in range(1, len(df) + 1):
         row_df = df.iloc[border, :].to_frame().transpose()  # получаем датафрейм строку
-        border += 1
+
         # Проводим проверку Графа 2 = 3 + 31 + 32 + 60 + 61 + 62+ 63 + 64 + 65 + 66 + 67 + 68 + 69 + 70.
-        first_error_df_grad = check_first_error_grad(row_df.copy(), name_file, i)
+        first_error_df_grad = check_first_error_grad(row_df.copy(), name_file, correction+i)
         error_df = pd.concat([error_df, first_error_df_grad], axis=0, ignore_index=True)
         # Проводим проверку Графа 3 = сумма значений граф с 4 по 30.
-        second_error_df_grad = check_second_error_grad(row_df.copy(), name_file, i)
+        second_error_df_grad = check_second_error_grad(row_df.copy(), name_file, correction+i)
         error_df = pd.concat([error_df, second_error_df_grad], axis=0, ignore_index=True)
         # Проводим проверку Графа 3.1 <= Графа 3
-        third_error_df_grad = check_third_error_grad(row_df.copy(), name_file, i)
+        third_error_df_grad = check_third_error_grad(row_df.copy(), name_file, correction+i)
         error_df = pd.concat([error_df, third_error_df_grad], axis=0, ignore_index=True)
         # Проводим проверку Графа 3.2 <= Графа 3
-        fourth_error_df_grad = check_fourth_error_grad(row_df.copy(), name_file, i)
+        fourth_error_df_grad = check_fourth_error_grad(row_df.copy(), name_file, correction+i)
         error_df = pd.concat([error_df, fourth_error_df_grad], axis=0, ignore_index=True)
         # Проводим проверку Графа 32 = сумма значений граф с 33 по 59
-        fifth_error_df_grad = check_fifth_error_grad(row_df.copy(), name_file, i)
+        fifth_error_df_grad = check_fifth_error_grad(row_df.copy(), name_file, correction+i)
         error_df = pd.concat([error_df, fifth_error_df_grad], axis=0, ignore_index=True)
         # Проводим проверку Графа 32 >= Графа 32.1
-        six_error_df_grad = check_six_error_grad(row_df.copy(), name_file, i)
+        six_error_df_grad = check_six_error_grad(row_df.copy(), name_file, correction+i)
         error_df = pd.concat([error_df, six_error_df_grad], axis=0, ignore_index=True)
         # Проводим проверку Графа 32 >= Графа 32.2
-        seventh_error_df_grad = check_seventh_error_grad(row_df.copy(), name_file, i)
+        seventh_error_df_grad = check_seventh_error_grad(row_df.copy(), name_file, correction+i)
         error_df = pd.concat([error_df, seventh_error_df_grad], axis=0, ignore_index=True)
+
+        border += 1
 
     return error_df

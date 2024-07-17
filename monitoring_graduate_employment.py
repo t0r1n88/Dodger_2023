@@ -5,7 +5,7 @@
 from check_functions import base_check_file, extract_code_nose
 from support_functions import convert_to_int
 
-from mon_grad_check_functions import create_check_tables_mon_grad, check_error_mon_grad
+from mon_grad_check_functions import create_check_tables_mon_grad, check_error_mon_grad_spo
 
 import pandas as pd
 import numpy as np
@@ -106,8 +106,8 @@ def prepare_graduate_employment(path_folder_data: str, path_result_folder: str):
                     columns=[name_column for name_column in checked_first_sheet_df.columns if 'Unnamed' in name_column],
                     inplace=True)
 
-                file_error_df = check_error_mon_grad(checked_first_sheet_df,
-                                                     name_file)  # отправляем на проверку без колонки 1 и Unnamed
+                file_error_df = check_error_mon_grad_spo(checked_first_sheet_df,
+                                                         name_file,check_required_dct['Выпуск-СПО']['Количество строк заголовка']+1)  # отправляем на проверку без 73 и Unnamed
                 error_df = pd.concat([error_df, file_error_df], axis=0, ignore_index=True)
                 if len(file_error_df) != 0:
                     continue
@@ -156,7 +156,6 @@ def prepare_graduate_employment(path_folder_data: str, path_result_folder: str):
             for name_spec, row in spec_data.items():
                 for key, value in row.items():
                     if 'Unnamed' not in key and key != '1':
-                        print(value)
                         if key == '73':
                             code_spec_dct[name_spec][key] += f';{str(value)}'
                         else:
