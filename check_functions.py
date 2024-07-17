@@ -140,6 +140,7 @@ def base_check_file(file:str,path_folder_data:str,checked_required_sheet:dict):
 
 
 
+
 def check_sameness_column(checked_lst:list,check_range:int,begin_border:int,quantity_check_value:int,tup_correct:tuple,correction:int,
                           name_file=None,name_column=None):
     """

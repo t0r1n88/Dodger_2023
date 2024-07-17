@@ -45,9 +45,10 @@ def prepare_graduate_employment(path_folder_data: str, path_result_folder: str):
     text_required_columns_first_sheet = ['73']
 
     requred_columns_second_sheet = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13']
+    columns_for_out_second_df = ['Название файла','1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13']
 
     # создаем базовый датафрейм для данных второго листа
-    main_second_df = pd.DataFrame(columns=requred_columns_second_sheet)
+    main_second_df = pd.DataFrame(columns=columns_for_out_second_df)
 
 
 
@@ -132,7 +133,7 @@ def prepare_graduate_employment(path_folder_data: str, path_result_folder: str):
                 df_second_sheet = pd.read_excel(f'{path_folder_data}/{file}',
                                                sheet_name=check_required_dct['Выпуск-Целевое']['Реальное название листа'],
                                                skiprows=check_required_dct['Выпуск-Целевое'][
-                                                   'Количество строк заголовка'])
+                                                   'Количество строк заголовка'],dtype=str)
 
                 # проводим обработку только если лист заполнен данными
                 if len(df_second_sheet) != 0:
@@ -143,6 +144,9 @@ def prepare_graduate_employment(path_folder_data: str, path_result_folder: str):
                     error_df = pd.concat([error_df, file_error_df], axis=0, ignore_index=True)
                     if len(file_error_df) != 0:
                         continue
+                    df_second_sheet.insert(0,'Название файла',name_file) # добавляем колонку для названия файла
+                    main_second_df = pd.concat([main_second_df, df_second_sheet], axis=0, ignore_index=True)
+
 
 
 
@@ -205,7 +209,25 @@ def prepare_graduate_employment(path_folder_data: str, path_result_folder: str):
 
 
         # Сохраняем файл
-        out_df.to_excel(f'{path_result_folder}/Итоговый файл от {current_time}.xlsx', index=False)
+        wb = openpyxl.Workbook()
+        wb.create_sheet('Выпуск-СПО',index=0)
+        wb.create_sheet('Выпуск-Целевое', index=1)
+
+        # Записываем в файл
+        for r in dataframe_to_rows(out_df, index=False, header=True):
+            wb['Выпуск-СПО'].append(r)
+        wb['Выпуск-СПО'].column_dimensions['A'].width = 40
+
+        for r in dataframe_to_rows(main_second_df, index=False, header=True):
+            wb['Выпуск-Целевое'].append(r)
+        wb['Выпуск-Целевое'].column_dimensions['A'].width = 30
+
+        if 'Sheet' in wb.sheetnames:
+            del wb['Sheet']
+
+        wb.save(f'{path_result_folder}/Итоговый файл от {current_time}.xlsx')
+
+        #out_df.to_excel(f'{path_result_folder}/Итоговый файл от {current_time}.xlsx', index=False)
 
         # Сохраняем файл с ошибками
         error_df.to_excel(f'{path_result_folder}/Ошибки {current_time}.xlsx', index=False)
