@@ -37,7 +37,6 @@ def create_check_tables_mon_grad(high_level_dct: dict):
                 wb.create_sheet(title=code, index=idx)
                 used_name_sheet.add(code)
 
-    print(code_spec_dct)
     for code_spec in code_spec_dct.keys():
         if code_spec != 'nan':
             code = extract_code_nose(code_spec)
