@@ -50,11 +50,13 @@ def prepare_graduate_employment(path_folder_data: str, path_result_folder: str):
     """
     {Название листа:{Количество строк заголовка:int,'Обязательные колонки':список колонок,'Текст ошибки':'Описание ошибки'}}
     """
-    check_required_dct = {'Выпуск-СПО': {'Количество строк заголовка': 2,
+    check_required_dct = {'Выпуск-СПО': {'Количество строк заголовка': 4,
+                                         'Название листа':'Выпуск-СПО',
                                          'Обязательные колонки': requred_columns_first_sheet,
                                          'Не найден лист': 'В файле не найден лист с названием Выпуск-СПО',
                                          'Нет колонок': 'На листе Выпуск-СПО не найдены колонки:'},
                           'Выпуск-Целевое': {'Количество строк заголовка': 3,
+                                             'Название листа': 'Выпуск-Целевое',
                                              'Обязательные колонки': requred_columns_second_sheet,
                                              'Не найден лист': 'В файле не найден лист с названием Выпуск-Целевое',
                                              'Нет колонок': 'На листе Выпуск-Целевое не найдены колонки:'}}
@@ -70,10 +72,13 @@ def prepare_graduate_employment(path_folder_data: str, path_result_folder: str):
                 print(file)
                 name_file = file.split('.xlsx')[0]
                 # Обрабатываем данные с листа Выпуск-СПО
-                df_first_sheet = pd.read_excel(f'{path_folder_data}/{file}', sheet_name='Выпуск-СПО',
+                df_first_sheet = pd.read_excel(f'{path_folder_data}/{file}', sheet_name=0,
                                                skiprows=check_required_dct['Выпуск-СПО'][
                                                    'Количество строк заголовка'])  # Считываем прошедший базовую проверку файл
                 df_first_sheet.columns = list(map(str, df_first_sheet.columns))  # делаем названия колонок строковыми
+                # Если есть колонка с нулем где записан регион или название техникума то удаляем
+                if '0' in df_first_sheet.columns:
+                    df_first_sheet.drop(columns=['0'],inplace=True)
 
                 # Приводим все колонки кроме первой к инту
                 df_first_sheet[requred_columns_first_sheet[1:-1]] = df_first_sheet[
@@ -151,6 +156,7 @@ def prepare_graduate_employment(path_folder_data: str, path_result_folder: str):
             for name_spec, row in spec_data.items():
                 for key, value in row.items():
                     if 'Unnamed' not in key and key != '1':
+                        print(value)
                         if key == '73':
                             code_spec_dct[name_spec][key] += f';{str(value)}'
                         else:

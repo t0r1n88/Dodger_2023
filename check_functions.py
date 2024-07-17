@@ -58,6 +58,7 @@ def base_check_file(file:str,path_folder_data:str,checked_required_sheet:dict):
                                      columns=['Название файла', 'Строка или колонка с ошибкой',
                                               'Описание ошибки'])
         _error_df = pd.concat([_error_df, temp_error_df], axis=0, ignore_index=True)
+        return _error_df
     if not file.startswith('~$') and file.endswith('.xlsx'):
         # Проверка файла на наличие требуемых листов
         name_file = file.split('.xlsx')[0]
@@ -65,28 +66,68 @@ def base_check_file(file:str,path_folder_data:str,checked_required_sheet:dict):
         temp_wb = openpyxl.load_workbook(f'{path_folder_data}/{file}', read_only=True)
         lst_temp_sheets = temp_wb.sheetnames  # получаем листы в файле
         temp_wb.close()
-        for check_name_sheet,dct_param in checked_required_sheet.items():
-            if check_name_sheet not in lst_temp_sheets:  # проверяем наличие требуемых листов в файле
-                temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
-                                                    f'{dct_param["Не найден лист"]}']],
-                                             columns=['Название файла', 'Строка или колонка с ошибкой',
-                                                      'Описание ошибки'])
-                _error_df = pd.concat([_error_df, temp_error_df], axis=0, ignore_index=True)
 
-        # проверяем наличие требуемых колонок в файле
-        for check_name_sheet, dct_param in checked_required_sheet.items():
-            if check_name_sheet in lst_temp_sheets:
-                temp_df = pd.read_excel(f'{path_folder_data}/{file}',sheet_name=check_name_sheet,skiprows=dct_param['Количество строк заголовка'])
-                temp_df.columns = list(map(str,temp_df.columns)) # делаем названия колонок строковыми
-                # находим разницу в колонках
-                diff_cols = set(dct_param['Обязательные колонки']).difference(set(temp_df.columns))
-                if len(diff_cols) != 0:
-                    temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
-                                                        f'{dct_param["Нет колонок"]} {";".join(diff_cols)}.'
-                                                        f' Строка с номерами колонок должны быть на строке {dct_param["Количество строк заголовка"] + 1} в исходном файле']],
-                                                 columns=['Название файла', 'Строка или колонка с ошибкой',
-                                                          'Описание ошибки'])
-                    _error_df = pd.concat([_error_df, temp_error_df], axis=0, ignore_index=True)
+        # Создаем переменные для названий листо
+        name_first_sheet = None
+        name_second_sheet = None
+
+        # Ищем лист содержащий слово Выпуск-СПО
+        for sheet in lst_temp_sheets:
+            if checked_required_sheet['Выпуск-СПО']['Название листа'] in sheet:
+                name_first_sheet = sheet
+
+        if not name_first_sheet:
+            temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
+                                                'Не найден лист содержащий название Выпуск-СПО']],
+                                         columns=['Название файла', 'Строка или колонка с ошибкой',
+                                                  'Описание ошибки'])
+            _error_df = pd.concat([_error_df, temp_error_df], axis=0, ignore_index=True)
+            return _error_df
+
+        # Ищем лист содержащий слово Выпуск-Целевое
+        for sheet in lst_temp_sheets:
+            if checked_required_sheet['Выпуск-Целевое']['Название листа'] in sheet:
+                name_second_sheet = sheet
+
+        if not name_second_sheet:
+            temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
+                                                'Не найден лист содержащий название Выпуск-Целевое']],
+                                         columns=['Название файла', 'Строка или колонка с ошибкой',
+                                                  'Описание ошибки'])
+            _error_df = pd.concat([_error_df, temp_error_df], axis=0, ignore_index=True)
+            return _error_df
+
+
+        # проверяем наличие требуемых колонок на первом листе
+        temp_df = pd.read_excel(f'{path_folder_data}/{file}',sheet_name=name_first_sheet,skiprows=checked_required_sheet['Выпуск-СПО']['Количество строк заголовка'])
+
+        temp_df.columns = list(map(str,temp_df.columns)) # делаем названия колонок строковыми
+        # находим разницу в колонках
+        diff_cols = set(checked_required_sheet['Выпуск-СПО']['Обязательные колонки']).difference(set(temp_df.columns))
+        if len(diff_cols) != 0:
+            temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
+                                                f'{checked_required_sheet["Выпуск-СПО"]["Нет колонок"]} {";".join(diff_cols)}.'
+                                                f' Строка с номерами колонок должны быть на строке {checked_required_sheet["Выпуск-СПО"]["Количество строк заголовка"] + 1} в исходном файле']],
+                                         columns=['Название файла', 'Строка или колонка с ошибкой',
+                                                  'Описание ошибки'])
+            _error_df = pd.concat([_error_df, temp_error_df], axis=0, ignore_index=True)
+            return _error_df
+
+        # Провереряем наличие требуемых колонок на втором листе
+        temp_df = pd.read_excel(f'{path_folder_data}/{file}',sheet_name=name_second_sheet,skiprows=checked_required_sheet['Выпуск-Целевое']['Количество строк заголовка'])
+
+        temp_df.columns = list(map(str,temp_df.columns)) # делаем названия колонок строковыми
+        # находим разницу в колонках
+        diff_cols = set(checked_required_sheet['Выпуск-Целевое']['Обязательные колонки']).difference(set(temp_df.columns))
+        if len(diff_cols) != 0:
+            temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
+                                                f'{checked_required_sheet["Выпуск-Целевое"]["Нет колонок"]} {";".join(diff_cols)}.'
+                                                f' Строка с номерами колонок должны быть на строке {checked_required_sheet["Выпуск-Целевое"]["Количество строк заголовка"] + 1} в исходном файле']],
+                                         columns=['Название файла', 'Строка или колонка с ошибкой',
+                                                  'Описание ошибки'])
+            _error_df = pd.concat([_error_df, temp_error_df], axis=0, ignore_index=True)
+            return _error_df
+
     return _error_df
 
 
