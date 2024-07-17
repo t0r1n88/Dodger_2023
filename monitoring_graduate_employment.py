@@ -46,35 +46,45 @@ def prepare_graduate_employment(path_folder_data: str, path_result_folder: str):
 
     requred_columns_second_sheet = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13']
 
-    # Создаем словарь для базовой проверки файла (расширение, наличие листов, наличие колонок)
-    """
-    {Название листа:{Количество строк заголовка:int,'Обязательные колонки':список колонок,'Текст ошибки':'Описание ошибки'}}
-    """
-    check_required_dct = {'Выпуск-СПО': {'Количество строк заголовка': 4,
-                                         'Название листа':'Выпуск-СПО',
-                                         'Обязательные колонки': requred_columns_first_sheet,
-                                         'Не найден лист': 'В файле не найден лист с названием Выпуск-СПО',
-                                         'Нет колонок': 'На листе Выпуск-СПО не найдены колонки:'},
-                          'Выпуск-Целевое': {'Количество строк заголовка': 3,
-                                             'Название листа': 'Выпуск-Целевое',
-                                             'Обязательные колонки': requred_columns_second_sheet,
-                                             'Не найден лист': 'В файле не найден лист с названием Выпуск-Целевое',
-                                             'Нет колонок': 'На листе Выпуск-Целевое не найдены колонки:'}}
+
 
     try:
         for file in os.listdir(path_folder_data):
             if not file.startswith('~$'):
+                # Создаем словарь для базовой проверки файла (расширение, наличие листов, наличие колонок)
+                """
+                {Название листа:{Количество строк заголовка:int,'Обязательные колонки':список колонок,'Текст ошибки':'Описание ошибки'}}
+                """
+                check_required_dct = {'Выпуск-СПО': {'Количество строк заголовка': 4,
+                                                     'Название листа': 'Выпуск-СПО',
+                                                     'Реальное название листа': None,
+                                                     'Обязательные колонки': requred_columns_first_sheet,
+                                                     'Не найден лист': 'В файле не найден лист с названием Выпуск-СПО',
+                                                     'Нет колонок': 'На листе Выпуск-СПО не найдены колонки:'},
+                                      'Выпуск-Целевое': {'Количество строк заголовка': 3,
+                                                         'Название листа': 'Выпуск-Целевое',
+                                                         'Реальное название листа': None,
+                                                         'Обязательные колонки': requred_columns_second_sheet,
+                                                         'Не найден лист': 'В файле не найден лист с названием Выпуск-Целевое',
+                                                         'Нет колонок': 'На листе Выпуск-Целевое не найдены колонки:'}}
                 # Проверяем файл на расширение, наличие нужных листов и колонок
-                file_error_df = base_check_file(file, path_folder_data, check_required_dct)
+                file_error_df, check_required_dct = base_check_file(file, path_folder_data, check_required_dct)
                 error_df = pd.concat([error_df, file_error_df], axis=0, ignore_index=True)
                 if len(file_error_df) != 0:
                     continue
                 print(file)
                 name_file = file.split('.xlsx')[0]
                 # Обрабатываем данные с листа Выпуск-СПО
-                df_first_sheet = pd.read_excel(f'{path_folder_data}/{file}', sheet_name=0,
+                df_first_sheet = pd.read_excel(f'{path_folder_data}/{file}', sheet_name=check_required_dct['Выпуск-СПО']['Реальное название листа'],
                                                skiprows=check_required_dct['Выпуск-СПО'][
                                                    'Количество строк заголовка'])  # Считываем прошедший базовую проверку файл
+                if len(df_first_sheet) == 0:
+                    temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
+                                                        'Лист Выпуск-СПО не заполнен']],
+                                                 columns=['Название файла', 'Строка или колонка с ошибкой',
+                                                          'Описание ошибки'])
+                    error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
+                    continue
                 df_first_sheet.columns = list(map(str, df_first_sheet.columns))  # делаем названия колонок строковыми
                 # Если есть колонка с нулем где записан регион или название техникума то удаляем
                 if '0' in df_first_sheet.columns:
@@ -111,6 +121,18 @@ def prepare_graduate_employment(path_folder_data: str, path_result_folder: str):
                 error_df = pd.concat([error_df, file_error_df], axis=0, ignore_index=True)
                 if len(file_error_df) != 0:
                     continue
+
+                """
+                Обрабатываем лист Выпуск- Целевое
+                """
+                # Обрабатываем данные с листа Выпуск-Целевое
+                df_second_sheet = pd.read_excel(f'{path_folder_data}/{file}',
+                                               sheet_name=check_required_dct['Выпуск-Целевое']['Реальное название листа'],
+                                               skiprows=check_required_dct['Выпуск-Целевое'][
+                                                   'Количество строк заголовка'])
+
+                print(df_second_sheet)
+
 
                 # Заполняем словарь данными
                 # перебираем список словарей
@@ -167,7 +189,9 @@ def prepare_graduate_employment(path_folder_data: str, path_result_folder: str):
         out_df = pd.DataFrame.from_dict(code_spec_dct, orient='index')
         # Удаляем лишние колонки
         out_df.drop(columns=[name_column for name_column in out_df.columns if 'Unnamed' in name_column], inplace=True)
-        # очищаем от лишней точки с запятой в колонке 73 с описанием
+
+
+
         # Сохраняем файл
         out_df.to_excel(f'{path_result_folder}/Итоговый файл от {current_time}.xlsx', index=False)
 

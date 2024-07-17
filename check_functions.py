@@ -47,8 +47,9 @@ def check_data_note(cell):
 
 def base_check_file(file:str,path_folder_data:str,checked_required_sheet:dict):
     """
-    Функция для базовой проверки файла. Расширение,наличие нужных листов
+    Функция для базовой проверки файла мониторига занятости выпускников загружаемого в СССР. Расширение,наличие нужных листов
     """
+
     _error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
     if not file.startswith('~$') and not file.endswith('.xlsx'):
         # проверка файла на расширение xlsx
@@ -58,7 +59,7 @@ def base_check_file(file:str,path_folder_data:str,checked_required_sheet:dict):
                                      columns=['Название файла', 'Строка или колонка с ошибкой',
                                               'Описание ошибки'])
         _error_df = pd.concat([_error_df, temp_error_df], axis=0, ignore_index=True)
-        return _error_df
+        return _error_df, checked_required_sheet
     if not file.startswith('~$') and file.endswith('.xlsx'):
         # Проверка файла на наличие требуемых листов
         name_file = file.split('.xlsx')[0]
@@ -82,7 +83,7 @@ def base_check_file(file:str,path_folder_data:str,checked_required_sheet:dict):
                                          columns=['Название файла', 'Строка или колонка с ошибкой',
                                                   'Описание ошибки'])
             _error_df = pd.concat([_error_df, temp_error_df], axis=0, ignore_index=True)
-            return _error_df
+            return _error_df, checked_required_sheet
 
         # Ищем лист содержащий слово Выпуск-Целевое
         for sheet in lst_temp_sheets:
@@ -95,7 +96,7 @@ def base_check_file(file:str,path_folder_data:str,checked_required_sheet:dict):
                                          columns=['Название файла', 'Строка или колонка с ошибкой',
                                                   'Описание ошибки'])
             _error_df = pd.concat([_error_df, temp_error_df], axis=0, ignore_index=True)
-            return _error_df
+            return _error_df, checked_required_sheet
 
 
         # проверяем наличие требуемых колонок на первом листе
@@ -111,7 +112,7 @@ def base_check_file(file:str,path_folder_data:str,checked_required_sheet:dict):
                                          columns=['Название файла', 'Строка или колонка с ошибкой',
                                                   'Описание ошибки'])
             _error_df = pd.concat([_error_df, temp_error_df], axis=0, ignore_index=True)
-            return _error_df
+            return _error_df, checked_required_sheet
 
         # Провереряем наличие требуемых колонок на втором листе
         temp_df = pd.read_excel(f'{path_folder_data}/{file}',sheet_name=name_second_sheet,skiprows=checked_required_sheet['Выпуск-Целевое']['Количество строк заголовка'])
@@ -126,9 +127,13 @@ def base_check_file(file:str,path_folder_data:str,checked_required_sheet:dict):
                                          columns=['Название файла', 'Строка или колонка с ошибкой',
                                                   'Описание ошибки'])
             _error_df = pd.concat([_error_df, temp_error_df], axis=0, ignore_index=True)
-            return _error_df
+            return _error_df, checked_required_sheet
 
-    return _error_df
+        # получаем реальные названия листов
+        checked_required_sheet['Выпуск-СПО']['Реальное название листа'] = name_first_sheet
+        checked_required_sheet['Выпуск-Целевое']['Реальное название листа'] = name_second_sheet
+
+    return _error_df, checked_required_sheet
 
 
 
