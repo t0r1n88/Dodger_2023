@@ -316,6 +316,7 @@ def check_error_mon_grad_target(spo_df:pd.DataFrame, target_df:pd.DataFrame,name
             worker_target = int(row[3]) # трудоустроено целевиков по специальности
             all_release = int(row[4]) # суммарный выпуск по специальности
             all_worker = int(row[5]) # всего трудоустроено
+
             # Проверки
             """
             Суммарная численность выпускников по каждой профессии, специальности на вкладке «2. Выпуск – Целевое» 
@@ -348,6 +349,7 @@ def check_error_mon_grad_target(spo_df:pd.DataFrame, target_df:pd.DataFrame,name
         row_df = target_df.iloc[border, :].to_frame().transpose()  # получаем датафрейм строку
         first_error_df_grad_target = check_first_error_grad_target(row_df.copy(), name_file, correction+i)
         error_df = pd.concat([error_df, first_error_df_grad_target], axis=0, ignore_index=True)
+        border += 1
 
 
 
