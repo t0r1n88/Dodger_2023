@@ -25,7 +25,7 @@ def create_check_tables_mon_grad(high_level_dct: dict):
     sort_code_spec_dct = sorted(code_spec_dct.items())
     code_spec_dct = {dct[0]: dct[1] for dct in sort_code_spec_dct}
 
-    used_name_sheet = set() # Множество для хранения названий листов
+    used_name_sheet = set()  # Множество для хранения названий листов
     # Создаем файл
     wb = openpyxl.Workbook()
     # Создаем листы
@@ -71,7 +71,7 @@ def check_first_error_grad(df: pd.DataFrame, name_file: str, number_row: int):
     df['Сумма'] = df[check_sum_columns].sum(axis=1)
     df['Результат'] = df['2'] == df['Сумма']
     df['Результат'] = df['Результат'].apply(lambda x: 'Правильно' if x else 'Неправильно')
-    name_spec = df.iloc[0, 0]   # получаем значение проверки
+    name_spec = df.iloc[0, 0]  # получаем значение проверки
     if df.iloc[0, -1] == 'Неправильно':
         # получаем значения из колонок сумма и проверочной колонки
         first_value = df['2'].tolist()[0]
@@ -174,7 +174,6 @@ def check_fifth_error_grad(df: pd.DataFrame, name_file: str, number_row: int):
     return temp_error_df
 
 
-
 def check_six_error_grad(df: pd.DataFrame, name_file: str, number_row: int):
     """
     Функция для проверки условия Графа 32 >= графы 32.1
@@ -192,6 +191,7 @@ def check_six_error_grad(df: pd.DataFrame, name_file: str, number_row: int):
         return temp_error_df
 
     return temp_error_df
+
 
 def check_seventh_error_grad(df: pd.DataFrame, name_file: str, number_row: int):
     """
@@ -212,7 +212,7 @@ def check_seventh_error_grad(df: pd.DataFrame, name_file: str, number_row: int):
     return temp_error_df
 
 
-def check_error_mon_grad_spo(df: pd.DataFrame, name_file: str,correction:int):
+def check_error_mon_grad_spo(df: pd.DataFrame, name_file: str, correction: int):
     """
     Точка входа для проверки датафрейма занятости выпускников на арифметические ошибки
     :param correction: число строк на которое нужно увеличить результат чтобы показывалась правильная строка у ошибки
@@ -224,31 +224,30 @@ def check_error_mon_grad_spo(df: pd.DataFrame, name_file: str,correction:int):
         row_df = df.iloc[border, :].to_frame().transpose()  # получаем датафрейм строку
 
         # Проводим проверку Графа 2 = 3 + 31 + 32 + 60 + 61 + 62+ 63 + 64 + 65 + 66 + 67 + 68 + 69 + 70.
-        first_error_df_grad = check_first_error_grad(row_df.copy(), name_file, correction+i)
+        first_error_df_grad = check_first_error_grad(row_df.copy(), name_file, correction + i)
         error_df = pd.concat([error_df, first_error_df_grad], axis=0, ignore_index=True)
         # Проводим проверку Графа 3 = сумма значений граф с 4 по 30.
-        second_error_df_grad = check_second_error_grad(row_df.copy(), name_file, correction+i)
+        second_error_df_grad = check_second_error_grad(row_df.copy(), name_file, correction + i)
         error_df = pd.concat([error_df, second_error_df_grad], axis=0, ignore_index=True)
         # Проводим проверку Графа 3.1 <= Графа 3
-        third_error_df_grad = check_third_error_grad(row_df.copy(), name_file, correction+i)
+        third_error_df_grad = check_third_error_grad(row_df.copy(), name_file, correction + i)
         error_df = pd.concat([error_df, third_error_df_grad], axis=0, ignore_index=True)
         # Проводим проверку Графа 3.2 <= Графа 3
-        fourth_error_df_grad = check_fourth_error_grad(row_df.copy(), name_file, correction+i)
+        fourth_error_df_grad = check_fourth_error_grad(row_df.copy(), name_file, correction + i)
         error_df = pd.concat([error_df, fourth_error_df_grad], axis=0, ignore_index=True)
         # Проводим проверку Графа 32 = сумма значений граф с 33 по 59
-        fifth_error_df_grad = check_fifth_error_grad(row_df.copy(), name_file, correction+i)
+        fifth_error_df_grad = check_fifth_error_grad(row_df.copy(), name_file, correction + i)
         error_df = pd.concat([error_df, fifth_error_df_grad], axis=0, ignore_index=True)
         # Проводим проверку Графа 32 >= Графа 32.1
-        six_error_df_grad = check_six_error_grad(row_df.copy(), name_file, correction+i)
+        six_error_df_grad = check_six_error_grad(row_df.copy(), name_file, correction + i)
         error_df = pd.concat([error_df, six_error_df_grad], axis=0, ignore_index=True)
         # Проводим проверку Графа 32 >= Графа 32.2
-        seventh_error_df_grad = check_seventh_error_grad(row_df.copy(), name_file, correction+i)
+        seventh_error_df_grad = check_seventh_error_grad(row_df.copy(), name_file, correction + i)
         error_df = pd.concat([error_df, seventh_error_df_grad], axis=0, ignore_index=True)
 
         border += 1
 
     return error_df
-
 
 
 def check_first_error_grad_target(df: pd.DataFrame, name_file: str, number_row: int):
@@ -274,26 +273,22 @@ def check_first_error_grad_target(df: pd.DataFrame, name_file: str, number_row: 
     return temp_error_df
 
 
-
-
-
-
-
-def check_error_mon_grad_target(spo_df:pd.DataFrame, target_df:pd.DataFrame,name_file,correction):
+def check_error_mon_grad_target(spo_df: pd.DataFrame, target_df: pd.DataFrame, name_file, correction):
     """
     Функция для проверки правильности заполнения листа 2 Целевой выпуск
     """
     # создаем датафрейм для регистрации ошибок
     error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
 
-    group_first_check_df = target_df.groupby('1').agg({'5':'sum','6':'sum'}).reset_index()
-    group_first_check_df.rename(columns={'1':'Код и наименование','5':'Численность целевиков','6':'Трудоустроено целевиков'},inplace=True)
-    spo_df = spo_df[['1','2','3']]
+    group_first_check_df = target_df.groupby('1').agg({'5': 'sum', '6': 'sum'}).reset_index()
+    group_first_check_df.rename(
+        columns={'1': 'Код и наименование', '5': 'Численность целевиков', '6': 'Трудоустроено целевиков'}, inplace=True)
+    spo_df = spo_df[['1', '2', '3']]
     spo_df.rename(
         columns={'1': 'Код и наименование', '2': 'Суммарный выпуск', '3': 'Всего трудоустроено'}, inplace=True)
     # проверяем на совпадение специальностей
-    both_in_two_tables_df = pd.merge(group_first_check_df,spo_df,how='outer',left_on='Код и наименование',
-                                     right_on='Код и наименование',indicator=True)
+    both_in_two_tables_df = pd.merge(group_first_check_df, spo_df, how='outer', left_on='Код и наименование',
+                                     right_on='Код и наименование', indicator=True)
     # получаем все специальности которых нет на листе СПО-1
     not_spo_sheet_df = both_in_two_tables_df[both_in_two_tables_df['_merge'] == 'left_only']
     if len(not_spo_sheet_df) != 0:
@@ -312,10 +307,10 @@ def check_error_mon_grad_target(spo_df:pd.DataFrame, target_df:pd.DataFrame,name
         # Перебираем построчно
         for row in both_spec_df.itertuples():
             name_spec = row[1]
-            quantity_target = int(row[2]) # численость целевиков по специальности
-            worker_target = int(row[3]) # трудоустроено целевиков по специальности
-            all_release = int(row[4]) # суммарный выпуск по специальности
-            all_worker = int(row[5]) # всего трудоустроено
+            quantity_target = int(row[2])  # численость целевиков по специальности
+            worker_target = int(row[3])  # трудоустроено целевиков по специальности
+            all_release = int(row[4])  # суммарный выпуск по специальности
+            all_worker = int(row[5])  # всего трудоустроено
 
             # Проверки
             """
@@ -324,10 +319,11 @@ def check_error_mon_grad_target(spo_df:pd.DataFrame, target_df:pd.DataFrame,name
              по этой профессии, специальности на вкладке «1. Выпуск – СПО»
             """
             if quantity_target > all_release:
-                temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки'],
-                                             data=[[name_file, f'{name_spec}',
-                                                    f'Лист Выпуск-Целевое. Суммарная численность целевиков по специальности больше чем суммарный выпуск специальности '
-                                                    f'указанный в графе 2 на листе Выпуск-СПО. Целевиков- {quantity_target} а суммарная численность - {all_release}']])
+                temp_error_df = pd.DataFrame(
+                    columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки'],
+                    data=[[name_file, f'{name_spec}',
+                           f'Лист Выпуск-Целевое. Суммарная численность целевиков по специальности больше чем суммарный выпуск специальности '
+                           f'указанный в графе 2 на листе Выпуск-СПО. Целевиков- {quantity_target} а суммарная численность - {all_release}']])
                 error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
             """
             Численность трудоустроенных выпускников по каждой профессии, специальности на вкладке «2. Выпуск – Целевое» 
@@ -335,10 +331,11 @@ def check_error_mon_grad_target(spo_df:pd.DataFrame, target_df:pd.DataFrame,name
             """
 
             if worker_target > all_worker:
-                temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки'],
-                                             data=[[name_file, f'{name_spec}',
-                                                    f'Лист Выпуск-Целевое. Численность  трудоустроенных целевиков по специальности в графе 6 больше чем количество трудоустроенных '
-                                                    f'указанное в графе 3 на листе Выпуск-СПО. Трудоустроено целевиков- {worker_target} всего трудоустроено - {all_worker}']])
+                temp_error_df = pd.DataFrame(
+                    columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки'],
+                    data=[[name_file, f'{name_spec}',
+                           f'Лист Выпуск-Целевое. Численность  трудоустроенных целевиков по специальности в графе 6 больше чем количество трудоустроенных '
+                           f'указанное в графе 3 на листе Выпуск-СПО. Трудоустроено целевиков- {worker_target} всего трудоустроено - {all_worker}']])
                 error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
     # Проверяем сумму целевиков
     """
@@ -347,22 +344,14 @@ def check_error_mon_grad_target(spo_df:pd.DataFrame, target_df:pd.DataFrame,name
     border = 0
     for i in range(1, len(target_df) + 1):
         row_df = target_df.iloc[border, :].to_frame().transpose()  # получаем датафрейм строку
-        first_error_df_grad_target = check_first_error_grad_target(row_df.copy(), name_file, correction+i)
+        first_error_df_grad_target = check_first_error_grad_target(row_df.copy(), name_file, correction + i)
         error_df = pd.concat([error_df, first_error_df_grad_target], axis=0, ignore_index=True)
         border += 1
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-    error_df.to_excel('data/fsgdg.xlsx',index=False)
+    error_df.to_excel('data/fsgdg.xlsx', index=False)
     return error_df
+
+
+
+
+

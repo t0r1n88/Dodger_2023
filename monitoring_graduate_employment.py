@@ -29,8 +29,6 @@ def prepare_graduate_employment(path_folder_data: str, path_result_folder: str):
     """
     # создаем словарь верхнего уровня для каждого поо
     high_level_dct = {}
-    # создаем словарь верхнего уровня для хранения пары ключ значение где ключ это код специальности а значение- код и наименование
-    dct_code_and_name = dict()
     # создаем датафрейм для регистрации ошибок
     error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
     requred_columns_first_sheet = ['1', '1.1', '1.2', '2', '3', '3.1', '3.2', '4', '5', '6', '7', '8', '9', '10',
@@ -55,24 +53,9 @@ def prepare_graduate_employment(path_folder_data: str, path_result_folder: str):
     try:
         for file in os.listdir(path_folder_data):
             if not file.startswith('~$'):
-                # Создаем словарь для базовой проверки файла (расширение, наличие листов, наличие колонок)
-                """
-                {Название листа:{Количество строк заголовка:int,'Обязательные колонки':список колонок,'Текст ошибки':'Описание ошибки'}}
-                """
-                check_required_dct = {'Выпуск-СПО': {'Количество строк заголовка': 2,
-                                                     'Название листа': 'Выпуск-СПО',
-                                                     'Реальное название листа': None,
-                                                     'Обязательные колонки': requred_columns_first_sheet,
-                                                     'Не найден лист': 'В файле не найден лист с названием Выпуск-СПО',
-                                                     'Нет колонок': 'На листе Выпуск-СПО не найдены колонки:'},
-                                      'Выпуск-Целевое': {'Количество строк заголовка': 3,
-                                                         'Название листа': 'Выпуск-Целевое',
-                                                         'Реальное название листа': None,
-                                                         'Обязательные колонки': requred_columns_second_sheet,
-                                                         'Не найден лист': 'В файле не найден лист с названием Выпуск-Целевое',
-                                                         'Нет колонок': 'На листе Выпуск-Целевое не найдены колонки:'}}
+
                 # Проверяем файл на расширение, наличие нужных листов и колонок
-                file_error_df, check_required_dct = base_check_file(file, path_folder_data, check_required_dct)
+                file_error_df, check_required_dct = base_check_file(file, path_folder_data,requred_columns_first_sheet,requred_columns_second_sheet)
                 error_df = pd.concat([error_df, file_error_df], axis=0, ignore_index=True)
                 if len(file_error_df) != 0:
                     continue
@@ -139,6 +122,8 @@ def prepare_graduate_employment(path_folder_data: str, path_result_folder: str):
 
                 # проводим обработку только если лист заполнен данными
                 if len(df_second_sheet) != 0:
+                    # удаляем строки с суммами и пустые строки
+                    df_second_sheet = df_second_sheet[df_second_sheet['1'].notna()]
                     lst_int_columns_second_sheet = ['5','6','7','8','9','10','11','12']
                     df_second_sheet[lst_int_columns_second_sheet] = df_second_sheet[lst_int_columns_second_sheet].applymap(convert_to_int)
                     file_error_df = check_error_mon_grad_target(df_first_sheet.copy(),df_second_sheet.copy(),name_file,

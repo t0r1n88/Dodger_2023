@@ -2,17 +2,9 @@
 """
 Функции для проверки данных
 """
-from support_functions import * # импортируем вспомогательные функции и исключения
+from support_functions import *  # импортируем вспомогательные функции и исключения
 import pandas as pd
 import numpy as np
-import tkinter
-import sys
-import os
-from tkinter import *
-from tkinter import filedialog
-from tkinter import messagebox
-from tkinter import ttk
-import time
 
 pd.options.mode.chained_assignment = None  # default='warn'
 import warnings
@@ -20,11 +12,10 @@ import warnings
 warnings.filterwarnings('ignore', category=UserWarning, module='openpyxl')
 warnings.filterwarnings('ignore', category=DeprecationWarning)
 warnings.filterwarnings('ignore', category=FutureWarning)
-import copy
 import openpyxl
 from openpyxl.utils.dataframe import dataframe_to_rows
 import re
-import random
+
 
 def check_data(cell):
     """
@@ -45,12 +36,46 @@ def check_data_note(cell):
         return 'Не заполнено'
     return str(cell)
 
-def base_check_file(file:str,path_folder_data:str,checked_required_sheet:dict):
+
+def find_header_lenght(wb: openpyxl.Workbook, name_sheet: str, target_column: int, target_value: str) -> int:
+    """
+    Функция для поиска размера заголовка
+    """
+    header_lenght = None
+
+    for row in wb[name_sheet].iter_rows(min_row=1, min_col=target_column, max_col=target_column):
+        cell_value = row[0].value
+        if cell_value == target_value:
+            header_lenght = row[0].row - 1  # Отнимаем еденицу потому что будем использовать эту строку в качестве заголовка
+            break
+
+    return header_lenght
+
+
+def base_check_file(file: str, path_folder_data: str, requred_columns_first_sheet: list,
+                    requred_columns_second_sheet: list):
     """
     Функция для базовой проверки файла мониторига занятости выпускников загружаемого в СССР. Расширение,наличие нужных листов
     """
+    # Создаем словарь для базовой проверки файла (расширение, наличие листов, наличие колонок)
+    """
+    {Название листа:{Количество строк заголовка:int,'Обязательные колонки':список колонок,'Текст ошибки':'Описание ошибки'}}
+    """
+    checked_required_sheet = {'Выпуск-СПО': {'Количество строк заголовка': 4,
+                                             'Название листа': 'Выпуск-СПО',
+                                             'Реальное название листа': None,
+                                             'Обязательные колонки': requred_columns_first_sheet,
+                                             'Не найден лист': 'В файле не найден лист с названием Выпуск-СПО',
+                                             'Нет колонок': 'На листе Выпуск-СПО не найдены колонки:'},
+                              'Выпуск-Целевое': {'Количество строк заголовка': 3,
+                                                 'Название листа': 'Выпуск-Целевое',
+                                                 'Реальное название листа': None,
+                                                 'Обязательные колонки': requred_columns_second_sheet,
+                                                 'Не найден лист': 'В файле не найден лист с названием Выпуск-Целевое',
+                                                 'Нет колонок': 'На листе Выпуск-Целевое не найдены колонки:'}}
 
     _error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
+
     if not file.startswith('~$') and not file.endswith('.xlsx'):
         # проверка файла на расширение xlsx
         name_file = file.split('.xls')[0]
@@ -64,9 +89,8 @@ def base_check_file(file:str,path_folder_data:str,checked_required_sheet:dict):
         # Проверка файла на наличие требуемых листов
         name_file = file.split('.xlsx')[0]
         # получаем название первого листа
-        temp_wb = openpyxl.load_workbook(f'{path_folder_data}/{file}', read_only=True)
+        temp_wb = openpyxl.load_workbook(f'{path_folder_data}/{file}')
         lst_temp_sheets = temp_wb.sheetnames  # получаем листы в файле
-        temp_wb.close()
 
         # Создаем переменные для названий листо
         name_first_sheet = None
@@ -98,11 +122,23 @@ def base_check_file(file:str,path_folder_data:str,checked_required_sheet:dict):
             _error_df = pd.concat([_error_df, temp_error_df], axis=0, ignore_index=True)
             return _error_df, checked_required_sheet
 
+        # Ищем размер заголовка первого листа
+        result_find_first_header = find_header_lenght(temp_wb, name_first_sheet, 3,'1.1')
+        if result_find_first_header:
+            checked_required_sheet['Выпуск-СПО']['Количество строк заголовка'] = result_find_first_header
+
+        # Ищем размер заголовка второго листа
+        result_find_second_header = find_header_lenght(temp_wb, name_second_sheet, 2,'1')
+        if result_find_second_header:
+            checked_required_sheet['Выпуск-Целевое']['Количество строк заголовка'] = result_find_second_header
+
+        temp_wb.close()  # закрываем файл
 
         # проверяем наличие требуемых колонок на первом листе
-        temp_df = pd.read_excel(f'{path_folder_data}/{file}',sheet_name=name_first_sheet,skiprows=checked_required_sheet['Выпуск-СПО']['Количество строк заголовка'])
+        temp_df = pd.read_excel(f'{path_folder_data}/{file}', sheet_name=name_first_sheet,
+                                skiprows=checked_required_sheet['Выпуск-СПО']['Количество строк заголовка'])
 
-        temp_df.columns = list(map(str,temp_df.columns)) # делаем названия колонок строковыми
+        temp_df.columns = list(map(str, temp_df.columns))  # делаем названия колонок строковыми
         # находим разницу в колонках
         diff_cols = set(checked_required_sheet['Выпуск-СПО']['Обязательные колонки']).difference(set(temp_df.columns))
         if len(diff_cols) != 0:
@@ -115,11 +151,13 @@ def base_check_file(file:str,path_folder_data:str,checked_required_sheet:dict):
             return _error_df, checked_required_sheet
 
         # Провереряем наличие требуемых колонок на втором листе
-        temp_df = pd.read_excel(f'{path_folder_data}/{file}',sheet_name=name_second_sheet,skiprows=checked_required_sheet['Выпуск-Целевое']['Количество строк заголовка'])
+        temp_df = pd.read_excel(f'{path_folder_data}/{file}', sheet_name=name_second_sheet,
+                                skiprows=checked_required_sheet['Выпуск-Целевое']['Количество строк заголовка'])
 
-        temp_df.columns = list(map(str,temp_df.columns)) # делаем названия колонок строковыми
+        temp_df.columns = list(map(str, temp_df.columns))  # делаем названия колонок строковыми
         # находим разницу в колонках
-        diff_cols = set(checked_required_sheet['Выпуск-Целевое']['Обязательные колонки']).difference(set(temp_df.columns))
+        diff_cols = set(checked_required_sheet['Выпуск-Целевое']['Обязательные колонки']).difference(
+            set(temp_df.columns))
         if len(diff_cols) != 0:
             temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
                                                 f'{checked_required_sheet["Выпуск-Целевое"]["Нет колонок"]} {";".join(diff_cols)}.'
@@ -136,13 +174,9 @@ def base_check_file(file:str,path_folder_data:str,checked_required_sheet:dict):
     return _error_df, checked_required_sheet
 
 
-
-
-
-
-
-def check_sameness_column(checked_lst:list,check_range:int,begin_border:int,quantity_check_value:int,tup_correct:tuple,correction:int,
-                          name_file=None,name_column=None):
+def check_sameness_column(checked_lst: list, check_range: int, begin_border: int, quantity_check_value: int,
+                          tup_correct: tuple, correction: int,
+                          name_file=None, name_column=None):
     """
     Функция для проверки заполнен ли определенный диапазон одинаковыми значениями
     checked_lst : список значений который нужно проверить на однородность в каждом диапазоне
@@ -158,25 +192,28 @@ def check_sameness_column(checked_lst:list,check_range:int,begin_border:int,quan
     _error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
     first_correct = tup_correct[0]
     second_correct = tup_correct[1]
-    offset = 0 # сдвиг
+    offset = 0  # сдвиг
 
     for i in range(quantity_check_value):
         temp_set = set(
             [value for value in checked_lst[begin_border:begin_border + check_range]])
         if len(temp_set) != 1:
-            temp_error_df = pd.DataFrame(data=[[name_file,f'Диапазон строк {begin_border + first_correct + offset} - {begin_border + second_correct +offset}',
+            temp_error_df = pd.DataFrame(data=[[name_file,
+                                                f'Диапазон строк {begin_border + first_correct + offset} - {begin_border + second_correct + offset}',
                                                 f'В колонке {name_column} в указанном диапазоне обнаружены отличающиеся значения']],
-                                         columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
-            _error_df = pd.concat([_error_df,temp_error_df],axis=0,ignore_index=True)
+                                         columns=['Название файла', 'Строка или колонка с ошибкой',
+                                                  'Описание ошибки', ])
+            _error_df = pd.concat([_error_df, temp_error_df], axis=0, ignore_index=True)
 
-        begin_border +=  check_range # сдвигаем проверяемый диапазон в списке
-        offset += correction # добавляем поправку
+        begin_border += check_range  # сдвигаем проверяемый диапазон в списке
+        offset += correction  # добавляем поправку
 
     return _error_df
 
 
-def check_blankness_column(checked_lst:list,check_range:int,begin_border:int,quantity_check_value:int,tup_correct:tuple,correction:int,
-                          name_file=None,name_column=None):
+def check_blankness_column(checked_lst: list, check_range: int, begin_border: int, quantity_check_value: int,
+                           tup_correct: tuple, correction: int,
+                           name_file=None, name_column=None):
     """
     Функция для проверки есть ли в определенном диапазоне пустые значения
     checked_lst : список значений который нужно проверить на однородность в каждом диапазоне
@@ -192,30 +229,23 @@ def check_blankness_column(checked_lst:list,check_range:int,begin_border:int,qua
     _error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
     first_correct = tup_correct[0]
     second_correct = tup_correct[1]
-    offset = 0 # сдвиг
+    offset = 0  # сдвиг
 
     for i in range(quantity_check_value):
         temp_set = set(
             [value for value in checked_lst[begin_border:begin_border + check_range]])
         if np.nan in temp_set or ' ' in temp_set:
-            temp_error_df = pd.DataFrame(data=[[name_file,f'Диапазон строк {begin_border + first_correct + offset} - {begin_border + second_correct +offset}',
+            temp_error_df = pd.DataFrame(data=[[name_file,
+                                                f'Диапазон строк {begin_border + first_correct + offset} - {begin_border + second_correct + offset}',
                                                 f'В колонке {name_column} в указанном диапазоне обнаружены незаполненные ячейки']],
-                                         columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
-            _error_df = pd.concat([_error_df,temp_error_df],axis=0,ignore_index=True)
+                                         columns=['Название файла', 'Строка или колонка с ошибкой',
+                                                  'Описание ошибки', ])
+            _error_df = pd.concat([_error_df, temp_error_df], axis=0, ignore_index=True)
 
-        begin_border +=  check_range # сдвигаем проверяемый диапазон в списке
-        offset += correction # добавляем поправку
+        begin_border += check_range  # сдвигаем проверяемый диапазон в списке
+        offset += correction  # добавляем поправку
 
     return _error_df
-
-
-
-
-
-
-
-
-
 
 
 def check_first_error_temp(df: pd.DataFrame, name_file, tup_correct):
@@ -278,7 +308,7 @@ def check_second_error_temp(df: pd.DataFrame, name_file, tup_correct):
     return temp_error_df
 
 
-def check_third_error_temp(df: pd.DataFrame, name_file, border, tup_correct,correction):
+def check_third_error_temp(df: pd.DataFrame, name_file, border, tup_correct, correction):
     """
     Функция для проверки правильности введеденных данных
     стр. 06 = стр. 02 + стр. 04
@@ -303,7 +333,8 @@ def check_third_error_temp(df: pd.DataFrame, name_file, border, tup_correct,corr
     # обрабатываем индексы строк с ошибками чтобы строки совпадали с файлом excel
     raw_lst_index = foo_df['index'].tolist()  # делаем список
     finish_lst_index = list(
-        map(lambda x: f'Диапазон строк {border + first_correct+correction} - {border + second_correct+correction}, колонка {str(x)}',
+        map(lambda
+                x: f'Диапазон строк {border + first_correct + correction} - {border + second_correct + correction}, колонка {str(x)}',
             raw_lst_index))
 
     temp_error_df['Строка или колонка с ошибкой'] = finish_lst_index
@@ -311,9 +342,12 @@ def check_third_error_temp(df: pd.DataFrame, name_file, border, tup_correct,corr
     temp_error_df['Описание ошибки'] = 'Не выполняется условие: стр. 06 = стр. 02 + стр. 04 '
     return temp_error_df
 
+
 """
 Проверки
 """
+
+
 def check_first_error(df: pd.DataFrame, name_file, border, tup_correct: tuple, correction):
     """
     Функция для проверки правильности введеденных данных
@@ -338,13 +372,15 @@ def check_first_error(df: pd.DataFrame, name_file, border, tup_correct: tuple, c
     # обрабатываем индексы строк с ошибками чтобы строки совпадали с файлом excel
     raw_lst_index = foo_df['index'].tolist()  # делаем список
     finish_lst_index = list(
-        map(lambda x: f'Диапазон строк {border + first_correct+correction} - {border + second_correct+correction}, колонка {str(x)}',
+        map(lambda
+                x: f'Диапазон строк {border + first_correct + correction} - {border + second_correct + correction}, колонка {str(x)}',
             raw_lst_index))
 
     temp_error_df['Строка или колонка с ошибкой'] = finish_lst_index
     temp_error_df['Название файла'] = name_file
     temp_error_df['Описание ошибки'] = 'Не выполняется условие: стр. 03 <= стр. 02 '
     return temp_error_df
+
 
 def check_second_error(df: pd.DataFrame, name_file, border, tup_correct: tuple, correction):
     """
@@ -366,7 +402,7 @@ def check_second_error(df: pd.DataFrame, name_file, border, tup_correct: tuple, 
     foo_df['05'] = df.iloc[4, :]
 
     foo_df['Результат'] = (foo_df['01'] >= foo_df['02']) & (foo_df['01'] >= foo_df['04']) & (
-                foo_df['01'] >= foo_df['05'])
+            foo_df['01'] >= foo_df['05'])
     foo_df['Результат'] = foo_df['Результат'].apply(lambda x: 'Правильно' if x else 'Неправильно')
 
     foo_df = foo_df[foo_df['Результат'] == 'Неправильно'].reset_index()
@@ -374,7 +410,8 @@ def check_second_error(df: pd.DataFrame, name_file, border, tup_correct: tuple, 
     # обрабатываем индексы строк с ошибками чтобы строки совпадали с файлом excel
     raw_lst_index = foo_df['index'].tolist()  # делаем список
     finish_lst_index = list(
-        map(lambda x: f'Диапазон строк {border + first_correct+correction} - {border + second_correct+correction}, колонка {str(x)}',
+        map(lambda
+                x: f'Диапазон строк {border + first_correct + correction} - {border + second_correct + correction}, колонка {str(x)}',
             raw_lst_index))
 
     temp_error_df['Строка или колонка с ошибкой'] = finish_lst_index
@@ -393,7 +430,7 @@ def check_third_error(df: pd.DataFrame, name_file, tup_correct):
     """
     # получаем строку диапазона
     first_correct = tup_correct[0]
-    all_sum_cols = list(df) # получаем список колонок
+    all_sum_cols = list(df)  # получаем список колонок
     # удаляем колонку 05 с общей суммой
     all_sum_cols.remove('05')
     # получаем сумму колонок 06:27
@@ -415,10 +452,13 @@ def check_third_error(df: pd.DataFrame, name_file, tup_correct):
     temp_error_df['Описание ошибки'] = 'Не выполняется условие: гр. 05 = сумма(с гр.06 по гр.27)'
     return temp_error_df
 
+
 """
 Функции проверки для формы 2
 """
-def form_two_check_fourth_error(df: pd.DataFrame, name_file, border, tup_correct,correction):
+
+
+def form_two_check_fourth_error(df: pd.DataFrame, name_file, border, tup_correct, correction):
     """
     Функция для проверки правильности введеденных данных
     стр. 06 = стр. 02 + стр. 04
@@ -443,7 +483,8 @@ def form_two_check_fourth_error(df: pd.DataFrame, name_file, border, tup_correct
     # обрабатываем индексы строк с ошибками чтобы строки совпадали с файлом excel
     raw_lst_index = foo_df['index'].tolist()  # делаем список
     finish_lst_index = list(
-        map(lambda x: f'Диапазон строк {border + first_correct+correction} - {border + second_correct+correction}, колонка {str(x)}',
+        map(lambda
+                x: f'Диапазон строк {border + first_correct + correction} - {border + second_correct + correction}, колонка {str(x)}',
             raw_lst_index))
 
     temp_error_df['Строка или колонка с ошибкой'] = finish_lst_index
@@ -452,8 +493,7 @@ def form_two_check_fourth_error(df: pd.DataFrame, name_file, border, tup_correct
     return temp_error_df
 
 
-
-def form_two_check_fifth_error(df: pd.DataFrame, name_file, border, tup_correct,correction):
+def form_two_check_fifth_error(df: pd.DataFrame, name_file, border, tup_correct, correction):
     """
     Функция для проверки правильности введеденных данных
     стр. 06 = стр.07 + стр.08 + стр.09 + стр.10 + стр.11 + стр.12 + стр. 13
@@ -487,7 +527,8 @@ def form_two_check_fifth_error(df: pd.DataFrame, name_file, border, tup_correct,
     # обрабатываем индексы строк с ошибками чтобы строки совпадали с файлом excel
     raw_lst_index = foo_df['index'].tolist()  # делаем список
     finish_lst_index = list(
-        map(lambda x: f'Диапазон строк {border + first_correct + correction} - {border + second_correct +correction}, колонка {str(x)}',
+        map(lambda
+                x: f'Диапазон строк {border + first_correct + correction} - {border + second_correct + correction}, колонка {str(x)}',
             raw_lst_index))
     temp_error_df['Строка или колонка с ошибкой'] = finish_lst_index
     temp_error_df['Название файла'] = name_file
@@ -496,7 +537,7 @@ def form_two_check_fifth_error(df: pd.DataFrame, name_file, border, tup_correct,
     return temp_error_df
 
 
-def form_two_check_sixth_error(df: pd.DataFrame, name_file, border, tup_correct,correction):
+def form_two_check_sixth_error(df: pd.DataFrame, name_file, border, tup_correct, correction):
     """
        Функция для проверки правильности введеденных данных
        стр. 14<=стр. 06, стр. 14<=стр 05 (<= означает "меньше или равно")
@@ -532,7 +573,6 @@ def form_two_check_sixth_error(df: pd.DataFrame, name_file, border, tup_correct,
     return temp_error_df
 
 
-
 def form_three_check_third_error(df: pd.DataFrame, name_file, tup_correct):
     """
     Функция для проверки правильности введенных данных Форма 3 ожидаемый выпуск
@@ -540,9 +580,9 @@ def form_three_check_third_error(df: pd.DataFrame, name_file, tup_correct):
     """
     # получаем строку диапазона
     first_correct = tup_correct[0]
-    all_sum_cols = list(df) # получаем список колонок
+    all_sum_cols = list(df)  # получаем список колонок
     # удаляем  лишние колонки при подсчете
-    lst_remove_columns = ['05','07','08','09','13','14','21','22']
+    lst_remove_columns = ['05', '07', '08', '09', '13', '14', '21', '22']
     for rem_column in lst_remove_columns:
         all_sum_cols.remove(rem_column)
 
@@ -575,7 +615,7 @@ def form_three_check_fourth_error(df: pd.DataFrame, name_file, tup_correct):
     first_correct = tup_correct[0]
 
     # получаем сумму колонок
-    df['Сумма'] = df[['07','08','09',]].sum(axis=1)
+    df['Сумма'] = df[['07', '08', '09', ]].sum(axis=1)
     # Проводим проверку
     df['Результат'] = df['06'] >= df['Сумма']
     # заменяем булевые значения на понятные
@@ -593,6 +633,7 @@ def form_three_check_fourth_error(df: pd.DataFrame, name_file, tup_correct):
     temp_error_df['Описание ошибки'] = 'Не выполняется условие: гр. 07+ гр. 08 + гр. 09 <= гр. 06'
     return temp_error_df
 
+
 def form_three_check_fifth_error(df: pd.DataFrame, name_file, tup_correct):
     """
     Функция для проверки правильности введенных данных Форма 3 ожидаемый выпуск
@@ -601,7 +642,7 @@ def form_three_check_fifth_error(df: pd.DataFrame, name_file, tup_correct):
     # получаем строку диапазона
     first_correct = tup_correct[0]
     # получаем сумму колонок
-    df['Сумма'] = df[['13','14']].sum(axis=1)
+    df['Сумма'] = df[['13', '14']].sum(axis=1)
     # Проводим проверку
     df['Результат'] = df['12'] >= df['Сумма']
     # заменяем булевые значения на понятные
@@ -628,7 +669,7 @@ def form_three_check_sixteen_error(df: pd.DataFrame, name_file, tup_correct):
     # получаем строку диапазона
     first_correct = tup_correct[0]
     # получаем сумму колонок
-    df['Сумма'] = df[['21','22']].sum(axis=1)
+    df['Сумма'] = df[['21', '22']].sum(axis=1)
     # Проводим проверку
     df['Результат'] = df['20'] >= df['Сумма']
     # заменяем булевые значения на понятные
@@ -647,8 +688,7 @@ def form_three_check_sixteen_error(df: pd.DataFrame, name_file, tup_correct):
     return temp_error_df
 
 
-
-def check_fourth_error(df: pd.DataFrame, name_file, border, tup_correct,correction):
+def check_fourth_error(df: pd.DataFrame, name_file, border, tup_correct, correction):
     """
     Функция для проверки правильности введеденных данных
     стр. 06 = стр.07 + стр.08 + стр.09 + стр.10 + стр.11 + стр.12 + стр. 13
@@ -682,7 +722,8 @@ def check_fourth_error(df: pd.DataFrame, name_file, border, tup_correct,correcti
     # обрабатываем индексы строк с ошибками чтобы строки совпадали с файлом excel
     raw_lst_index = foo_df['index'].tolist()  # делаем список
     finish_lst_index = list(
-        map(lambda x: f'Диапазон строк {border + first_correct + correction} - {border + second_correct +correction}, колонка {str(x)}',
+        map(lambda
+                x: f'Диапазон строк {border + first_correct + correction} - {border + second_correct + correction}, колонка {str(x)}',
             raw_lst_index))
     temp_error_df['Строка или колонка с ошибкой'] = finish_lst_index
     temp_error_df['Название файла'] = name_file
@@ -690,7 +731,8 @@ def check_fourth_error(df: pd.DataFrame, name_file, border, tup_correct,correcti
         'Описание ошибки'] = 'Не выполняется условие: стр. 06 = стр.07 + стр.08 + стр.09 + стр.10 + стр.11 + стр.12 + стр. 13 '
     return temp_error_df
 
-def check_fifth_error(df: pd.DataFrame, name_file, border, tup_correct,correction):
+
+def check_fifth_error(df: pd.DataFrame, name_file, border, tup_correct, correction):
     """
     Функция для проверки правильности введеденных данных
     стр. 14<=стр. 06, стр. 14<=стр 05 (<= означает "меньше или равно")
@@ -717,7 +759,8 @@ def check_fifth_error(df: pd.DataFrame, name_file, border, tup_correct,correctio
     raw_lst_index = foo_df[
         'index'].tolist()  # делаем список, прибавляем для того чтобы номера строк совпадали с строками в файле
     finish_lst_index = list(
-        map(lambda x: f'Диапазон строк  {border + first_correct+correction} - {border + second_correct+correction}, колонка {str(x)}',
+        map(lambda
+                x: f'Диапазон строк  {border + first_correct + correction} - {border + second_correct + correction}, колонка {str(x)}',
             raw_lst_index))
     temp_error_df['Строка или колонка с ошибкой'] = finish_lst_index
     temp_error_df['Название файла'] = name_file
@@ -725,8 +768,7 @@ def check_fifth_error(df: pd.DataFrame, name_file, border, tup_correct,correctio
     return temp_error_df
 
 
-
-def check_sixth_error(df: pd.DataFrame, name_file, border, tup_correct: tuple,correction):
+def check_sixth_error(df: pd.DataFrame, name_file, border, tup_correct: tuple, correction):
     """
     Функция для проверки правильности введеденных данных
     стр 03 <= стр 02 (<= означает "меньше или равно")
@@ -750,7 +792,8 @@ def check_sixth_error(df: pd.DataFrame, name_file, border, tup_correct: tuple,co
     # обрабатываем индексы строк с ошибками чтобы строки совпадали с файлом excel
     raw_lst_index = foo_df['index'].tolist()  # делаем список
     finish_lst_index = list(
-        map(lambda x: f'Диапазон строк {border + first_correct+correction} - {border + second_correct+correction}, колонка {str(x)}',
+        map(lambda
+                x: f'Диапазон строк {border + first_correct + correction} - {border + second_correct + correction}, колонка {str(x)}',
             raw_lst_index))
 
     temp_error_df['Строка или колонка с ошибкой'] = finish_lst_index
@@ -759,7 +802,7 @@ def check_sixth_error(df: pd.DataFrame, name_file, border, tup_correct: tuple,co
     return temp_error_df
 
 
-def check_seventh_error(df: pd.DataFrame, name_file, border, tup_correct: tuple,correction):
+def check_seventh_error(df: pd.DataFrame, name_file, border, tup_correct: tuple, correction):
     """
     Функция для проверки правильности введеденных данных
     стр.02 и стр.04 и стр.05 < стр.01
@@ -779,7 +822,7 @@ def check_seventh_error(df: pd.DataFrame, name_file, border, tup_correct: tuple,
     foo_df['05'] = df.iloc[4, :]
 
     foo_df['Результат'] = (foo_df['01'] >= foo_df['02']) & (foo_df['01'] >= foo_df['04']) & (
-                foo_df['01'] >= foo_df['05'])
+            foo_df['01'] >= foo_df['05'])
     foo_df['Результат'] = foo_df['Результат'].apply(lambda x: 'Правильно' if x else 'Неправильно')
 
     foo_df = foo_df[foo_df['Результат'] == 'Неправильно'].reset_index()
@@ -787,7 +830,8 @@ def check_seventh_error(df: pd.DataFrame, name_file, border, tup_correct: tuple,
     # обрабатываем индексы строк с ошибками чтобы строки совпадали с файлом excel
     raw_lst_index = foo_df['index'].tolist()  # делаем список
     finish_lst_index = list(
-        map(lambda x: f'Диапазон строк {border + first_correct+correction} - {border + second_correct+correction}, колонка {str(x)}',
+        map(lambda
+                x: f'Диапазон строк {border + first_correct + correction} - {border + second_correct + correction}, колонка {str(x)}',
             raw_lst_index))
 
     temp_error_df['Строка или колонка с ошибкой'] = finish_lst_index
@@ -796,6 +840,7 @@ def check_seventh_error(df: pd.DataFrame, name_file, border, tup_correct: tuple,
         'Описание ошибки'] = 'Не выполняется условие: стр.02<= стр.01 или стр.04<= стр.01 или стр.05<= стр.01 '
     return temp_error_df
 
+
 def check_error_form_one(df: pd.DataFrame, name_file, tup_correct: tuple):
     """
     Функция для проверки данных нозологий
@@ -803,19 +848,19 @@ def check_error_form_one(df: pd.DataFrame, name_file, tup_correct: tuple):
     """
     # создаем датафрейм для регистрации ошибок
     error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
-    df = df.iloc[:, 3:26] # получаем часть с числами
-    df = df.applymap(check_data) # заполняем пустые ячейки нулями
+    df = df.iloc[:, 3:26]  # получаем часть с числами
+    df = df.applymap(check_data)  # заполняем пустые ячейки нулями
 
     # получаем количество датафреймов
     quantity = df.shape[0] // 5
     # счетчик для обработанных строк
     border = 0
-    correction = 0 # поправка для учета строки c проверками
+    correction = 0  # поправка для учета строки c проверками
     for i in range(1, quantity + 1):
         temp_df = df.iloc[border:border + 5, :]
 
         # Проводим проверку стр.03 <= стр.02
-        first_error_df = check_first_error(temp_df.copy(), name_file,border, tup_correct,correction)
+        first_error_df = check_first_error(temp_df.copy(), name_file, border, tup_correct, correction)
         # добавляем результат проверки в датафрейм
         error_df = pd.concat([error_df, first_error_df], axis=0, ignore_index=True)
 
@@ -832,9 +877,6 @@ def check_error_form_one(df: pd.DataFrame, name_file, tup_correct: tuple):
         border += 5
     # Возвращаем датафрейм с ошибками
     return error_df
-
-
-
 
 
 def create_check_tables_form_one(high_level_dct: dict):
@@ -884,14 +926,17 @@ def create_check_tables_form_one(high_level_dct: dict):
                 temp_code_df[0].apply(lambda x: x.get('Колонка 11'))
             temp_code_df['Находятся в отпуске по уходу за ребенком'] = temp_code_df[0].apply(
                 lambda x: x.get('Колонка 12'))
-            temp_code_df['Неформальная занятость (теневой сектор экономики)'] = temp_code_df[0].apply(lambda x: x.get('Колонка 13'))
+            temp_code_df['Неформальная занятость (теневой сектор экономики)'] = temp_code_df[0].apply(
+                lambda x: x.get('Колонка 13'))
             temp_code_df[
                 'Зарегистрированы в центрах занятости в качестве безработных (получают пособие по безработице) и не планируют трудоустраиваться'] = \
                 temp_code_df[0].apply(lambda x: x.get('Колонка 14'))
             temp_code_df[
                 'Не имеют мотивации к трудоустройству (кроме зарегистрированных в качестве безработных) и не планируют трудоустраиваться, в том числе по причинам получения иных социальных льгот '] = \
                 temp_code_df[0].apply(lambda x: x.get('Колонка 15'))
-            temp_code_df['Иные причины нахождения под риском нетрудоустройства (включая отсутствие проводимой с выпускниками работы по содействию их занятости)'] = temp_code_df[0].apply(
+            temp_code_df[
+                'Иные причины нахождения под риском нетрудоустройства (включая отсутствие проводимой с выпускниками работы по содействию их занятости)'] = \
+            temp_code_df[0].apply(
                 lambda x: x.get('Колонка 16'))
             temp_code_df['Смерть, тяжелое состояние здоровья'] = temp_code_df[0].apply(lambda x: x.get('Колонка 17'))
             temp_code_df['Находятся под следствием, отбывают наказание'] = temp_code_df[0].apply(
@@ -913,7 +958,6 @@ def create_check_tables_form_one(high_level_dct: dict):
                 'будут в армии на контрактной основе, в органах внутренних дел, Государственной противопожарной службе, органах по контролю за оборотом наркотических средств и психотропных веществ, учреждениях и органах уголовно-исполнительной системы, войсках национальной гвардии Российской Федерации, органах принудительного исполнения Российской Федерации*'] = \
                 temp_code_df[0].apply(lambda x: x.get('Колонка 26'))
             temp_code_df['будут продолжать обучение'] = temp_code_df[0].apply(lambda x: x.get('Колонка 27'))
-
 
             finish_code_spec_df = temp_code_df.drop([0], axis=1)
 
@@ -953,11 +997,11 @@ def check_error_form_two(df: pd.DataFrame, name_file, tup_correct: tuple):
     quantity = df.shape[0] // 15
     # счетчик для обработанных строк
     border = 0
-    correction = 0 # поправка для учета строки 16 чтобы диапазон ошибки отображался правильно
+    correction = 0  # поправка для учета строки 16 чтобы диапазон ошибки отображался правильно
     for i in range(1, quantity + 1):
         temp_df = df.iloc[border:border + 15, :]
         # Проводим проверку стр 03 <= стр 02
-        first_error_df = check_first_error(temp_df.copy(), name_file,border, tup_correct,correction)
+        first_error_df = check_first_error(temp_df.copy(), name_file, border, tup_correct, correction)
         # добавляем результат проверки в датафрейм
         error_df = pd.concat([error_df, first_error_df], axis=0, ignore_index=True)
 
@@ -969,21 +1013,21 @@ def check_error_form_two(df: pd.DataFrame, name_file, tup_correct: tuple):
         error_df = pd.concat([error_df, third_error_df], axis=0, ignore_index=True)
 
         # Проводим проверку стр 06 = стр 02 + стр 04
-        fourth_error_df = form_two_check_fourth_error(temp_df.copy(), name_file, border, tup_correct,correction)
+        fourth_error_df = form_two_check_fourth_error(temp_df.copy(), name_file, border, tup_correct, correction)
         # добавляем результат проверки в датафрейм
         error_df = pd.concat([error_df, fourth_error_df], axis=0, ignore_index=True)
 
         # Проводим проверку стр.06 = стр.07 + стр.08 + стр.09 + стр.10 + стр.11 + стр.12 + стр.13
-        fifth_error_df = form_two_check_fifth_error(temp_df.copy(), name_file, border, tup_correct,correction)
+        fifth_error_df = form_two_check_fifth_error(temp_df.copy(), name_file, border, tup_correct, correction)
         # добавляем результат проверки в датафрейм
         error_df = pd.concat([error_df, fifth_error_df], axis=0, ignore_index=True)
 
         # Проводим проверку стр. 14<=стр. 06, стр. 14<=стр 05 (<= означает "меньше или равно")
-        sixth_error_df = form_two_check_sixth_error(temp_df.copy(), name_file, border, tup_correct,correction)
+        sixth_error_df = form_two_check_sixth_error(temp_df.copy(), name_file, border, tup_correct, correction)
         error_df = pd.concat([error_df, sixth_error_df], axis=0, ignore_index=True)
         # прибавляем border
         border += 15
-        correction +=1
+        correction += 1
     # Возвращаем датафрейм с ошибками
     return error_df
 
@@ -1035,14 +1079,17 @@ def create_check_tables_form_two(high_level_dct: dict):
                 temp_code_df[0].apply(lambda x: x.get('Колонка 11'))
             temp_code_df['Находятся в отпуске по уходу за ребенком'] = temp_code_df[0].apply(
                 lambda x: x.get('Колонка 12'))
-            temp_code_df['Неформальная занятость (теневой сектор экономики)'] = temp_code_df[0].apply(lambda x: x.get('Колонка 13'))
+            temp_code_df['Неформальная занятость (теневой сектор экономики)'] = temp_code_df[0].apply(
+                lambda x: x.get('Колонка 13'))
             temp_code_df[
                 'Зарегистрированы в центрах занятости в качестве безработных (получают пособие по безработице) и не планируют трудоустраиваться'] = \
                 temp_code_df[0].apply(lambda x: x.get('Колонка 14'))
             temp_code_df[
                 'Не имеют мотивации к трудоустройству (кроме зарегистрированных в качестве безработных) и не планируют трудоустраиваться, в том числе по причинам получения иных социальных льгот '] = \
                 temp_code_df[0].apply(lambda x: x.get('Колонка 15'))
-            temp_code_df['Иные причины нахождения под риском нетрудоустройства (включая отсутствие проводимой с выпускниками работы по содействию их занятости)'] = temp_code_df[0].apply(
+            temp_code_df[
+                'Иные причины нахождения под риском нетрудоустройства (включая отсутствие проводимой с выпускниками работы по содействию их занятости)'] = \
+            temp_code_df[0].apply(
                 lambda x: x.get('Колонка 16'))
             temp_code_df['Смерть, тяжелое состояние здоровья'] = temp_code_df[0].apply(lambda x: x.get('Колонка 17'))
             temp_code_df['Находятся под следствием, отбывают наказание'] = temp_code_df[0].apply(
@@ -1064,7 +1111,6 @@ def create_check_tables_form_two(high_level_dct: dict):
                 'будут в армии на контрактной основе, в органах внутренних дел, Государственной противопожарной службе, органах по контролю за оборотом наркотических средств и психотропных веществ, учреждениях и органах уголовно-исполнительной системы, войсках национальной гвардии Российской Федерации, органах принудительного исполнения Российской Федерации*'] = \
                 temp_code_df[0].apply(lambda x: x.get('Колонка 26'))
             temp_code_df['будут продолжать обучение'] = temp_code_df[0].apply(lambda x: x.get('Колонка 27'))
-
 
             finish_code_spec_df = temp_code_df.drop([0], axis=1)
 
@@ -1106,17 +1152,17 @@ def check_error_form_three(df: pd.DataFrame, name_file, tup_correct: tuple):
     """
     # создаем датафрейм для регистрации ошибок
     error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
-    df = df.iloc[:, 3:21] # получаем часть с числами
-    df = df.applymap(check_data) # заполняем пустые ячейки нулями
+    df = df.iloc[:, 3:21]  # получаем часть с числами
+    df = df.applymap(check_data)  # заполняем пустые ячейки нулями
     # получаем количество датафреймов
     quantity = df.shape[0] // 5
     # счетчик для обработанных строк
     border = 0
-    correction = 0 # поправка для учета строки c проверками
+    correction = 0  # поправка для учета строки c проверками
     for i in range(1, quantity + 1):
         temp_df = df.iloc[border:border + 5, :]
         # Проводим проверку стр.03 <= стр.02
-        first_error_df = check_first_error(temp_df.copy(), name_file,border, tup_correct,correction)
+        first_error_df = check_first_error(temp_df.copy(), name_file, border, tup_correct, correction)
         # добавляем результат проверки в датафрейм
         error_df = pd.concat([error_df, first_error_df], axis=0, ignore_index=True)
 
@@ -1140,12 +1186,12 @@ def check_error_form_three(df: pd.DataFrame, name_file, tup_correct: tuple):
         sixteen_error_df = form_three_check_sixteen_error(temp_df.copy(), name_file, tup_correct)
         error_df = pd.concat([error_df, sixteen_error_df], axis=0, ignore_index=True)
 
-
         # прибавляем border
 
         border += 5
     # Возвращаем датафрейм с ошибками
     return error_df
+
 
 def create_check_tables_form_three(high_level_dct: dict):
     """
@@ -1183,18 +1229,23 @@ def create_check_tables_form_three(high_level_dct: dict):
             temp_code_df[
                 'Трудоустроены (по трудовому договору, договору ГПХ в соответствии с трудовым законодательством, законодательством  об обязательном пенсионном страховании)'] = \
                 temp_code_df[0].apply(lambda x: x.get('Колонка 6'))
-            temp_code_df['совмещают обучение с трудоустройством по специальности, в том числе с переводом на индивидуальный учебный план'] = temp_code_df[0].apply(lambda x: x.get('Колонка 7'))
+            temp_code_df[
+                'совмещают обучение с трудоустройством по специальности, в том числе с переводом на индивидуальный учебный план'] = \
+            temp_code_df[0].apply(lambda x: x.get('Колонка 7'))
             temp_code_df[
                 'проходят оплачиваемую практику по специальности с заключением срочного трудового договора '] = \
                 temp_code_df[0].apply(lambda x: x.get('Колонка 8'))
-            temp_code_df['трудоустроены в учебно-производственных комплексах, созданных на базе образовательных организаций, по специальности'] = temp_code_df[0].apply(lambda x: x.get('Колонка 9'))
+            temp_code_df[
+                'трудоустроены в учебно-производственных комплексах, созданных на базе образовательных организаций, по специальности'] = \
+            temp_code_df[0].apply(lambda x: x.get('Колонка 9'))
             temp_code_df['Индивидуальные предприни-матели '] = temp_code_df[0].apply(lambda x: x.get('Колонка 10'))
             temp_code_df[
                 'Самозанятые (перешедшие на специальный налоговый режим - налог на профессио-нальный доход)'] = \
                 temp_code_df[0].apply(lambda x: x.get('Колонка 11'))
             temp_code_df['Планируют трудоустройство'] = temp_code_df[0].apply(
                 lambda x: x.get('Колонка 12'))
-            temp_code_df['трудоустроятся на предприятиях, в которых была пройдена практика'] = temp_code_df[0].apply(lambda x: x.get('Колонка 13'))
+            temp_code_df['трудоустроятся на предприятиях, в которых была пройдена практика'] = temp_code_df[0].apply(
+                lambda x: x.get('Колонка 13'))
             temp_code_df[
                 'трудоустроятся на других предприятиях, являющихся партнерами образовательной организации'] = \
                 temp_code_df[0].apply(lambda x: x.get('Колонка 14'))
@@ -1204,7 +1255,9 @@ def create_check_tables_form_three(high_level_dct: dict):
             temp_code_df['Планируют зарегистрироваться в качестве самозанятых'] = temp_code_df[0].apply(
                 lambda x: x.get('Колонка 16'))
             temp_code_df['Подлежат призыву в армию'] = temp_code_df[0].apply(lambda x: x.get('Колонка 17'))
-            temp_code_df['Планируют поступить в армию на контрактной основе, в органах внутренних дел, Государственной противопожарной службе, органах по контролю за оборотом наркотических средств и психотропных веществ, учреждениях и органах уголовно-исполнительной системы, войсках национальной гвардии Российской Федерации, органах принудительного исполнения Российской Федерации*'] = temp_code_df[0].apply(
+            temp_code_df[
+                'Планируют поступить в армию на контрактной основе, в органах внутренних дел, Государственной противопожарной службе, органах по контролю за оборотом наркотических средств и психотропных веществ, учреждениях и органах уголовно-исполнительной системы, войсках национальной гвардии Российской Федерации, органах принудительного исполнения Российской Федерации*'] = \
+            temp_code_df[0].apply(
                 lambda x: x.get('Колонка 18'))
             temp_code_df[
                 'Планируют продолжать обучение'] = \
@@ -1212,9 +1265,12 @@ def create_check_tables_form_three(high_level_dct: dict):
             temp_code_df[
                 'Находятся под риском нетрудоустройства'] = \
                 temp_code_df[0].apply(lambda x: x.get('Колонка 20'))
-            temp_code_df['Планируют переезд за пределы Российской Федерации(кроме переезда в иные регионы - по ним регион должен располагать сведениями)'] = temp_code_df[0].apply(
+            temp_code_df[
+                'Планируют переезд за пределы Российской Федерации(кроме переезда в иные регионы - по ним регион должен располагать сведениями)'] = \
+            temp_code_df[0].apply(
                 lambda x: x.get('Колонка 21'))
-            temp_code_df['Выпускники из числа иностранных граждан, которые не имеют СНИЛС'] = temp_code_df[0].apply(lambda x: x.get('Колонка 22'))
+            temp_code_df['Выпускники из числа иностранных граждан, которые не имеют СНИЛС'] = temp_code_df[0].apply(
+                lambda x: x.get('Колонка 22'))
             finish_code_spec_df = temp_code_df.drop([0], axis=1)
 
             finish_code_spec_df = finish_code_spec_df.reset_index()
@@ -1239,11 +1295,6 @@ def create_check_tables_form_three(high_level_dct: dict):
     return wb
 
 
-
-
-
-
-
 def check_error_nose(df: pd.DataFrame, name_file, tup_correct: tuple):
     """
     Функция для проверки данных нозологий
@@ -1258,7 +1309,7 @@ def check_error_nose(df: pd.DataFrame, name_file, tup_correct: tuple):
     quantity = df.shape[0] // 15
     # счетчик для обработанных строк
     border = 0
-    correction = 0 # поправка для учета строки 16 чтобы диапазон ошибки отображался правильно
+    correction = 0  # поправка для учета строки 16 чтобы диапазон ошибки отображался правильно
     for i in range(1, quantity + 1):
         temp_df = df.iloc[border:border + 15, :]
         # Проводим проверку гр. 09 и гр. 10 <= гр. 08
@@ -1272,34 +1323,35 @@ def check_error_nose(df: pd.DataFrame, name_file, tup_correct: tuple):
         error_df = pd.concat([error_df, second_error_df], axis=0, ignore_index=True)
 
         # Проводим проверку стр. 06 = стр. 02 + стр. 04
-        third_error_df = check_third_error(temp_df.copy(), name_file, border, tup_correct,correction)
+        third_error_df = check_third_error(temp_df.copy(), name_file, border, tup_correct, correction)
         # добавляем результат проверки в датафрейм
         error_df = pd.concat([error_df, third_error_df], axis=0, ignore_index=True)
 
         # Проводим проверку стр. 06 = стр.07 + стр.08 + стр.09 + стр.10 + стр.11 + стр.12 + стр. 13
-        fourth_error_df = check_fourth_error(temp_df.copy(), name_file, border, tup_correct,correction)
+        fourth_error_df = check_fourth_error(temp_df.copy(), name_file, border, tup_correct, correction)
         # добавляем результат проверки в датафрейм
         error_df = pd.concat([error_df, fourth_error_df], axis=0, ignore_index=True)
 
         # Проводим проверку стр. 14<=стр. 06, стр. 14<=стр 05 (<= означает "меньше или равно")
-        fifth_error_df = check_fifth_error(temp_df.copy(), name_file, border, tup_correct,correction)
+        fifth_error_df = check_fifth_error(temp_df.copy(), name_file, border, tup_correct, correction)
         # добавляем результат проверки в датафрейм
         error_df = pd.concat([error_df, fifth_error_df], axis=0, ignore_index=True)
 
         # Проводим проверку стр.03 <= стр.02
-        sixth_error_df = check_sixth_error(temp_df.copy(), name_file, border, tup_correct,correction)
+        sixth_error_df = check_sixth_error(temp_df.copy(), name_file, border, tup_correct, correction)
         error_df = pd.concat([error_df, sixth_error_df], axis=0, ignore_index=True)
 
         # Проводим проверку стр.02 и стр.04 и стр.05 < стр.01
-        seventh_error_df = check_seventh_error(temp_df.copy(), name_file, border, tup_correct,correction)
+        seventh_error_df = check_seventh_error(temp_df.copy(), name_file, border, tup_correct, correction)
         error_df = pd.concat([error_df, seventh_error_df], axis=0, ignore_index=True)
 
         # прибавляем border
 
         border += 15
-        correction +=1
+        correction += 1
     # Возвращаем датафрейм с ошибками
     return error_df
+
 
 def check_error_base_mon(df: pd.DataFrame, name_file, tup_correct: tuple):
     """
@@ -1315,7 +1367,7 @@ def check_error_base_mon(df: pd.DataFrame, name_file, tup_correct: tuple):
     quantity = df.shape[0] // 15
     # счетчик для обработанных строк
     border = 0
-    correction = 0 # поправка для учета строки 16 чтобы диапазон ошибки отображался правильно
+    correction = 0  # поправка для учета строки 16 чтобы диапазон ошибки отображался правильно
     for i in range(1, quantity + 1):
         temp_df = df.iloc[border:border + 15, :]
         # Проводим проверку гр. 09 и гр. 10 <= гр. 08
@@ -1329,26 +1381,26 @@ def check_error_base_mon(df: pd.DataFrame, name_file, tup_correct: tuple):
         error_df = pd.concat([error_df, second_error_df], axis=0, ignore_index=True)
 
         # Проводим проверку стр. 06 = стр. 02 + стр. 04
-        third_error_df = check_third_error(temp_df.copy(), name_file, border, tup_correct,correction)
+        third_error_df = check_third_error(temp_df.copy(), name_file, border, tup_correct, correction)
         # добавляем результат проверки в датафрейм
         error_df = pd.concat([error_df, third_error_df], axis=0, ignore_index=True)
 
         # Проводим проверку стр. 06 = стр.07 + стр.08 + стр.09 + стр.10 + стр.11 + стр.12 + стр. 13
-        fourth_error_df = check_fourth_error(temp_df.copy(), name_file, border, tup_correct,correction)
+        fourth_error_df = check_fourth_error(temp_df.copy(), name_file, border, tup_correct, correction)
         # добавляем результат проверки в датафрейм
         error_df = pd.concat([error_df, fourth_error_df], axis=0, ignore_index=True)
 
         # Проводим проверку стр. 14<=стр. 06, стр. 14<=стр 05 (<= означает "меньше или равно")
-        fifth_error_df = check_fifth_error(temp_df.copy(), name_file, border, tup_correct,correction)
+        fifth_error_df = check_fifth_error(temp_df.copy(), name_file, border, tup_correct, correction)
         # добавляем результат проверки в датафрейм
         error_df = pd.concat([error_df, fifth_error_df], axis=0, ignore_index=True)
 
         # Проводим проверку стр.03 <= стр.02
-        sixth_error_df = check_sixth_error(temp_df.copy(), name_file, border, tup_correct,correction)
+        sixth_error_df = check_sixth_error(temp_df.copy(), name_file, border, tup_correct, correction)
         error_df = pd.concat([error_df, sixth_error_df], axis=0, ignore_index=True)
 
         # Проводим проверку стр.02 и стр.04 и стр.05 < стр.01
-        seventh_error_df = check_seventh_error(temp_df.copy(), name_file, border, tup_correct,correction)
+        seventh_error_df = check_seventh_error(temp_df.copy(), name_file, border, tup_correct, correction)
         error_df = pd.concat([error_df, seventh_error_df], axis=0, ignore_index=True)
 
         # прибавляем border
@@ -1369,6 +1421,7 @@ def extract_code(value):
         return result.group()
     else:
         return 'error'
+
 
 def extract_code_nose(value):
     """
@@ -1504,9 +1557,6 @@ def create_check_tables(high_level_dct: dict):
     return wb
 
 
-
-
-
 """
 Функции для обработки отчетов ЦК
 """
@@ -1614,6 +1664,8 @@ def check_vertical_chosen_sum(df: pd.DataFrame, lst_checked_rows: list, itog_row
     temp_error_df['Название файла'] = name_file
 
     return temp_error_df
+
+
 def check_error_ck(df: pd.DataFrame, name_file):
     # создаем датафрейм для регистрации ошибок
     error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки'])
@@ -1641,7 +1693,7 @@ def check_error_ck(df: pd.DataFrame, name_file):
 
     return error_df
 
+
 """
 Проверки ОПК
 """
-
