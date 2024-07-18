@@ -233,10 +233,7 @@ def prepare_graduate_employment(path_folder_data: str, path_result_folder: str):
     except PermissionError as e:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
                              f'Закройте открытые файлы Excel {e.args}')
-    except Exception as e:
-        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
-                             f'При обработке файла {name_file} возникла ошибка {e.args} !!!\n'
-                             f'Проверьте файл на соответствие шаблону')
+
     else:
         if error_df.shape[0] != 0:
             messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',

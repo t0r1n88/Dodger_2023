@@ -348,7 +348,6 @@ def check_error_mon_grad_target(spo_df: pd.DataFrame, target_df: pd.DataFrame, n
         error_df = pd.concat([error_df, first_error_df_grad_target], axis=0, ignore_index=True)
         border += 1
 
-    error_df.to_excel('data/fsgdg.xlsx', index=False)
     return error_df
 
 
