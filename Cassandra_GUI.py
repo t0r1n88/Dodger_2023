@@ -5,6 +5,7 @@
 from form_one_five_row import prepare_form_one_employment  # импортируем функцию для обработки Формы 1 (5 строк)
 from form_two_fifteen_row_nose import prepare_form_two_employment  # импортируем функцию для обработки Форма 2 нозологии 15 строк
 from form_three_expected_release import prepare_form_three_employment # импортируем функцию для обработки Формы 3 Ожидаемый выпуск
+from monitoring_graduate_employment import prepare_graduate_employment
 from ck_employment import prepare_ck_employment  # импортируем функцию для обработки данных для отчета центров карьеры
 from opk_employment import prepare_opk_employment  # импортируем функцию для обработки данных по ОПК
 from create_svod_trudvsem import processing_data_trudvsem # импортируем функцию для обработки данных с трудвсем
@@ -88,6 +89,26 @@ def select_end_folder_form_three():
     """
     global path_to_end_folder_form_three
     path_to_end_folder_form_three = filedialog.askdirectory()
+
+
+def select_folder_data_mon_grad():
+    """
+    Функция для выбора папки c данными мониторинга выпускников для СССР
+    :return:
+    """
+    global path_folder_data_mon_grad
+    path_folder_data_mon_grad = filedialog.askdirectory()
+
+
+def select_end_folder_mon_grad():
+    """
+    Функция для выбора конечной папки куда будут складываться итоговые файлы мониторинга выпускников для СССР
+    :return:
+    """
+    global path_to_end_folder_mon_grad
+    path_to_end_folder_mon_grad = filedialog.askdirectory()
+
+
 
 
 
@@ -241,6 +262,20 @@ def processing_form_three_employment():
     """
     try:
         prepare_form_three_employment(path_folder_data_form_three, path_to_end_folder_form_three)
+
+    except NameError:
+        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
+                             f'Выберите файлы с данными и папку куда будет генерироваться файл')
+
+
+
+def processing_mon_grad():
+    """
+    Функция для обработки данных мониторинга занятости выпускников 2024 для сайта СССР
+    :return:
+    """
+    try:
+        prepare_graduate_employment(path_folder_data_mon_grad, path_to_end_folder_mon_grad)
 
     except NameError:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
@@ -428,7 +463,7 @@ def show_textmenu(event):
 
 if __name__ == '__main__':
     window = Tk()
-    window.title('Кассандра Подсчет данных по трудоустройству выпускников ver 5.5')
+    window.title('Кассандра Подсчет данных по трудоустройству выпускников ver 6.0')
     # Устанавливаем размер и положение окна
     set_window_size(window)
     window.resizable(True, True)
@@ -451,7 +486,7 @@ if __name__ == '__main__':
     Создаем вкладку для обработки формы 1 (пятистрочная)
     """
     tab_employment_five = ttk.Frame(tab_control)
-    tab_control.add(tab_employment_five, text='Форма 1 (5 строк)')
+    tab_control.add(tab_employment_five, text='Форма 1\n (5 строк)')
 
     employment_five_frame_description = LabelFrame(tab_employment_five)
     employment_five_frame_description.pack()
@@ -497,7 +532,7 @@ if __name__ == '__main__':
     Вкладка для обработки формы 2 нозологии 15 строк
     """
     tab_employment_nose = ttk.Frame(tab_control)
-    tab_control.add(tab_employment_nose, text='Форма 2 нозологии')
+    tab_control.add(tab_employment_nose, text='Форма 2\n (нозологии)')
 
     employment_nose_frame_description = LabelFrame(tab_employment_nose)
     employment_nose_frame_description.pack()
@@ -546,14 +581,14 @@ if __name__ == '__main__':
     Вкладка для обработки формы 3 Ожидаемый выпуск
     """
     tab_employment_expect = ttk.Frame(tab_control)
-    tab_control.add(tab_employment_expect, text='Форма 3 Ожидаемый выпуск')
+    tab_control.add(tab_employment_expect, text='Форма 3\n (ожидаемый выпуск)')
 
     employment_expect_frame_description = LabelFrame(tab_employment_expect)
     employment_expect_frame_description.pack()
 
     lbl_hello_employment_expect = Label(employment_expect_frame_description,
                                         text='Центр опережающей профессиональной подготовки Республики Бурятия\n'
-                                             'Трудоустройство выпускников. Форма 3 нозологии Ожидаемый выпуск',
+                                             'Трудоустройство выпускников. Форма 3 Ожидаемый выпуск',
                                         width=60)
     lbl_hello_employment_expect.pack(side=LEFT, anchor=N, ipadx=25, ipady=10)
 
@@ -589,6 +624,61 @@ if __name__ == '__main__':
                                                     command=processing_form_three_employment
                                                     )
     btn_proccessing_data_employment_expect.pack(padx=10, pady=10)
+
+    """
+    Создаем вкладку для обработки мониторинга занятости выпускников для сайта СССР
+    """
+
+
+    tab_employment_grad_mon = ttk.Frame(tab_control)
+    tab_control.add(tab_employment_grad_mon, text='Мониторинг занятости\nвыпускников')
+
+    employment_grad_mon_frame_description = LabelFrame(tab_employment_grad_mon)
+    employment_grad_mon_frame_description.pack()
+
+    lbl_hello_employment_grad_mon = Label(employment_grad_mon_frame_description,
+                                          text='Центр опережающей профессиональной подготовки Республики Бурятия\n'
+                                               'Мониторинг занятости выпускников 2024 для сервиса\n'
+                                               '«Система сбора и синхронизации ресурсов» (https://data.firpo.ru).',
+                                          width=60)
+    lbl_hello_employment_grad_mon.pack(side=LEFT, anchor=N, ipadx=25, ipady=10)
+
+    # Картинка
+    path_to_img_employment_grad_mon = resource_path('logo.png')
+    img_employment_grad_mon = PhotoImage(file=path_to_img_employment_grad_mon)
+    Label(employment_grad_mon_frame_description,
+          image=img_employment_grad_mon, padx=10, pady=10
+          ).pack(side=LEFT, anchor=E, ipadx=5, ipady=5)
+
+    # Создаем область для того чтобы поместить туда подготовительные кнопки(выбрать файл,выбрать папку и т.п.)
+    frame_data_employment_grad_mon = LabelFrame(tab_employment_grad_mon, text='Подготовка')
+    frame_data_employment_grad_mon.pack(padx=10, pady=10)
+
+    btn_choose_data_employment_grad_mon = Button(frame_data_employment_grad_mon, text='1) Выберите папку с данными',
+                                                 font=('Arial Bold', 20),
+                                                 command=select_folder_data_mon_grad
+                                                 )
+    btn_choose_data_employment_grad_mon.pack(padx=10, pady=10)
+
+    # Создаем кнопку для выбора папки куда будут генерироваться файлы
+
+    btn_choose_end_folder_employment_grad_mon = Button(frame_data_employment_grad_mon,
+                                                       text='2) Выберите конечную папку',
+                                                       font=('Arial Bold', 20),
+                                                       command=select_end_folder_mon_grad
+                                                       )
+    btn_choose_end_folder_employment_grad_mon.pack(padx=10, pady=10)
+    #
+    # Создаем кнопку обработки данных
+
+    btn_proccessing_data_employment_grad_mon = Button(tab_employment_grad_mon, text='3) Обработать данные',
+                                                      font=('Arial Bold', 20),
+                                                      command=processing_mon_grad
+                                                      )
+    btn_proccessing_data_employment_grad_mon.pack(padx=10, pady=10)
+
+
+
 
 
     """

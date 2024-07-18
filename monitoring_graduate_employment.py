@@ -43,26 +43,26 @@ def prepare_graduate_employment(path_folder_data: str, path_result_folder: str):
     text_required_columns_first_sheet = ['73']
 
     requred_columns_second_sheet = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13']
-    columns_for_out_second_df = ['Название файла','1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13']
+    columns_for_out_second_df = ['Название файла', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13']
 
     # создаем базовый датафрейм для данных второго листа
     main_second_df = pd.DataFrame(columns=columns_for_out_second_df)
-
-
 
     try:
         for file in os.listdir(path_folder_data):
             if not file.startswith('~$'):
 
                 # Проверяем файл на расширение, наличие нужных листов и колонок
-                file_error_df, check_required_dct = base_check_file(file, path_folder_data,requred_columns_first_sheet,requred_columns_second_sheet)
+                file_error_df, check_required_dct = base_check_file(file, path_folder_data, requred_columns_first_sheet,
+                                                                    requred_columns_second_sheet)
                 error_df = pd.concat([error_df, file_error_df], axis=0, ignore_index=True)
                 if len(file_error_df) != 0:
                     continue
                 print(file)
                 name_file = file.split('.xlsx')[0]
                 # Обрабатываем данные с листа Выпуск-СПО
-                df_first_sheet = pd.read_excel(f'{path_folder_data}/{file}', sheet_name=check_required_dct['Выпуск-СПО']['Реальное название листа'],
+                df_first_sheet = pd.read_excel(f'{path_folder_data}/{file}',
+                                               sheet_name=check_required_dct['Выпуск-СПО']['Реальное название листа'],
                                                skiprows=check_required_dct['Выпуск-СПО'][
                                                    'Количество строк заголовка'])  # Считываем прошедший базовую проверку файл
                 if len(df_first_sheet) == 0:
@@ -75,7 +75,7 @@ def prepare_graduate_employment(path_folder_data: str, path_result_folder: str):
                 df_first_sheet.columns = list(map(str, df_first_sheet.columns))  # делаем названия колонок строковыми
                 # Если есть колонка с нулем где записан регион или название техникума то удаляем
                 if '0' in df_first_sheet.columns:
-                    df_first_sheet.drop(columns=['0'],inplace=True)
+                    df_first_sheet.drop(columns=['0'], inplace=True)
                 # удаляем строки с суммами
                 df_first_sheet = df_first_sheet[df_first_sheet['1'].notna()]
 
@@ -106,7 +106,8 @@ def prepare_graduate_employment(path_folder_data: str, path_result_folder: str):
                     inplace=True)
 
                 file_error_df = check_error_mon_grad_spo(checked_first_sheet_df,
-                                                         name_file,check_required_dct['Выпуск-СПО']['Количество строк заголовка']+1)  # отправляем на проверку без 73 и Unnamed
+                                                         name_file, check_required_dct['Выпуск-СПО'][
+                                                             'Количество строк заголовка'] + 1)  # отправляем на проверку без 73 и Unnamed
                 error_df = pd.concat([error_df, file_error_df], axis=0, ignore_index=True)
                 if len(file_error_df) != 0:
                     continue
@@ -116,26 +117,27 @@ def prepare_graduate_employment(path_folder_data: str, path_result_folder: str):
                 """
                 # Обрабатываем данные с листа Выпуск-Целевое
                 df_second_sheet = pd.read_excel(f'{path_folder_data}/{file}',
-                                               sheet_name=check_required_dct['Выпуск-Целевое']['Реальное название листа'],
-                                               skiprows=check_required_dct['Выпуск-Целевое'][
-                                                   'Количество строк заголовка'],dtype=str)
+                                                sheet_name=check_required_dct['Выпуск-Целевое'][
+                                                    'Реальное название листа'],
+                                                skiprows=check_required_dct['Выпуск-Целевое'][
+                                                    'Количество строк заголовка'], dtype=str)
 
                 # проводим обработку только если лист заполнен данными
                 if len(df_second_sheet) != 0:
                     # удаляем строки с суммами и пустые строки
                     df_second_sheet = df_second_sheet[df_second_sheet['1'].notna()]
-                    lst_int_columns_second_sheet = ['5','6','7','8','9','10','11','12']
-                    df_second_sheet[lst_int_columns_second_sheet] = df_second_sheet[lst_int_columns_second_sheet].applymap(convert_to_int)
-                    file_error_df = check_error_mon_grad_target(df_first_sheet.copy(),df_second_sheet.copy(),name_file,
-                                                                check_required_dct['Выпуск-Целевое']['Количество строк заголовка']+1)  # отправляем на проверку без 73 и Unnamed
+                    lst_int_columns_second_sheet = ['5', '6', '7', '8', '9', '10', '11', '12']
+                    df_second_sheet[lst_int_columns_second_sheet] = df_second_sheet[
+                        lst_int_columns_second_sheet].applymap(convert_to_int)
+                    file_error_df = check_error_mon_grad_target(df_first_sheet.copy(), df_second_sheet.copy(),
+                                                                name_file,
+                                                                check_required_dct['Выпуск-Целевое'][
+                                                                    'Количество строк заголовка'] + 1)  # отправляем на проверку без 73 и Unnamed
                     error_df = pd.concat([error_df, file_error_df], axis=0, ignore_index=True)
                     if len(file_error_df) != 0:
                         continue
-                    df_second_sheet.insert(0,'Название файла',name_file) # добавляем колонку для названия файла
+                    df_second_sheet.insert(0, 'Название файла', name_file)  # добавляем колонку для названия файла
                     main_second_df = pd.concat([main_second_df, df_second_sheet], axis=0, ignore_index=True)
-
-
-
 
                 # Заполняем словарь данными
                 # перебираем список словарей
@@ -193,11 +195,9 @@ def prepare_graduate_employment(path_folder_data: str, path_result_folder: str):
         # Удаляем лишние колонки
         out_df.drop(columns=[name_column for name_column in out_df.columns if 'Unnamed' in name_column], inplace=True)
 
-
-
         # Сохраняем файл
         wb = openpyxl.Workbook()
-        wb.create_sheet('Выпуск-СПО',index=0)
+        wb.create_sheet('Выпуск-СПО', index=0)
         wb.create_sheet('Выпуск-Целевое', index=1)
 
         # Записываем в файл
@@ -214,12 +214,38 @@ def prepare_graduate_employment(path_folder_data: str, path_result_folder: str):
 
         wb.save(f'{path_result_folder}/Итоговый файл от {current_time}.xlsx')
 
-        #out_df.to_excel(f'{path_result_folder}/Итоговый файл от {current_time}.xlsx', index=False)
+        # out_df.to_excel(f'{path_result_folder}/Итоговый файл от {current_time}.xlsx', index=False)
 
         # Сохраняем файл с ошибками
         error_df.to_excel(f'{path_result_folder}/Ошибки {current_time}.xlsx', index=False)
-    except ZeroDivisionError:
-        print('dssd')
+
+    except NameError:
+        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
+                             f'Выберите файлы с данными и папку куда будет генерироваться файл')
+    except KeyError as e:
+        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
+                             f'Не найдено значение {e.args}')
+    except FileNotFoundError:
+        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
+                             f'Перенесите файлы которые вы хотите обработать в корень диска. Проблема может быть\n '
+                             f'в слишком длинном пути к обрабатываемым файлам')
+
+    except PermissionError as e:
+        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
+                             f'Закройте открытые файлы Excel {e.args}')
+    except Exception as e:
+        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
+                             f'При обработке файла {name_file} возникла ошибка {e.args} !!!\n'
+                             f'Проверьте файл на соответствие шаблону')
+    else:
+        if error_df.shape[0] != 0:
+            messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
+                                 'Обнаружены ошибки в обрабатываемых файлах.\n'
+                                 'Названия файлов с ошибками и ошибки вы можете найти в файле Ошибки.\n'
+                                 'Исправьте ошибки и запустите повторную обработку для того чтобы получить полный результат.')
+        else:
+            messagebox.showinfo('Кассандра Подсчет данных по трудоустройству выпускников',
+                                'Данные успешно обработаны.Ошибок не обнаружено')
 
 
 if __name__ == '__main__':
