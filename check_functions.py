@@ -148,9 +148,10 @@ def base_check_file(file: str, path_folder_data: str, requred_columns_first_shee
             checked_required_sheet['Выпуск-Целевое']['Количество строк заголовка'] = result_find_second_header
 
         # Ищем размер заголовка третьего листа
-        result_find_third_header = find_header_lenght(temp_wb, name_prof_sheet, 2,'1')
-        if result_find_third_header:
-            checked_required_sheet['Выпуск-Профессионалитет']['Количество строк заголовка'] = result_find_third_header
+        if name_prof_sheet:
+            result_find_third_header = find_header_lenght(temp_wb, name_prof_sheet, 2,'1')
+            if result_find_third_header:
+                checked_required_sheet['Выпуск-Профессионалитет']['Количество строк заголовка'] = result_find_third_header
 
 
 

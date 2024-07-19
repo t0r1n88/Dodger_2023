@@ -259,9 +259,9 @@ def prepare_graduate_employment(path_folder_data: str, path_result_folder: str):
     except NameError:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
                              f'Выберите файлы с данными и папку куда будет генерироваться файл')
-    except KeyError as e:
-        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
-                             f'Не найдено значение {e.args}')
+    # except KeyError as e:
+    #     messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
+    #                          f'Не найдено значение {e.args}')
     except FileNotFoundError:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
                              f'Перенесите файлы которые вы хотите обработать в корень диска. Проблема может быть\n '
