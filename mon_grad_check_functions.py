@@ -351,6 +351,68 @@ def check_error_mon_grad_target(spo_df: pd.DataFrame, target_df: pd.DataFrame, n
     return error_df
 
 
+def check_first_error_grad_prof(df: pd.DataFrame, name_file: str, number_row: int):
+    """
+    Функция для проверки условия Графа 8 = сумма граф 9 + 10 + 11 + 12+ 13.
+    """
+    temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки'])
 
+    check_sum_columns = ['9', '10', '11',
+                         '12','13']
+    df['Сумма'] = df[check_sum_columns].sum(axis=1)
+    df['Результат'] = df['8'] == df['Сумма']
+    df['Результат'] = df['Результат'].apply(lambda x: 'Правильно' if x else 'Неправильно')
+    name_spec = df['1'].tolist()[0]
+    if df.iloc[0, -1] == 'Неправильно':
+        first_value = df['8'].tolist()[0]
+        second_value = df['Сумма'].tolist()[0]
+        temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки'],
+                                     data=[[name_file, f'Строка {number_row}- {name_spec}',
+                                            f'Лист Выпуск-Профессионалитет. Не выполняется условие: Графа 8 = сумма значений граф с 9 по 13. Графа 8 = {first_value}, сумма граф = {second_value}']])
+        return temp_error_df
+
+    return temp_error_df
+
+def check_second_error_grad_prof(df: pd.DataFrame, name_file: str, number_row: int):
+    """
+    Функция для проверки условия Графа 6 = сумма граф 7 и 8.
+    """
+    temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки'])
+
+    check_sum_columns = ['7', '8']
+    df['Сумма'] = df[check_sum_columns].sum(axis=1)
+    df['Результат'] = df['6'] == df['Сумма']
+    df['Результат'] = df['Результат'].apply(lambda x: 'Правильно' if x else 'Неправильно')
+    name_spec = df['1'].tolist()[0]
+    if df.iloc[0, -1] == 'Неправильно':
+        first_value = df['6'].tolist()[0]
+        second_value = df['Сумма'].tolist()[0]
+        temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки'],
+                                     data=[[name_file, f'Строка {number_row}- {name_spec}',
+                                            f'Лист Выпуск-Профессионалитет. Не выполняется условие: Графа 6 = сумма значений граф  7 и 8. Графа 6 = {first_value}, сумма граф = {second_value}']])
+        return temp_error_df
+
+    return temp_error_df
+
+
+def check_error_mon_grad_prof(prof_df:pd.DataFrame,name_file, correction):
+    """
+    Функция для подсчета данных с листа профессионалитет
+    """
+
+    error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
+
+    border = 0
+    for i in range(1, len(prof_df) + 1):
+        row_df = prof_df.iloc[border, :].to_frame().transpose()  # получаем датафрейм строку
+        # проверяем Графа 8 = сумма граф  9 + 10 + 11 + 12+13
+        first_error_df_grad_prof = check_first_error_grad_prof(row_df.copy(), name_file, correction + i)
+        error_df = pd.concat([error_df, first_error_df_grad_prof], axis=0, ignore_index=True)
+        # Проверяем Графа 6 =  графы 7 +8
+        second_error_df_grad_prof = check_second_error_grad_prof(row_df.copy(), name_file, correction + i)
+        error_df = pd.concat([error_df, second_error_df_grad_prof], axis=0, ignore_index=True)
+        border += 1
+
+    return error_df
 
 

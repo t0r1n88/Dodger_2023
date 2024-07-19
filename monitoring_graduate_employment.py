@@ -5,7 +5,7 @@
 from check_functions import base_check_file, extract_code_nose
 from support_functions import convert_to_int
 
-from mon_grad_check_functions import create_check_tables_mon_grad, check_error_mon_grad_spo, check_error_mon_grad_target
+from mon_grad_check_functions import create_check_tables_mon_grad, check_error_mon_grad_spo, check_error_mon_grad_target,check_error_mon_grad_prof
 
 import pandas as pd
 import numpy as np
@@ -48,13 +48,19 @@ def prepare_graduate_employment(path_folder_data: str, path_result_folder: str):
     # создаем базовый датафрейм для данных второго листа
     main_second_df = pd.DataFrame(columns=columns_for_out_second_df)
 
+    requred_columns_prof_sheet = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13','14']
+    columns_for_out_prof_df = ['Название файла','1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13','14']
+    main_third_df = pd.DataFrame(columns=columns_for_out_prof_df)
+
+
+
     try:
         for file in os.listdir(path_folder_data):
             if not file.startswith('~$'):
 
                 # Проверяем файл на расширение, наличие нужных листов и колонок
                 file_error_df, check_required_dct = base_check_file(file, path_folder_data, requred_columns_first_sheet,
-                                                                    requred_columns_second_sheet)
+                                                                    requred_columns_second_sheet,requred_columns_prof_sheet)
                 error_df = pd.concat([error_df, file_error_df], axis=0, ignore_index=True)
                 if len(file_error_df) != 0:
                     continue
@@ -139,6 +145,32 @@ def prepare_graduate_employment(path_folder_data: str, path_result_folder: str):
                     df_second_sheet.insert(0, 'Название файла', name_file)  # добавляем колонку для названия файла
                     main_second_df = pd.concat([main_second_df, df_second_sheet], axis=0, ignore_index=True)
 
+                """
+                Обрабатываем лист Выпуск Профессионалитет,если он есть
+                """
+                if check_required_dct['Выпуск-Профессионалитет']['Количество строк заголовка'] and check_required_dct['Выпуск-Профессионалитет']['Реальное название листа']:
+                    # Обрабатываем данные с листа Выпуск-Профессионалитет
+                    df_third_sheet = pd.read_excel(f'{path_folder_data}/{file}',
+                                                    sheet_name=check_required_dct['Выпуск-Профессионалитет'][
+                                                        'Реальное название листа'],
+                                                    skiprows=check_required_dct['Выпуск-Профессионалитет'][
+                                                        'Количество строк заголовка'], dtype=str)
+                    if len(df_third_sheet) != 0:
+                        # удаляем строки с суммами и пустые строки
+                        df_third_sheet = df_third_sheet[df_third_sheet['1'].notna()]
+                        lst_int_columns_third_sheet = ['6', '7', '8', '9', '10', '11', '12','13']
+                        df_third_sheet[lst_int_columns_third_sheet] = df_third_sheet[
+                            lst_int_columns_third_sheet].applymap(convert_to_int)
+
+                        file_error_df = check_error_mon_grad_prof(df_third_sheet.copy(),
+                                                                    name_file,
+                                                                    check_required_dct['Выпуск-Профессионалитет'][
+                                                                        'Количество строк заголовка'] + 1)
+                        error_df = pd.concat([error_df, file_error_df], axis=0, ignore_index=True)
+
+                        df_third_sheet.insert(0, 'Название файла', name_file)  # добавляем колонку для названия файла
+                        main_third_df = pd.concat([main_third_df, df_third_sheet], axis=0, ignore_index=True)
+
                 # Заполняем словарь данными
                 # перебираем список словарей
                 # Создание словаря для хранения данных файла
@@ -199,6 +231,12 @@ def prepare_graduate_employment(path_folder_data: str, path_result_folder: str):
         wb = openpyxl.Workbook()
         wb.create_sheet('Выпуск-СПО', index=0)
         wb.create_sheet('Выпуск-Целевое', index=1)
+        if len(main_third_df) > 0:
+            # Если есть какие то данные по профессионалитету то записываем
+            wb.create_sheet('Выпуск-Профессионалитет', index=2)
+            for r in dataframe_to_rows(main_third_df, index=False, header=True):
+                wb['Выпуск-Профессионалитет'].append(r)
+            wb['Выпуск-Профессионалитет'].column_dimensions['A'].width = 30
 
         # Записываем в файл
         for r in dataframe_to_rows(out_df, index=False, header=True):
@@ -214,7 +252,6 @@ def prepare_graduate_employment(path_folder_data: str, path_result_folder: str):
 
         wb.save(f'{path_result_folder}/Итоговый файл от {current_time}.xlsx')
 
-        # out_df.to_excel(f'{path_result_folder}/Итоговый файл от {current_time}.xlsx', index=False)
 
         # Сохраняем файл с ошибками
         error_df.to_excel(f'{path_result_folder}/Ошибки {current_time}.xlsx', index=False)

@@ -53,7 +53,7 @@ def find_header_lenght(wb: openpyxl.Workbook, name_sheet: str, target_column: in
 
 
 def base_check_file(file: str, path_folder_data: str, requred_columns_first_sheet: list,
-                    requred_columns_second_sheet: list):
+                    requred_columns_second_sheet: list,requred_columns_prof_sheet:list):
     """
     Функция для базовой проверки файла мониторига занятости выпускников загружаемого в СССР. Расширение,наличие нужных листов
     """
@@ -72,7 +72,14 @@ def base_check_file(file: str, path_folder_data: str, requred_columns_first_shee
                                                  'Реальное название листа': None,
                                                  'Обязательные колонки': requred_columns_second_sheet,
                                                  'Не найден лист': 'В файле не найден лист с названием Выпуск-Целевое',
-                                                 'Нет колонок': 'На листе Выпуск-Целевое не найдены колонки:'}}
+                                                 'Нет колонок': 'На листе Выпуск-Целевое не найдены колонки:'},
+                              'Выпуск-Профессионалитет': {'Количество строк заголовка': None,
+                                                 'Название листа': 'Профессионалитет',
+                                                 'Реальное название листа': None,
+                                                 'Обязательные колонки': requred_columns_prof_sheet,
+                                                 'Не найден лист': 'В файле не найден лист с названием Профессионалитет',
+                                                 'Нет колонок': 'На листе Выпуск-Профессионалитет не найдены колонки:'}
+                              }
 
     _error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
 
@@ -92,16 +99,17 @@ def base_check_file(file: str, path_folder_data: str, requred_columns_first_shee
         temp_wb = openpyxl.load_workbook(f'{path_folder_data}/{file}')
         lst_temp_sheets = temp_wb.sheetnames  # получаем листы в файле
 
-        # Создаем переменные для названий листо
-        name_first_sheet = None
-        name_second_sheet = None
+        # Создаем переменные для названий листов
+        name_spo_sheet = None
+        name_target_sheet = None
+        name_prof_sheet = None
 
         # Ищем лист содержащий слово Выпуск-СПО
         for sheet in lst_temp_sheets:
             if checked_required_sheet['Выпуск-СПО']['Название листа'] in sheet:
-                name_first_sheet = sheet
+                name_spo_sheet = sheet
 
-        if not name_first_sheet:
+        if not name_spo_sheet:
             temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
                                                 'Не найден лист содержащий название Выпуск-СПО']],
                                          columns=['Название файла', 'Строка или колонка с ошибкой',
@@ -112,9 +120,9 @@ def base_check_file(file: str, path_folder_data: str, requred_columns_first_shee
         # Ищем лист содержащий слово Выпуск-Целевое
         for sheet in lst_temp_sheets:
             if checked_required_sheet['Выпуск-Целевое']['Название листа'] in sheet:
-                name_second_sheet = sheet
+                name_target_sheet = sheet
 
-        if not name_second_sheet:
+        if not name_target_sheet:
             temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
                                                 'Не найден лист содержащий название Выпуск-Целевое']],
                                          columns=['Название файла', 'Строка или колонка с ошибкой',
@@ -122,20 +130,34 @@ def base_check_file(file: str, path_folder_data: str, requred_columns_first_shee
             _error_df = pd.concat([_error_df, temp_error_df], axis=0, ignore_index=True)
             return _error_df, checked_required_sheet
 
+        # Ищем название листа с названием профессионалитет
+        for sheet in lst_temp_sheets:
+
+            if checked_required_sheet['Выпуск-Профессионалитет']['Название листа'] in sheet:
+                name_prof_sheet = sheet
+
+
         # Ищем размер заголовка первого листа
-        result_find_first_header = find_header_lenght(temp_wb, name_first_sheet, 3,'1.1')
+        result_find_first_header = find_header_lenght(temp_wb, name_spo_sheet, 3,'1.1')
         if result_find_first_header:
             checked_required_sheet['Выпуск-СПО']['Количество строк заголовка'] = result_find_first_header
 
         # Ищем размер заголовка второго листа
-        result_find_second_header = find_header_lenght(temp_wb, name_second_sheet, 2,'1')
+        result_find_second_header = find_header_lenght(temp_wb, name_target_sheet, 2,'1')
         if result_find_second_header:
             checked_required_sheet['Выпуск-Целевое']['Количество строк заголовка'] = result_find_second_header
+
+        # Ищем размер заголовка третьего листа
+        result_find_third_header = find_header_lenght(temp_wb, name_prof_sheet, 2,'1')
+        if result_find_third_header:
+            checked_required_sheet['Выпуск-Профессионалитет']['Количество строк заголовка'] = result_find_third_header
+
+
 
         temp_wb.close()  # закрываем файл
 
         # проверяем наличие требуемых колонок на первом листе
-        temp_df = pd.read_excel(f'{path_folder_data}/{file}', sheet_name=name_first_sheet,
+        temp_df = pd.read_excel(f'{path_folder_data}/{file}', sheet_name=name_spo_sheet,
                                 skiprows=checked_required_sheet['Выпуск-СПО']['Количество строк заголовка'])
 
         temp_df.columns = list(map(str, temp_df.columns))  # делаем названия колонок строковыми
@@ -151,7 +173,7 @@ def base_check_file(file: str, path_folder_data: str, requred_columns_first_shee
             return _error_df, checked_required_sheet
 
         # Провереряем наличие требуемых колонок на втором листе
-        temp_df = pd.read_excel(f'{path_folder_data}/{file}', sheet_name=name_second_sheet,
+        temp_df = pd.read_excel(f'{path_folder_data}/{file}', sheet_name=name_target_sheet,
                                 skiprows=checked_required_sheet['Выпуск-Целевое']['Количество строк заголовка'])
 
         temp_df.columns = list(map(str, temp_df.columns))  # делаем названия колонок строковыми
@@ -168,8 +190,10 @@ def base_check_file(file: str, path_folder_data: str, requred_columns_first_shee
             return _error_df, checked_required_sheet
 
         # получаем реальные названия листов
-        checked_required_sheet['Выпуск-СПО']['Реальное название листа'] = name_first_sheet
-        checked_required_sheet['Выпуск-Целевое']['Реальное название листа'] = name_second_sheet
+        checked_required_sheet['Выпуск-СПО']['Реальное название листа'] = name_spo_sheet
+        checked_required_sheet['Выпуск-Целевое']['Реальное название листа'] = name_target_sheet
+        checked_required_sheet['Выпуск-Профессионалитет']['Реальное название листа'] = name_prof_sheet
+
 
     return _error_df, checked_required_sheet
 
