@@ -1006,9 +1006,6 @@ def processing_data_trudvsem(file_data: str, file_org: str, end_folder: str, reg
     except NameError:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
                              f'Выберите файлы с данными и папку куда будет генерироваться файл')
-    except NotRegion:
-        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
-                             f'Не найден регион {region}! Проверьте написание региона в соответствии с правилами сайта Работа в России')
     # except KeyError as e:
     #     messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
     #                          f'Не найдено значение {e.args}')
@@ -1038,6 +1035,9 @@ if __name__ == '__main__':
         if not os.path.exists(main_end_folder):
             os.makedirs(main_end_folder)
         print(region)
-        processing_data_trudvsem(main_file_data, main_org_file, main_end_folder, region, df)
+        try:
+            processing_data_trudvsem(main_file_data, main_org_file, main_end_folder, region, df)
+        except NotRegion:
+            continue
 
     print('Lindy Booth !!!')
