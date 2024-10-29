@@ -1014,13 +1014,8 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
 
 if __name__ == '__main__':
     main_file_data = 'data/vacancy.csv'
-    main_file_data = 'data/Вакансии СФО 09_04_2024.csv'
-    main_org_file = 'data/company.xlsx'
     main_org_file = 'data/Организации Бурятия.xlsx'
     main_region = 'Республика Бурятия'
-    # main_region = 'Красноярский край'
-
-
 
     main_end_folder = 'c:/Users/1/PycharmProjects/Dodger_2023/data/Республика Бурятия'
 
