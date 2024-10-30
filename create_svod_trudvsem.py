@@ -313,18 +313,24 @@ def prepare_data_vacancy(df: pd.DataFrame, dct_name_columns: dict, lst_columns: 
 
     # Начинаем извлекать данные из сложных колонок с json
     # Данные по образованию
-    df['КПП работодателя'] = df['Данные компании'].apply(lambda x: json.loads(x).get('kpp', 'Не указано'))
+    df['Образование'] = df['Данные по образованию'].apply(lambda x: json.loads(x).get('educationType', 'Не указано'))
+    df['Требуемая специализация'] = df['Данные по образованию'].apply(lambda x: json.loads(x).get('speciality', 'Не указано'))
 
+    # Данные по широте и долготе
+    df['Широта адрес вакансии'] = df['Геоданные'].apply(lambda x: json.loads(x).get('latitude', 'Не указано'))
+    df['Долгота адрес вакансии'] = df['Геоданные'].apply(lambda x: json.loads(x).get('longitude', 'Не указано'))
 
 
 
     # данные по работодателю
     df['КПП работодателя'] = df['Данные компании'].apply(lambda x: json.loads(x).get('kpp', 'Не указано'))
     df['ОГРН работодателя'] = df['Данные компании'].apply(lambda x: json.loads(x).get('ogrn', 'Не указано'))
+    df['ИНН работодателя'] = df['Данные компании'].apply(lambda x: json.loads(x).get('inn', 'Не указано'))
     df['Контактный телефон'] = df['Данные компании'].apply(lambda x: json.loads(x).get('phone', 'Не указано'))
     df['Email работодателя'] = df['Данные компании'].apply(lambda x: json.loads(x).get('email', 'Не указано'))
     df['Профиль работодателя'] = df['Данные компании'].apply(lambda x: json.loads(x).get('url', 'Не указано'))
-    df['ID работодателя'] = df['Профиль работодателя'].apply(extract_id_company)
+    df['Сайт работодателя'] = df['Данные компании'].apply(lambda x: json.loads(x).get('site', 'Не указано'))
+    df['ID работодателя'] = df['Данные компании'].apply(lambda x: json.loads(x).get('companyCode', 'Не указано'))
 
 
     # Обрабатываем колонку с языками
@@ -335,7 +341,8 @@ def prepare_data_vacancy(df: pd.DataFrame, dct_name_columns: dict, lst_columns: 
     df['Требуемые софтскиллы'] = df['Данные по софтскиллам'].apply(
         lambda x: extract_data_from_list_cell(x, ['soft_skill_name']))
 
-    df.drop(columns=['Данные компании', 'Данные по языкам', 'Данные по хардскиллам', 'Данные по софтскиллам'],
+    df.drop(columns=['Данные компании', 'Данные по языкам', 'Данные по хардскиллам', 'Данные по софтскиллам','Данные по образованию',
+                     'Геоданные'],
             inplace=True)
 
     df = df.reindex(columns=lst_columns)
@@ -380,6 +387,7 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
                         'languageKnowledge': 'Данные по языкам', 'hardSkills': 'Данные по хардскиллам',
                         'softSkills': 'Данные по софтскиллам',
                         'vacancyUrl': 'Ссылка на вакансию',
+                        'geo': 'Геоданные',
                         }
 
     try:
@@ -400,7 +408,7 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
                        'Требуемые языки','Требуемые хардскиллы','Требуемые софтскиллы','Для иностранцев','Программа трудовой мобильности',
                        'Источник вакансии','Статус проверки вакансии','Полное название работодателя','Краткое название работодателя','Муниципалитет','Адрес вакансии','Доп информация по адресу вакансии',
                        'ИНН работодателя','КПП работодателя','ОГРН работодателя','Контактное лицо','Контактный телефон','Email работодателя',
-                       'Профиль работодателя','Широта адрес вакансии','Долгота адрес вакансии','ID вакансии','ID работодателя','Ссылка на вакансию']
+                       'Профиль работодателя','Сайт работодателя','Широта адрес вакансии','Долгота адрес вакансии','ID вакансии','ID работодателя','Ссылка на вакансию']
 
         # Список колонок с текстом
         lst_text_columns = ['Вакансия', 'Требуемая специализация', 'Требования',
