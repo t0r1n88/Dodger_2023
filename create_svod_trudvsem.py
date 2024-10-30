@@ -176,16 +176,32 @@ def extract_municipality(cell):
         else:
             return 'Не определен'
 
+def extract_salary(cell):
+    """
+    Функция для извлечения значения зарплаты
+    """
+    if isinstance(cell,str):
+        value = cell.replace('от ','')
+        try:
+            return int(value)
+        except:
+            result = re.search(r'\d+',value)
+            if result:
+                return result.group(0)
+            else:
+                return 0
+    else:
+        return cell
+
 def prepare_data_vacancy(df: pd.DataFrame, dct_name_columns: dict, lst_columns: list) -> pd.DataFrame:
     """
     Функция для обработки датафрейма с данными работы в России
     """
-    base_url = 'https://trudvsem.ru/vacancy/card/' # базовая ссылка для формирования ссылки на вакансию
+    dct_status_accommodationType = {'DORMITORY':'Общежитие','FLAT':'Квартира',
+                      'HOUSE':'Дом','ROOM':'Комната'}
 
-    # Словарь для замены статусов подтверждения вакансии
-    dct_status_vacancy = {'ACCEPTED':'Данные вакансии проверены работодателем','AUTOMODERATION':'Автомодерация',
-                      'REJECTED':'Отклонено','CHANGED':'Статус вакансии изменен',
-                      'WAITING':'Ожидает подтверждения',}
+    dct_status_companyBusinessSize = {'SMALL':'Малая','MIDDLE':'Средняя',
+                      'MICRO':'Микро'}
 
     # Словарь для аббревиатур
     dct_abbr = {'ОБЩЕСТВО С ОГРАНИЧЕННОЙ ОТВЕТСТВЕННОСТЬЮ':'ООО','КРАЕВОЕ ГОСУДАРСТВЕННОЕ АВТОНОМНОЕ УЧРЕЖДЕНИЕ':'КГАУ',
@@ -262,11 +278,14 @@ def prepare_data_vacancy(df: pd.DataFrame, dct_name_columns: dict, lst_columns: 
     df['Краткое название работодателя'] = df['Полное название работодателя'].apply(lambda x:x.upper() if isinstance(x,str) else x).replace(dct_abbr,regex=True)
 
     # Числовые
-    lst_number_columns = ['Требуемый опыт работы в годах', 'Минимальная зарплата', 'Максимальная зарплата',
-                          'Количество рабочих мест']
-
+    lst_number_columns = ['Требуемый опыт работы в годах','Количество рабочих мест']
     df[lst_number_columns] = df[lst_number_columns].fillna(0)
     df[lst_number_columns] = df[lst_number_columns].astype(int, errors='ignore')
+
+    # Создаем числовую колонку для минимальной зарплаты извлекая цифры оттуда
+    df['Минимальная зарплата'] = df['Зарплата'].fillna(0)
+    df['Минимальная зарплата'] = df['Минимальная зарплата'].apply(extract_salary)
+
 
     # Создаем колонку с категориями минимальной зарплаты
     category = ['До 25 тысяч','25-50 тысяч','50-75 тысяч','75-100 тысяч','Свыше 100 тысяч']
@@ -277,13 +296,28 @@ def prepare_data_vacancy(df: pd.DataFrame, dct_name_columns: dict, lst_columns: 
 
     df['Дата размещения вакансии'] = df['Дата размещения вакансии'].apply(convert_date)
     df['Дата изменения вакансии'] = df['Дата изменения вакансии'].apply(convert_date)
-
     # Категориальные
     df['Квотируемое место'] = df['Квотируемое место'].apply(lambda x: 'Квотируемое место' if x == 'true' else None)
     df['Требуется медкнижка'] = df['Требуется медкнижка'].apply(
         lambda x: 'Требуется медкнижка' if x == 'true' else None)
-    df['Статус проверки вакансии'] = df['Статус проверки вакансии'].replace(dct_status_vacancy)
+
+    df['Жилье от организации'] = df['Жилье от организации'].apply(lambda x: 'Предоставляется жилье' if x == 'true' else None)
+    df['Тип жилья'] = df['Тип жилья'].replace(dct_status_accommodationType)
+
+    df['Размер организации'] = df['Размер организации'].replace(dct_status_companyBusinessSize)
+
+
+    df['Для иностранцев'] = df['Для иностранцев'].apply(lambda x: 'Для иностранных специалистов' if x == 'true' else None)
+    df['Программа трудовой мобильности'] = df['Программа трудовой мобильности'].apply(lambda x: 'Вакансия по программе трудовой мобильности' if x == 'true' else None)
+
+
     # Начинаем извлекать данные из сложных колонок с json
+    # Данные по образованию
+    df['КПП работодателя'] = df['Данные компании'].apply(lambda x: json.loads(x).get('kpp', 'Не указано'))
+
+
+
+
     # данные по работодателю
     df['КПП работодателя'] = df['Данные компании'].apply(lambda x: json.loads(x).get('kpp', 'Не указано'))
     df['ОГРН работодателя'] = df['Данные компании'].apply(lambda x: json.loads(x).get('ogrn', 'Не указано'))
@@ -291,7 +325,6 @@ def prepare_data_vacancy(df: pd.DataFrame, dct_name_columns: dict, lst_columns: 
     df['Email работодателя'] = df['Данные компании'].apply(lambda x: json.loads(x).get('email', 'Не указано'))
     df['Профиль работодателя'] = df['Данные компании'].apply(lambda x: json.loads(x).get('url', 'Не указано'))
     df['ID работодателя'] = df['Профиль работодателя'].apply(extract_id_company)
-    df['Ссылка на вакансию'] = base_url + df['ID работодателя'] + '/' + df['ID вакансии']
 
 
     # Обрабатываем колонку с языками
@@ -321,7 +354,7 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
     # колонки которые нужно оставить и переименовать
     dct_name_columns = {'id':'ID вакансии','busyType': 'Тип занятости', 'contactPerson': 'Контактное лицо',
                         'creationDate': 'Дата размещения вакансии',
-                        'dateModify': 'Дата изменения вакансии', 'educationRequirements': 'Образование',
+                        'dateModify': 'Дата изменения вакансии', 'educationRequirements': 'Данные по образованию',
                          'isQuoted': 'Квотируемое место',
                          'accommodationCapability': 'Жилье от организации',
                          'accommodationType': 'Тип жилья',
@@ -329,7 +362,7 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
                         'otherVacancyBenefit': 'Бонусы', 'positionRequirements': 'Требования',
                         'regionName': 'Регион',
                         'foreignWorkersCapability': 'Для иностранцев',
-                        'isMobilityProgram ': 'Программа трудовой мобильности',
+                        'isMobilityProgram': 'Программа трудовой мобильности',
                         'experienceRequirements': 'Требуемый опыт работы в годах',
                         'retrainingCapability': 'Возможность переподготовки',
                         'requiredСertificates': 'Требуемые доп. документы',
@@ -345,7 +378,9 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
                         'fullCompanyName': 'Полное название работодателя', 'companyBusinessSize': 'Размер организации',
                         'company': 'Данные компании',
                         'languageKnowledge': 'Данные по языкам', 'hardSkills': 'Данные по хардскиллам',
-                        'softSkills': 'Данные по софтскиллам'}
+                        'softSkills': 'Данные по софтскиллам',
+                        'vacancyUrl': 'Ссылка на вакансию',
+                        }
 
     try:
         t = time.localtime()  # получаем текущее время и дату
@@ -360,6 +395,7 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
                        'Зарплата','Минимальная зарплата','Категория минимальной зарплаты','График работы','Тип занятости','Образование','Требуемая специализация',
                        'Требования','Бонусы','Жилье от организации','Тип жилья','Возможность переподготовки','Размер стипендии','Компенсация транспорт',
                        'Квотируемое место','Социально защищенная категория',
+                       'Для иностранцев','Программа трудовой мобильности',
                        'Требуемый опыт работы в годах','Требуется медкнижка','Требуемые доп. документы','Требуемые водительские права',
                        'Требуемые языки','Требуемые хардскиллы','Требуемые софтскиллы','Для иностранцев','Программа трудовой мобильности',
                        'Источник вакансии','Статус проверки вакансии','Полное название работодателя','Краткое название работодателя','Муниципалитет','Адрес вакансии','Доп информация по адресу вакансии',
@@ -382,9 +418,12 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
         # получаем обработанный датафрейм со всеми статусами вакансий
         all_status_prepared_df = prepare_data_vacancy(df, dct_name_columns,lst_columns)
 
+        all_status_prepared_df.to_excel('data/test.xlsx',index=False)
+        raise ZeroDivisionError
+
         # получаем датафрейм только с подтвержденными вакансиями
         prepared_df = all_status_prepared_df[
-            all_status_prepared_df['Статус проверки вакансии'] == 'Данные вакансии проверены работодателем']
+            all_status_prepared_df['Статус проверки вакансии'] == 'Одобрено']
         union_company_df_columns = list(prepared_df.columns).insert(0, 'Организация')
         union_company_df = pd.DataFrame(columns=union_company_df_columns)
 
@@ -992,20 +1031,20 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
     except NameError:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
                                  f'Выберите файлы с данными и папку куда будет генерироваться файл')
-    except NotRegion:
-        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
-                                 f'Не найден регион! Проверьте написание региона в соответствии с правилами сайта Работа в России')
-    except KeyError as e:
-        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
-                             f'Не найдено значение {e.args}')
-
-    except PermissionError as e:
-        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
-                             f'Закройте открытые файлы Excel {e.args}')
-    except OSError:
-        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
-                             f'Укажите в качестве конечной папки, папку в корне диска с коротким названием. Проблема может быть\n '
-                             f'в слишком длинном пути к создаваемому файлу')
+    # except NotRegion:
+    #     messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
+    #                              f'Не найден регион! Проверьте написание региона в соответствии с правилами сайта Работа в России')
+    # except KeyError as e:
+    #     messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
+    #                          f'Не найдено значение {e.args}')
+    #
+    # except PermissionError as e:
+    #     messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
+    #                          f'Закройте открытые файлы Excel {e.args}')
+    # except OSError:
+    #     messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
+    #                          f'Укажите в качестве конечной папки, папку в корне диска с коротким названием. Проблема может быть\n '
+    #                          f'в слишком длинном пути к создаваемому файлу')
 
     else:
         messagebox.showinfo('Кассандра Подсчет данных по трудоустройству выпускников',
