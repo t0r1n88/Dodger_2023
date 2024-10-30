@@ -337,9 +337,9 @@ def prepare_data_vacancy(df: pd.DataFrame, dct_name_columns: dict, lst_columns: 
     df['Требуемые языки'] = df['Данные по языкам'].apply(
         lambda x: extract_data_from_list_cell(x, ['code_language', 'level']))
     df['Требуемые хардскиллы'] = df['Данные по хардскиллам'].apply(
-        lambda x: extract_data_from_list_cell(x, ['hard_skill_name']))
+        lambda x: ','.join(ast.literal_eval(x)))
     df['Требуемые софтскиллы'] = df['Данные по софтскиллам'].apply(
-        lambda x: extract_data_from_list_cell(x, ['soft_skill_name']))
+        lambda x: ','.join(ast.literal_eval(x)))
 
     df.drop(columns=['Данные компании', 'Данные по языкам', 'Данные по хардскиллам', 'Данные по софтскиллам','Данные по образованию',
                      'Геоданные'],
