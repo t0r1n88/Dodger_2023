@@ -306,7 +306,7 @@ def prepare_data_vacancy(df: pd.DataFrame, dct_name_columns: dict, lst_columns: 
     df['Размер организации'] = df['Размер организации'].replace(dct_status_companyBusinessSize)
 
 
-    df['Для иностранцев'] = df['Для иностранцев'].astype(str).apply(lambda x: 'Для иностранных специалистов' if x == 'True' else None)
+    df['Для иностранцев'] = df['Для иностранцев'].astype(str).apply(lambda x: 'Возможно трудоустройство иностранных граждан' if x == 'True' else None)
     df['Программа трудовой мобильности'] = df['Программа трудовой мобильности'].astype(str).apply(lambda x: 'Вакансия по программе трудовой мобильности' if x == 'True' else None)
     df['Возможность переподготовки'] = df['Возможность переподготовки'].astype(str).apply(lambda x: 'Да' if x == 'True' else None)
 
@@ -406,7 +406,7 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
                        'Для иностранцев','Программа трудовой мобильности',
                        'Требуемый опыт работы в годах','Требуется медкнижка','Требуемые доп. документы','Требуемые водительские права',
                        'Требуемые языки','Требуемые хардскиллы','Требуемые софтскиллы',
-                       'Источник вакансии','Статус проверки вакансии','Полное название работодателя','Краткое название работодателя','Муниципалитет','Адрес вакансии','Доп информация по адресу вакансии',
+                       'Источник вакансии','Статус проверки вакансии','Размер организации','Полное название работодателя','Краткое название работодателя','Муниципалитет','Адрес вакансии','Доп информация по адресу вакансии',
                        'ИНН работодателя','КПП работодателя','ОГРН работодателя','Контактное лицо','Контактный телефон','Email работодателя',
                        'Профиль работодателя','Сайт работодателя','Широта адрес вакансии','Долгота адрес вакансии','ID вакансии','ID работодателя','Ссылка на вакансию']
 
@@ -426,8 +426,6 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
         # получаем обработанный датафрейм со всеми статусами вакансий
         all_status_prepared_df = prepare_data_vacancy(df, dct_name_columns,lst_columns)
 
-        all_status_prepared_df.to_excel('data/test.xlsx',index=False)
-        raise ZeroDivisionError
 
         # получаем датафрейм только с подтвержденными вакансиями
         prepared_df = all_status_prepared_df[
@@ -489,20 +487,36 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
             quote_df = prepared_df[prepared_df['Квотируемое место'] == 'Квотируемое место']
             soc_df = prepared_df[~prepared_df['Социально защищенная категория'].isna()]
 
+            # Создаем 3 датафрейма по вакансием с предоставлением жилья, для мобильной занятости, для иностранных специалистов,
+            accommodation_df = prepared_df[prepared_df['Жилье от организации'] == 'Предоставляется жилье']
+            program_mobile_df = prepared_df[prepared_df['Программа трудовой мобильности'] == 'Вакансия по программе трудовой мобильности']
+            migrant_mobile_df = prepared_df[prepared_df['Для иностранцев'] == 'Возможно трудоустройство иностранных граждан']
             if len(union_company_df) != 0:
                 union_company_df.sort_values(by=['Вакансия'], inplace=True)
                 union_company_df[lst_text_columns] = union_company_df[lst_text_columns].applymap(clean_equal)
                 company_quote_df = union_company_df[union_company_df['Квотируемое место'] == 'Квотируемое место']
                 company_soc_df = union_company_df[~union_company_df['Социально защищенная категория'].isna()]
+                # Создаем 3 датафрейма по вакансием с предоставлением жилья, для мобильной занятости, для иностранных специалистов,
+                company_accommodation_df = union_company_df[union_company_df['Жилье от организации'] == 'Предоставляется жилье']
+                company_program_mobile_df = union_company_df[
+                    union_company_df['Программа трудовой мобильности'] == 'Вакансия по программе трудовой мобильности']
+                company_migrant_mobile_df = union_company_df[
+                    union_company_df['Для иностранцев'] == 'Возможно трудоустройство иностранных граждан']
                 with pd.ExcelWriter(f'{org_folder}/Общий файл.xlsx') as writer:
                     union_company_df.to_excel(writer, sheet_name='Общий список', index=False)
                     company_quote_df.to_excel(writer, sheet_name='Квотируемые', index=False)
                     company_soc_df.to_excel(writer, sheet_name='Для соц категорий', index=False)
+                    company_accommodation_df.to_excel(writer, sheet_name='С предоставлением жилья', index=False)
+                    company_program_mobile_df.to_excel(writer, sheet_name='Трудовая мобильность', index=False)
+                    company_migrant_mobile_df.to_excel(writer, sheet_name='Для иностранцев', index=False)
 
             with pd.ExcelWriter(f'{end_folder}/Вакансии по региону от {current_time}.xlsx') as writer:
                 prepared_df.to_excel(writer, sheet_name='Только подтвержденные вакансии', index=False)
                 quote_df.to_excel(writer, sheet_name='Квотируемые', index=False)
                 soc_df.to_excel(writer, sheet_name='Для соц категорий', index=False)
+                accommodation_df.to_excel(writer, sheet_name='С предоставлением жилья', index=False)
+                program_mobile_df.to_excel(writer, sheet_name='Трудовая мобильность', index=False)
+                migrant_mobile_df.to_excel(writer, sheet_name='Для иностранцев', index=False)
                 all_status_prepared_df.to_excel(writer, sheet_name='Вакансии со всеми статусами', index=False)
         except IllegalCharacterError:
             # Если в тексте есть ошибочные символы то очищаем данные
@@ -512,21 +526,37 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
 
             quote_df = prepared_df[prepared_df['Квотируемое место'] == 'Квотируемое место']
             soc_df = prepared_df[~prepared_df['Социально защищенная категория'].isna()]
+            # Создаем 3 датафрейма по вакансием с предоставлением жилья, для мобильной занятости, для иностранных специалистов,
+            accommodation_df = prepared_df[prepared_df['Жилье от организации'] == 'Предоставляется жилье']
+            program_mobile_df = prepared_df[prepared_df['Программа трудовой мобильности'] == 'Вакансия по программе трудовой мобильности']
+            migrant_mobile_df = prepared_df[prepared_df['Для иностранцев'] == 'Возможно трудоустройство иностранных граждан']
 
             if len(union_company_df) != 0:
                 union_company_df.sort_values(by=['Вакансия'], inplace=True)
                 union_company_df[lst_text_columns] = union_company_df[lst_text_columns].applymap(clean_text)
                 company_quote_df = union_company_df[union_company_df['Квотируемое место'] == 'Квотируемое место']
                 company_soc_df = union_company_df[~union_company_df['Социально защищенная категория'].isna()]
+                # Создаем 3 датафрейма по вакансием с предоставлением жилья, для мобильной занятости, для иностранных специалистов,
+                company_accommodation_df = union_company_df[union_company_df['Жилье от организации'] == 'Предоставляется жилье']
+                company_program_mobile_df = union_company_df[
+                    union_company_df['Программа трудовой мобильности'] == 'Вакансия по программе трудовой мобильности']
+                company_migrant_mobile_df = union_company_df[union_company_df['Для иностранцев'] == 'Возможно трудоустройство иностранных граждан']
+
                 with pd.ExcelWriter(f'{org_folder}/Общий файл.xlsx') as writer:
                     union_company_df.to_excel(writer, sheet_name='Общий список', index=False)
                     company_quote_df.to_excel(writer, sheet_name='Квотируемые', index=False)
                     company_soc_df.to_excel(writer, sheet_name='Для соц категорий', index=False)
+                    company_accommodation_df.to_excel(writer, sheet_name='С предоставлением жилья', index=False)
+                    company_program_mobile_df.to_excel(writer, sheet_name='Трудовая мобильность', index=False)
+                    company_migrant_mobile_df.to_excel(writer, sheet_name='Для иностранцев', index=False)
 
             with pd.ExcelWriter(f'{end_folder}/Вакансии по региону от {current_time}.xlsx') as writer:
                 prepared_df.to_excel(writer, sheet_name='Только подтвержденные вакансии', index=False)
                 quote_df.to_excel(writer, sheet_name='Квотируемые', index=False)
                 soc_df.to_excel(writer, sheet_name='Для соц категорий', index=False)
+                accommodation_df.to_excel(writer, sheet_name='С предоставлением жилья', index=False)
+                program_mobile_df.to_excel(writer, sheet_name='Трудовая мобильность', index=False)
+                migrant_mobile_df.to_excel(writer, sheet_name='Для иностранцев', index=False)
                 all_status_prepared_df.to_excel(writer, sheet_name='Вакансии со всеми статусами', index=False)
 
 
