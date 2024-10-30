@@ -11,7 +11,7 @@ from opk_employment import prepare_opk_employment  # импортируем фу
 from create_svod_trudvsem import processing_data_trudvsem # импортируем функцию для обработки данных с трудвсем
 from contrast_svod_trudvsem import prepare_diff_svod_trudvsem # импортируем функцию для измерения разницы между двумя сводами
 from difference import prepare_diffrence  # импортируем функцию для нахождения разницы между двумя таблицами
-
+import sys
 import pandas as pd
 import os
 from tkinter import *
@@ -463,7 +463,7 @@ def show_textmenu(event):
 
 if __name__ == '__main__':
     window = Tk()
-    window.title('Кассандра Подсчет данных по трудоустройству выпускников ver 6.0')
+    window.title('Кассандра Подсчет данных по трудоустройству выпускников ver 6.1')
     # Устанавливаем размер и положение окна
     set_window_size(window)
     window.resizable(True, True)
