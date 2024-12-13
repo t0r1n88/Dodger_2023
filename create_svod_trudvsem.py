@@ -21,6 +21,12 @@ class NotRegion(Exception):
     """
     pass
 
+class NotColumn(Exception):
+    """
+    Класс для отслеживания наличия колонки указанной в параметрах в датафрейме
+    """
+    pass
+
 
 
 def extract_data_from_list_cell(cell: str, lst_need_keys: list):
@@ -192,6 +198,36 @@ def extract_salary(cell):
                 return 0
     else:
         return cell
+
+def filtred_df(df:pd.DataFrame,params_filter:str):
+    """
+    Функция для фильтрации датафрейма по указанным значениям в колонке
+    """
+    params_df = pd.read_excel(params_filter,dtype=str,usecols='A') # считываем параметры фильтрации
+    # проверяем наличие колонки в датафрейме
+    name_filter_column = params_df.columns[0]
+    if name_filter_column not in df.columns:
+        raise NotColumn
+    params_df.dropna(inplace=True) # очищаем от пустых строк
+    lst_filter_values = params_df[name_filter_column].tolist() # делаем список значений
+    lst_filter_values = list(map(str,lst_filter_values)) # делаем строковыми значения
+    lst_filter_values = list(map(lambda x:x.lower(),lst_filter_values)) # Переводим в нижний регистр
+    df[name_filter_column] = df[name_filter_column].astype(str) # делаем строковой колонку
+    df[name_filter_column] = df[name_filter_column].apply(lambda x:x.lower()) # делаем строковой колонку
+    df = df[df[name_filter_column].str.contains('|'.join(lst_filter_values))]# фильтруем
+    df[name_filter_column] = df[name_filter_column].apply(lambda x:x.capitalize()) # делаем строковой колонку
+
+    return df
+
+
+
+
+
+
+
+
+
+
 
 def prepare_data_vacancy(df: pd.DataFrame, dct_name_columns: dict, lst_columns: list) -> pd.DataFrame:
     """
@@ -600,12 +636,13 @@ def create_svod_for_df(prepared_df:pd.DataFrame,svod_region_folder:str,name_file
 
 
 
-def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:str):
+def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:str,param_filter:str):
     """
     Основная функция для обработки данных
     :param file_data: файл в формате csv с данными вакансий
     :param file_org: файл с данными организаций по которым нужно сделать отдельный свод
     :param region: регион вакансии которого нужно обработать
+    :param param_filter: файл с параметрами по которым нужно отфильтровать датафрейм
     :param end_folder: конечная папка
     """
     # колонки которые нужно оставить и переименовать
@@ -675,6 +712,8 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
         del main_df # очищаем память
         # получаем обработанный датафрейм со всеми статусами вакансий
         all_status_prepared_df = prepare_data_vacancy(df, dct_name_columns,lst_columns)
+
+        all_status_prepared_df = filtred_df(all_status_prepared_df,param_filter) # отфильтровываем датафрейм
 
 
         # получаем датафрейм только с подтвержденными вакансиями
@@ -1105,9 +1144,11 @@ if __name__ == '__main__':
     main_file_data = 'data/vacancy.csv'
     main_org_file = 'data/Организации Бурятия.xlsx'
     main_region = 'Республика Бурятия'
+    main_param_filter = 'data/Параметры отбора.xlsx'
 
     main_end_folder = 'c:/Users/1/PycharmProjects/Dodger_2023/data/Республика Бурятия'
+    main_end_folder = 'c:/Users/1/PycharmProjects/Dodger_2023/data/'
 
-    processing_data_trudvsem(main_file_data,main_org_file,main_end_folder,main_region)
+    processing_data_trudvsem(main_file_data,main_org_file,main_end_folder,main_region,main_param_filter)
 
     print('Lindy Booth !!!')
