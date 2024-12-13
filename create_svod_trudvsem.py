@@ -21,6 +21,13 @@ class NotRegion(Exception):
     """
     pass
 
+class MoreColumn(Exception):
+    """
+    Класс для отслеживания количества колонок, не более 3
+    """
+    pass
+
+
 class NotColumn(Exception):
     """
     Класс для отслеживания наличия колонки указанной в параметрах в датафрейме
@@ -203,23 +210,48 @@ def filtred_df(df:pd.DataFrame,params_filter:str):
     """
     Функция для фильтрации датафрейма по указанным значениям в колонке
     """
-    params_df = pd.read_excel(params_filter,dtype=str,usecols='A') # считываем параметры фильтрации
-    # проверяем наличие колонки в датафрейме
-    name_filter_column = params_df.columns[0]
-    if name_filter_column not in df.columns:
+    params_df = pd.read_excel(params_filter,dtype=str) # считываем параметры фильтрации
+    data_cols = [value for value in params_df.columns if 'Unnamed' not in value]
+    params_df = params_df[data_cols]
+    # проверяем длину колонок не более 3
+    if len(params_df.columns) > 3:
+        raise MoreColumn
+
+    # проверяем наличие колонок в датафрейме
+    diff_cols = set(params_df.columns).difference(set(df.columns))
+    if len(diff_cols) != 0:
         raise NotColumn
-    params_df.dropna(inplace=True) # очищаем от пустых строк
-    lst_filter_values = params_df[name_filter_column].tolist() # делаем список значений
-    lst_filter_values = list(map(str,lst_filter_values)) # делаем строковыми значения
-    lst_filter_values = list(map(lambda x:x.lower(),lst_filter_values)) # Переводим в нижний регистр
-    df[name_filter_column] = df[name_filter_column].astype(str) # делаем строковой колонку
-    df[name_filter_column] = df[name_filter_column].apply(lambda x:x.lower()) # делаем строковой колонку
-    df = df[df[name_filter_column].str.contains('|'.join(lst_filter_values))]# фильтруем
-    df[name_filter_column] = df[name_filter_column].apply(lambda x:x.capitalize()) # делаем строковой колонку
 
-    return df
+    # Обрабатываем в зависимости от количества колонок
+    if len(params_df.columns) == 1:
+        name_filter_column = params_df.columns[0]
+        lst_filter_values = params_df[name_filter_column].tolist() # делаем список значений
+        lst_filter_values = [value for value in lst_filter_values if not pd.isna(value)] # очищаем от нанов
+        lst_filter_values = list(map(str,lst_filter_values)) # делаем строковыми значения
+        df[name_filter_column] = df[name_filter_column].astype(str) # делаем строковой колонку
+        df = df[df[name_filter_column].str.contains('|'.join(lst_filter_values),case=False)]# фильтруем
 
+        return df
+    if len(params_df.columns) == 2:
+        name_first_filter_column = params_df.columns[0] # первый фильтр
+        name_second_filter_column = params_df.columns[1] # второй фильтр
+        lst_filter_values = params_df[name_first_filter_column].tolist() # делаем список значений
+        lst_filter_values = [value for value in lst_filter_values if not pd.isna(value)]  # очищаем от нанов
+        lst_second_filter_values = params_df[name_second_filter_column].tolist() # делаем список значений второго фильтра
+        lst_second_filter_values = [value for value in lst_second_filter_values if not pd.isna(value)]  # очищаем от нанов
 
+        # первая фильтрация
+        lst_filter_values = list(map(str,lst_filter_values)) # делаем строковыми значения
+        df[name_first_filter_column] = df[name_first_filter_column].astype(str) # делаем строковой колонку
+
+        first_df = df[df[name_first_filter_column].str.contains('|'.join(lst_filter_values),case=False)]# фильтруем
+        # вторая фильтрация
+        lst_second_filter_values = list(map(str,lst_second_filter_values)) # делаем строковыми значения
+        first_df[name_second_filter_column] = first_df[name_second_filter_column].astype(str) # делаем строковой колонку
+
+        second_df = first_df[first_df[name_second_filter_column].str.contains('|'.join(lst_second_filter_values),case=False)]# фильтруем
+
+        return second_df
 
 
 
