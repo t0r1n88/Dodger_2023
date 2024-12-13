@@ -777,7 +777,8 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
         # получаем обработанный датафрейм со всеми статусами вакансий
         all_status_prepared_df = prepare_data_vacancy(df, dct_name_columns,lst_columns)
 
-        all_status_prepared_df = filtred_df(all_status_prepared_df,param_filter) # отфильтровываем датафрейм
+        if param_filter != '' and param_filter != 'Не выбрано':
+            all_status_prepared_df = filtred_df(all_status_prepared_df,param_filter) # отфильтровываем датафрейм
 
 
         # получаем датафрейм только с подтвержденными вакансиями
@@ -1187,6 +1188,14 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
     except NotRegion:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
                                  f'Не найден регион! Проверьте написание региона в соответствии с правилами сайта Работа в России')
+    except MoreColumn:
+        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
+                             f'В файле параметров фильтрации найдено больше 3 колонок. Удалите лишние колонки')
+    except NotColumn as e:
+        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
+                             f'В файле параметров фильтрации обнаружены названия колонок, которых нет в файле Вакансии по региону.\n'
+                             f'Запустите программу без использования файла фильтрации и укажите корректные названия колонок которые есть в файле Вакансии по региону')
+
     except KeyError as e:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
                              f'Не найдено значение {e.args}')

@@ -180,6 +180,15 @@ def select_file_org_trudvsem():
     file_org_svod_trudvsem = filedialog.askopenfilename(filetypes=(('Excel files', '*.xlsx'), ('all files', '*.*')))
 
 
+def select_file_params():
+    """
+    Функция для выбора файла с параметрами обработки
+    """
+    global name_file_params
+    # Получаем путь к файлу
+    name_file_params = filedialog.askopenfilename(filetypes=(('Excel files', '*.xlsx'), ('all files', '*.*')))
+
+
 def select_end_folder_svod_trudvsem():
     """
     Функия для выбора папки.Определенно вот это когда нибудь я перепишу на ООП
@@ -292,7 +301,7 @@ def processing_svod_trudvsem():
     """
     try:
         name_region = str(entry_region.get()) # Получаем название региона
-        processing_data_trudvsem(file_csv_svod_trudvsem, file_org_svod_trudvsem,path_to_end_folder_svod_trudvsem,name_region)
+        processing_data_trudvsem(file_csv_svod_trudvsem, file_org_svod_trudvsem,path_to_end_folder_svod_trudvsem,name_region,name_file_params)
 
     except NameError:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
@@ -463,7 +472,7 @@ def show_textmenu(event):
 
 if __name__ == '__main__':
     window = Tk()
-    window.title('Кассандра Подсчет данных по трудоустройству выпускников ver 6.1')
+    window.title('Кассандра Подсчет данных по трудоустройству выпускников ver 6.2')
     # Устанавливаем размер и положение окна
     set_window_size(window)
     window.resizable(True, True)
@@ -481,6 +490,9 @@ if __name__ == '__main__':
 
     # Создаем ноутбук (вкладки)
     tab_control = ttk.Notebook(canvas)
+
+    global name_file_params
+    name_file_params = 'Не выбрано' # костыль конечно но что поделать
 
     """
     Создаем вкладку для обработки формы 1 (пятистрочная)
@@ -736,6 +748,15 @@ if __name__ == '__main__':
     svod_trudvsem_entry = Entry(frame_data_svod_trudvsem, textvariable=entry_region,
                                              width=30)
     svod_trudvsem_entry.pack(padx=10, pady=10)
+
+    # Кнопка для выбора файла с параметрами
+    btn_choose_params_svod_trudvsem = Button(frame_data_svod_trudvsem, text='Необязательная опция\n Выберите файл с параметрами фильтрации',
+                                                 font=('Arial Bold', 10),
+                                                 command=select_file_params
+                                                 )
+    btn_choose_params_svod_trudvsem.pack(padx=10, pady=10)
+
+
 
     # Кнопка для выбора конечной папки
     btn_choose_end_folder_svod_trudvsem = Button(frame_data_svod_trudvsem, text='4) Выберите конечную папку',
