@@ -13,7 +13,8 @@ import datetime
 import time
 from dateutil import parser
 pd.options.mode.chained_assignment = None
-
+import warnings
+warnings.filterwarnings("ignore")
 
 class NotRegion(Exception):
     """
@@ -252,6 +253,37 @@ def filtred_df(df:pd.DataFrame,params_filter:str):
         second_df = first_df[first_df[name_second_filter_column].str.contains('|'.join(lst_second_filter_values),case=False)]# фильтруем
 
         return second_df
+
+    if len(params_df.columns) == 3:
+        name_first_filter_column = params_df.columns[0] # первый фильтр
+        name_second_filter_column = params_df.columns[1] # второй фильтр
+        name_third_filter_column = params_df.columns[2] # третий фильтр
+
+        lst_filter_values = params_df[name_first_filter_column].tolist() # делаем список значений
+        lst_filter_values = [value for value in lst_filter_values if not pd.isna(value)]  # очищаем от нанов
+        lst_second_filter_values = params_df[name_second_filter_column].tolist() # делаем список значений второго фильтра
+        lst_second_filter_values = [value for value in lst_second_filter_values if not pd.isna(value)]  # очищаем от нанов
+        lst_third_filter_values = params_df[name_third_filter_column].tolist() # делаем список значений третьего фильтра
+        lst_third_filter_values = [value for value in lst_third_filter_values if not pd.isna(value)]  # очищаем от нанов
+
+        # первая фильтрация
+        lst_filter_values = list(map(str,lst_filter_values)) # делаем строковыми значения
+        df[name_first_filter_column] = df[name_first_filter_column].astype(str) # делаем строковой колонку
+
+        first_df = df[df[name_first_filter_column].str.contains('|'.join(lst_filter_values),case=False)]# фильтруем
+        # вторая фильтрация
+        lst_second_filter_values = list(map(str,lst_second_filter_values)) # делаем строковыми значения
+        first_df[name_second_filter_column] = first_df[name_second_filter_column].astype(str) # делаем строковой колонку
+
+        second_df = first_df[first_df[name_second_filter_column].str.contains('|'.join(lst_second_filter_values),case=False)]# фильтруем
+
+        # третья фильтрация
+        lst_third_filter_values = list(map(str,lst_third_filter_values)) # делаем строковыми значения
+        second_df[name_third_filter_column] = second_df[name_third_filter_column].astype(str) # делаем строковой колонку
+
+        third_df = second_df[second_df[name_third_filter_column].str.contains('|'.join(lst_third_filter_values),case=False)]# фильтруем
+
+        return third_df
 
 
 
