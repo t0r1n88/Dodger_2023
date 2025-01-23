@@ -1048,16 +1048,16 @@ def check_error_form_two(df: pd.DataFrame, name_file, tup_correct: tuple):
 
         # Проводим проверку стр.06 = стр.07 + стр.08 + стр.09 + стр.10 + стр.11 + стр.12 + стр.13
         fifth_error_df = form_two_check_fifth_error(temp_df.copy(), name_file, border, tup_correct, correction)
-        fifth_error_df.to_excel('data/fifth_Error.xlsx')
-        raise ZeroDivisionError
+
         # добавляем результат проверки в датафрейм
         error_df = pd.concat([error_df, fifth_error_df], axis=0, ignore_index=True)
 
         # Проводим проверку стр. 14<=стр. 06, стр. 14<=стр 05 (<= означает "меньше или равно")
         sixth_error_df = form_two_check_sixth_error(temp_df.copy(), name_file, border, tup_correct, correction)
-        error_df = pd.concat([error_df, sixth_error_df], axis=0, ignore_index=True)
+        sixth_error_df.to_excel('data/sixth_Error.xlsx')
+
         # прибавляем border
-        border += 15
+        border += 14
         correction += 1
     # Возвращаем датафрейм с ошибками
     return error_df
