@@ -109,14 +109,15 @@ def prepare_form_two_employment(path_folder_data:str,path_to_end_folder):
                                                             tup_correct, correction, name_file, 'Код и наименование')
 
 
-                sameness_error_df.to_excel(f'data/sameness {name_file}.xlsx')
-                blankness_error_df.to_excel(f'data/blankness {name_file}.xlsx')
-        #         # проверяем на арифметические ошибки
-        #         file_error_df = check_error_form_two(df.copy(), name_file, tup_correct)
-        #         # добавляем в получившийся датафейм ошибки однородности диапазона
-        #         file_error_df = pd.concat([file_error_df, sameness_error_df], axis=0, ignore_index=True)
-        #         file_error_df = pd.concat([file_error_df, blankness_error_df], axis=0, ignore_index=True)
-        #
+                # Добавляем колонку с номерами строк
+                lst_number_row = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14']
+                df.insert(1,'03',lst_number_row * count_spec)
+                # проверяем на арифметические ошибки
+                file_error_df = check_error_form_two(df.copy(), name_file, tup_correct)
+                # добавляем в получившийся датафейм ошибки однородности диапазона
+                file_error_df = pd.concat([file_error_df, sameness_error_df], axis=0, ignore_index=True)
+                file_error_df = pd.concat([file_error_df, blankness_error_df], axis=0, ignore_index=True)
+                file_error_df.to_excel(f'data/{name_file} arif.xlsx')
         #         # добавляем в словарь в полные имена из кода и наименования
         #         for full_name in df['02'].tolist():
         #             code = extract_code_nose(full_name)  # получаем только цифры

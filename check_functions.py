@@ -1015,16 +1015,16 @@ def check_error_form_two(df: pd.DataFrame, name_file, tup_correct: tuple):
     """
     # создаем датафрейм для регистрации ошибок
     error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
-    df = df.iloc[:, 3:26]
+    df = df.iloc[:, 3:29]
     df = df.applymap(check_data)
 
     # получаем количество датафреймов
-    quantity = df.shape[0] // 15
+    quantity = df.shape[0] // 14
     # счетчик для обработанных строк
     border = 0
-    correction = 0  # поправка для учета строки 16 чтобы диапазон ошибки отображался правильно
+    correction = 0  # поправка для учета строки 15 чтобы диапазон ошибки отображался правильно
     for i in range(1, quantity + 1):
-        temp_df = df.iloc[border:border + 15, :]
+        temp_df = df.iloc[border:border + 14, :]
         # Проводим проверку стр 03 <= стр 02
         first_error_df = check_first_error(temp_df.copy(), name_file, border, tup_correct, correction)
         # добавляем результат проверки в датафрейм
@@ -1032,6 +1032,8 @@ def check_error_form_two(df: pd.DataFrame, name_file, tup_correct: tuple):
 
         # Проводим проверку стр.02 и стр.04 и стр.05 <= стр.01
         second_error_df = check_second_error(temp_df.copy(), name_file, border, tup_correct, correction)
+        second_error_df.to_excel('data/second_Error.xlsx')
+        raise ZeroDivisionError
         error_df = pd.concat([error_df, second_error_df], axis=0, ignore_index=True)
         # Проводим проверку гр. 05=сумма(с гр.06 по гр.27)
         third_error_df = check_third_error(temp_df.copy(), name_file, tup_correct)
