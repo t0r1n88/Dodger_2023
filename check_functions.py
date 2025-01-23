@@ -445,8 +445,38 @@ def check_second_error(df: pd.DataFrame, name_file, border, tup_correct: tuple, 
         'Описание ошибки'] = 'Не выполняется условие: стр.02<= стр.01 или стр.04<= стр.01 или стр.05<= стр.01 '
     return temp_error_df
 
-
 def check_third_error(df: pd.DataFrame, name_file, tup_correct):
+    """
+    Функция для проверки правильности введеденных данных
+    (гр. 05= сумма(с гр.06 по гр.27))
+    :param df: копия датафрейма с данными из файла поо
+    :return:датафрейм с ошибками
+    """
+    # получаем строку диапазона
+    first_correct = tup_correct[0]
+    all_sum_cols = list(df)  # получаем список колонок
+    # удаляем колонку 05 с общей суммой
+    all_sum_cols.remove('05')
+    # получаем сумму колонок 06:27
+    df['Сумма'] = df[all_sum_cols].sum(axis=1)
+    # Проводим проверку
+    df['Результат'] = df['05'] == df['Сумма']
+    # заменяем булевые значения на понятные
+    df['Результат'] = df['Результат'].apply(lambda x: 'Правильно' if x else 'Неправильно')
+    # получаем датафрейм с ошибками и извлекаем индекс
+    df = df[df['Результат'] == 'Неправильно'].reset_index()
+    # создаем датафрейм дял добавления в ошибки
+    temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
+    # обрабатываем индексы строк с ошибками чтобы строки совпадали с файлом excel
+    raw_lst_index = df['index'].tolist()  # делаем список
+    finish_lst_index = list(map(lambda x: x + first_correct, raw_lst_index))
+    finish_lst_index = list(map(lambda x: f'Строка {str(x)}', finish_lst_index))
+    temp_error_df['Строка или колонка с ошибкой'] = finish_lst_index
+    temp_error_df['Название файла'] = name_file
+    temp_error_df['Описание ошибки'] = 'Не выполняется условие: гр. 05 = сумма(с гр.06 по гр.27)'
+    return temp_error_df
+
+def form_two_check_third_error(df: pd.DataFrame, name_file, tup_correct):
     """
     Функция для проверки правильности введеденных данных
     (гр. 05= сумма(с гр.06 по гр.27))
@@ -1036,7 +1066,7 @@ def check_error_form_two(df: pd.DataFrame, name_file, tup_correct: tuple):
 
         error_df = pd.concat([error_df, second_error_df], axis=0, ignore_index=True)
         # Проводим проверку гр. 04=сумма(с гр.05 по гр.29) кроме гр.06,гр.07,гр.23,гр.24
-        third_error_df = check_third_error(temp_df.copy(), name_file, tup_correct)
+        third_error_df = form_two_check_third_error(temp_df.copy(), name_file, tup_correct)
 
         error_df = pd.concat([error_df, third_error_df], axis=0, ignore_index=True)
 
@@ -1054,7 +1084,6 @@ def check_error_form_two(df: pd.DataFrame, name_file, tup_correct: tuple):
 
         # Проводим проверку стр. 14<=стр. 06, стр. 14<=стр 05 (<= означает "меньше или равно")
         sixth_error_df = form_two_check_sixth_error(temp_df.copy(), name_file, border, tup_correct, correction)
-        sixth_error_df.to_excel('data/sixth_Error.xlsx')
 
         # прибавляем border
         border += 14
