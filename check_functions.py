@@ -456,12 +456,13 @@ def check_third_error(df: pd.DataFrame, name_file, tup_correct):
     # получаем строку диапазона
     first_correct = tup_correct[0]
     all_sum_cols = list(df)  # получаем список колонок
-    # удаляем колонку 05 с общей суммой
-    all_sum_cols.remove('05')
+    remove_cols = ['гр.04','гр.06','гр.07','гр.23','гр.24']
+    # удаляем лишние колонки
+    all_sum_cols = [value for value in all_sum_cols if value not in remove_cols]
     # получаем сумму колонок 06:27
     df['Сумма'] = df[all_sum_cols].sum(axis=1)
     # Проводим проверку
-    df['Результат'] = df['05'] == df['Сумма']
+    df['Результат'] = df['гр.04'] == df['Сумма']
     # заменяем булевые значения на понятные
     df['Результат'] = df['Результат'].apply(lambda x: 'Правильно' if x else 'Неправильно')
     # получаем датафрейм с ошибками и извлекаем индекс
@@ -474,7 +475,7 @@ def check_third_error(df: pd.DataFrame, name_file, tup_correct):
     finish_lst_index = list(map(lambda x: f'Строка {str(x)}', finish_lst_index))
     temp_error_df['Строка или колонка с ошибкой'] = finish_lst_index
     temp_error_df['Название файла'] = name_file
-    temp_error_df['Описание ошибки'] = 'Не выполняется условие: гр. 05 = сумма(с гр.06 по гр.27)'
+    temp_error_df['Описание ошибки'] = 'Не выполняется условие: гр. 04 = сумма(с гр.05 по гр.29) кроме гр.06,гр.07,гр.23,гр.24'
     return temp_error_df
 
 
@@ -1032,20 +1033,23 @@ def check_error_form_two(df: pd.DataFrame, name_file, tup_correct: tuple):
 
         # Проводим проверку стр.02 и стр.04 и стр.05 <= стр.01
         second_error_df = check_second_error(temp_df.copy(), name_file, border, tup_correct, correction)
-        second_error_df.to_excel('data/second_Error.xlsx')
-        raise ZeroDivisionError
+
         error_df = pd.concat([error_df, second_error_df], axis=0, ignore_index=True)
-        # Проводим проверку гр. 05=сумма(с гр.06 по гр.27)
+        # Проводим проверку гр. 04=сумма(с гр.05 по гр.29) кроме гр.06,гр.07,гр.23,гр.24
         third_error_df = check_third_error(temp_df.copy(), name_file, tup_correct)
+
         error_df = pd.concat([error_df, third_error_df], axis=0, ignore_index=True)
 
         # Проводим проверку стр 06 = стр 02 + стр 04
         fourth_error_df = form_two_check_fourth_error(temp_df.copy(), name_file, border, tup_correct, correction)
+
         # добавляем результат проверки в датафрейм
         error_df = pd.concat([error_df, fourth_error_df], axis=0, ignore_index=True)
 
         # Проводим проверку стр.06 = стр.07 + стр.08 + стр.09 + стр.10 + стр.11 + стр.12 + стр.13
         fifth_error_df = form_two_check_fifth_error(temp_df.copy(), name_file, border, tup_correct, correction)
+        fifth_error_df.to_excel('data/fifth_Error.xlsx')
+        raise ZeroDivisionError
         # добавляем результат проверки в датафрейм
         error_df = pd.concat([error_df, fifth_error_df], axis=0, ignore_index=True)
 
