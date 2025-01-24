@@ -117,72 +117,72 @@ def prepare_form_two_employment(path_folder_data:str,path_to_end_folder):
                 # добавляем в получившийся датафейм ошибки однородности диапазона
                 file_error_df = pd.concat([file_error_df, sameness_error_df], axis=0, ignore_index=True)
                 file_error_df = pd.concat([file_error_df, blankness_error_df], axis=0, ignore_index=True)
-                file_error_df.to_excel(f'data/{name_file} arif.xlsx')
-        #         # добавляем в словарь в полные имена из кода и наименования
-        #         for full_name in df['02'].tolist():
-        #             code = extract_code_nose(full_name)  # получаем только цифры
-        #             dct_code_and_name[code] = full_name
-        #         # очищаем от текста чтобы названия листов не обрезались
-        #         df['02'] = df['02'].apply(extract_code_nose)  # очищаем от текста в кодах
-        #         if 'error' in df['02'].values:
-        #             temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
-        #                                                 'Некорректные значения в колонке 02 Код и наименование профессии/специальности.Вместо кода присутствует дата, и т.п. проверьте правильность заполнения колонки 02!!!']],
-        #                                          columns=['Название файла', 'Строка или колонка с ошибкой',
-        #                                                   'Описание ошибки'])
-        #             file_error_df = pd.concat([file_error_df, temp_error_df], axis=0, ignore_index=True)
-        #         # добавляем в основной файл с ошибками
-        #         error_df = pd.concat([error_df, file_error_df], axis=0, ignore_index=True)
-        #         if file_error_df.shape[0] != 0:
-        #             temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
-        #                                                 'В файле обнаружены ошибки!!! ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
-        #                                          columns=['Название файла', 'Строка или колонка с ошибкой',
-        #                                                   'Описание ошибки'])
-        #             error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
-        #             continue
+                # добавляем в словарь в полные имена из кода и наименования
+                for full_name in df['гр.02'].tolist():
+                    code = extract_code_nose(full_name)  # получаем только цифры
+                    dct_code_and_name[code] = full_name
+                # очищаем от текста чтобы названия листов не обрезались
+                df['гр.02'] = df['гр.02'].apply(extract_code_nose)  # очищаем от текста в кодах
+                if 'error' in df['гр.02'].values:
+                    temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
+                                                        'Некорректные значения в колонке гр.02 Код и наименование профессии/специальности.Вместо кода присутствует дата, и т.п. проверьте правильность заполнения колонки 02!!!']],
+                                                 columns=['Название файла', 'Строка или колонка с ошибкой',
+                                                          'Описание ошибки'])
+                    file_error_df = pd.concat([file_error_df, temp_error_df], axis=0, ignore_index=True)
+                # добавляем в основной файл с ошибками
+                error_df = pd.concat([error_df, file_error_df], axis=0, ignore_index=True)
+                if file_error_df.shape[0] != 0:
+                    temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
+                                                        'В файле обнаружены ошибки!!! ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
+                                                 columns=['Название файла', 'Строка или колонка с ошибкой',
+                                                          'Описание ошибки'])
+                    error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
+                    continue
         #
-        #         # Создание словаря для хранения данных файла
-        #         code_spec = [spec for spec in df['02'].unique()]  # получаем список специальностей которые есть в файле
-        #         # Создаем список для строк
-        #         row_cat = [f'Строка {i}' for i in range(1, 16)]
-        #         # Создаем список для колонок
-        #         column_cat = [f'Колонка {i}' for i in range(5, 28)]  # раньше было 7
-        #         # Создаем словарь нижнего уровня содержащий в себе все данные для каждой специальности
-        #         spec_dict = {}
-        #         for row in row_cat:
-        #             spec_dict[row] = {key: 0 for key in column_cat}
-        #         poo_dct = {key: copy.deepcopy(spec_dict) for key in code_spec}
-        #         high_level_dct[name_file] = copy.deepcopy(poo_dct)
-        #         #             """
-        #         #             В итоге получается такая структура
-        #         #             {БРИТ:{13.01.10:{Строка 1:{Колонка 1:0}}},ТСИГХ:{22.01.10:{Строка 1:{Колонка 1:0}}}}
-        #
-        #         current_code = 'Ошибка проверьте правильность заполнения кодов специальностей'  # чекбокс для проверки заполнения кода специальности
-        #
-        #         idx_row = 1  # счетчик обработанных строк
-        #
-        #         # Итерируемся по полученному датафрейму через itertuples
-        #         for row in df.itertuples():
-        #             # если счетчик колонок больше 15 то уменьшаем его до единицы
-        #             if idx_row > 15:
-        #                 idx_row = 1
-        #             # Проверяем на незаполненные ячейки и ячейки заполненные пробелами
-        #             if (row[1] is not np.nan) and (row[1] != ' '):
-        #                 # если значение ячейки отличается от текущего кода специальности то обновляем значение текущего кода
-        #                 if row[1] != current_code:
-        #                     current_code = row[1]
-        #             data_row = row[4:27]  # получаем срез с нужными данными
-        #
-        #             for idx_col, value in enumerate(data_row, start=1):
-        #                 high_level_dct[name_file][current_code][f'Строка {idx_row}'][
-        #                     f'Колонка {idx_col + 4}'] += check_data(value)
-        #             #
-        #             idx_row += 1
+                # Создание словаря для хранения данных файла
+                code_spec = [spec for spec in df['гр.02'].unique()]  # получаем список специальностей которые есть в файле
+                # Создаем список для строк
+                row_cat = [f'Строка {i}' for i in range(1, 15)]
+                # Создаем список для колонок
+                column_cat = [f'Колонка {i}' for i in range(4, 30)]  # 4 это порядковый номер колонки суммарный выпуск а 30 это последняя колонка с цифрами
+                # Создаем словарь нижнего уровня содержащий в себе все данные для каждой специальности
+                spec_dict = {}
+                for row in row_cat:
+                    spec_dict[row] = {key: 0 for key in column_cat}
+                poo_dct = {key: copy.deepcopy(spec_dict) for key in code_spec}
+                high_level_dct[name_file] = copy.deepcopy(poo_dct)
+                #             """
+                #             В итоге получается такая структура
+                #             {БРИТ:{13.01.10:{Строка 1:{Колонка 1:0}}},ТСИГХ:{22.01.10:{Строка 1:{Колонка 1:0}}}}
+
+                current_code = 'Ошибка проверьте правильность заполнения кодов специальностей'  # чекбокс для проверки заполнения кода специальности
+
+                idx_row = 1  # счетчик обработанных строк
+
+                # Итерируемся по полученному датафрейму через itertuples
+                for row in df.itertuples():
+                    # если счетчик колонок больше 14 то уменьшаем его до единицы
+                    if idx_row > 14:
+                        idx_row = 1
+                    # Проверяем на незаполненные ячейки и ячейки заполненные пробелами
+                    if (row[1] is not np.nan) and (row[1] != ' '):
+                        # если значение ячейки отличается от текущего кода специальности то обновляем значение текущего кода
+                        if row[1] != current_code:
+                            current_code = row[1]
+                    data_row = row[4:29]  # получаем срез с нужными данными колонки в которых есть числа
+
+                    for idx_col, value in enumerate(data_row, start=1):
+                        high_level_dct[name_file][current_code][f'Строка {idx_row}'][
+                            f'Колонка {idx_col + 3}'] += check_data(value)
+                    #
+                    idx_row += 1
         #
         t = time.localtime()  # получаем текущее время
         current_time = time.strftime('%H_%M_%S', t)
-        # wb_check_tables = create_check_tables_form_two(high_level_dct)  # проверяем данные по каждой специальности
-        # wb_check_tables.save(
-        #     f'{path_to_end_folder}/Данные для проверки правильности заполнения файлов от {current_time}.xlsx')
+        wb_check_tables = create_check_tables_form_two(high_level_dct)  # проверяем данные по каждой специальности
+        wb_check_tables.save(
+            f'{path_to_end_folder}/Данные для проверки правильности заполнения файлов от {current_time}.xlsx')
+        raise ZeroDivisionError
         #
         # # получаем уникальные специальности
         # all_spec_code = set()
