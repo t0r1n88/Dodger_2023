@@ -71,6 +71,7 @@ def prepare_form_two_employment(path_folder_data:str,path_to_end_folder):
                     error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
                     continue
 
+                df = df[df['гр.03'].notna()] # убираем возможные наны из за лишних строк
                 df = df[~df['гр.03'].str.contains('Проверка')]  # фильтруем строки с проверками
 
                 # отсекаем возможный первый столбец с данными ПОО,начинаем датафрейм с колонки 01 и отсекаем колонки с проверками
@@ -349,10 +350,10 @@ def prepare_form_two_employment(path_folder_data:str,path_to_end_folder):
     except PermissionError as e:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
                              f'Закройте открытые файлы Excel {e.args}')
-    except:
-        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
-                             f'При обработке файла {name_file} возникла ошибка !!!\n'
-                             f'Проверьте файл на соответствие шаблону исходной формы 2 нозологии)')
+    # except:
+    #     messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
+    #                          f'При обработке файла {name_file} возникла ошибка !!!\n'
+    #                          f'Проверьте файл на соответствие шаблону исходной формы 2 нозологии)')
 
     else:
         if error_df.shape[0] != 0:
