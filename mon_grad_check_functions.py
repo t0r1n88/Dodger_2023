@@ -1,7 +1,7 @@
 """
 Модуль для проверочных функций мониторинга занятости выпускников для сайта СССР
 """
-from check_functions import extract_code_nose
+from cass_check_functions import extract_code_nose
 import openpyxl
 from openpyxl.utils.dataframe import dataframe_to_rows
 import pandas as pd

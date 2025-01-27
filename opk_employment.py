@@ -3,7 +3,7 @@
 Скрипт для подсчета данных центров карьеры
 """
 from check_opk_functions import * # импортируем функции проверки файлов ОПК
-from check_functions import * # импортируем функции общих проверок
+from cass_check_functions import * # импортируем функции общих проверок
 from support_functions import * # импортируем вспомогательные функции и исключения
 import pandas as pd
 import numpy as np

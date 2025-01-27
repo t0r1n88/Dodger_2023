@@ -2,7 +2,7 @@
 """
 Скрипт для обработки данных Формы 2 нозология (15 строк) мониторинга занятости выпускников
 """
-from check_functions import * # импортируем функции проверки
+from cass_check_functions import * # импортируем функции проверки
 from support_functions import * # импортируем вспомогательные функции и исключения
 import pandas as pd
 import numpy as np

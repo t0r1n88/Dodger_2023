@@ -10,7 +10,7 @@ from ck_employment import prepare_ck_employment  # импортируем фун
 from opk_employment import prepare_opk_employment  # импортируем функцию для обработки данных по ОПК
 from create_svod_trudvsem import processing_data_trudvsem # импортируем функцию для обработки данных с трудвсем
 from contrast_svod_trudvsem import prepare_diff_svod_trudvsem # импортируем функцию для измерения разницы между двумя сводами
-from difference import prepare_diffrence  # импортируем функцию для нахождения разницы между двумя таблицами
+from cass_difference import prepare_diffrence  # импортируем функцию для нахождения разницы между двумя таблицами
 import sys
 import pandas as pd
 import os

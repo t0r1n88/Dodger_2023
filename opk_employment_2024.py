@@ -2,7 +2,7 @@
 """
 Скрипт для обработки формы сбора данных по потребности предприятий ОПК
 """
-from check_functions import * # импортируем функции проверки
+from cass_check_functions import * # импортируем функции проверки
 from support_functions import * # импортируем вспомогательные функции и исключения
 import pandas as pd
 import numpy as np
