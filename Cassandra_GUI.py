@@ -472,7 +472,7 @@ def show_textmenu(event):
 
 if __name__ == '__main__':
     window = Tk()
-    window.title('Кассандра Подсчет данных по трудоустройству выпускников ver 6.2')
+    window.title('Кассандра Подсчет данных по трудоустройству выпускников ver 6.3')
     # Устанавливаем размер и положение окна
     set_window_size(window)
     window.resizable(True, True)
@@ -551,7 +551,8 @@ if __name__ == '__main__':
 
     lbl_hello_employment_nose = Label(employment_nose_frame_description,
                                       text='Центр опережающей профессиональной подготовки Республики Бурятия\n'
-                                           'Трудоустройство выпускников. Форма 2 нозологии (15 строк)',
+                                           'Трудоустройство выпускников. Форма 2 нозологии (15 строк)\n'
+                                           'Форма мониторинга январь 2025',
                                       width=60)
     lbl_hello_employment_nose.pack(side=LEFT, anchor=N, ipadx=25, ipady=10)
 

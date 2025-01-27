@@ -170,7 +170,7 @@ def prepare_form_two_employment(path_folder_data:str,path_to_end_folder):
                         # если значение ячейки отличается от текущего кода специальности то обновляем значение текущего кода
                         if row[1] != current_code:
                             current_code = row[1]
-                    data_row = row[4:29]  # получаем срез с нужными данными колонки в которых есть числа
+                    data_row = row[4:30]  # получаем срез с нужными данными колонки в которых есть числа
 
                     for idx_col, value in enumerate(data_row, start=1):
                         high_level_dct[name_file][current_code][f'Строка {idx_row}'][
