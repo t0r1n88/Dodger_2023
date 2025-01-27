@@ -3,7 +3,7 @@
 """
 import pandas
 
-from support_functions import write_df_to_excel_color_selection # получаем функцию для записи в листы Excel
+from cass_support_functions import write_df_to_excel_color_selection # получаем функцию для записи в листы Excel
 import pandas as pd
 from tkinter import messagebox
 import math

@@ -2,7 +2,7 @@
 """
 Функции для проверки данных
 """
-from support_functions import *  # импортируем вспомогательные функции и исключения
+from cass_support_functions import *  # импортируем вспомогательные функции и исключения
 import pandas as pd
 import numpy as np
 

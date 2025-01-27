@@ -4,7 +4,7 @@
 Форма с разделением выпускников по отраслям
 """
 from cass_check_functions import * # импортируем функции проверки
-from support_functions import * # импортируем вспомогательные функции и исключения
+from cass_support_functions import * # импортируем вспомогательные функции и исключения
 import pandas as pd
 import numpy as np
 import os

@@ -1,7 +1,7 @@
 """
 Функция для подсчета разницы между страницами
 """
-from support_functions import *
+from cass_support_functions import *
 
 import pandas as pd
 import numpy as np

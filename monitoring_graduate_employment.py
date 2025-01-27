@@ -3,7 +3,7 @@
 Модуль для обработки таблиц мониторинга занятости выпускников используемого для загрузки на сайт СССР
 """
 from cass_check_functions import base_check_file, extract_code_nose
-from support_functions import convert_to_int
+from cass_support_functions import convert_to_int
 
 from mon_grad_check_functions import create_check_tables_mon_grad, check_error_mon_grad_spo, check_error_mon_grad_target,check_error_mon_grad_prof
 
