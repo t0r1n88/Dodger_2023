@@ -85,6 +85,17 @@ def prepare_form_two_employment(path_folder_data:str,path_to_end_folder):
                 if empty_row_index[0].tolist():
                     row_index = empty_row_index[0][0]
                     df = df.iloc[:row_index]
+                # Проверка на лишние или недостающие строки в конце таблицы
+                remains = len(df) % 14
+                if remains !=0 :
+                    temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
+                                                        f'На каждую специальность/профессию должно приходиться по 14 строк не считая строки проверки.Найдено {len(df)} строк с данными, остаток при делении на 14 равен {remains}. Возможно какие то строки удалены или под таблицей есть лишние строки. ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!! ']],
+                                                 columns=['Название файла', 'Строка или колонка с ошибкой',
+                                                          'Описание ошибки'])
+                    error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
+                    continue
+
+
                 #     # Проверка на размер таблицы, должно бьть кратно 14
                 count_spec = df.shape[0] // 14  # количество специальностей
                 df = df.iloc[:count_spec * 14, :]  # отбрасываем строки проверки
