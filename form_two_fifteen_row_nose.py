@@ -18,6 +18,14 @@ import copy
 import openpyxl
 from openpyxl.utils.dataframe import dataframe_to_rows
 
+class NotCorrectFile(Exception):
+    """
+    Исключения для обработки случая когда нет ни одного корректного файла
+    """
+    pass
+
+
+
 def prepare_form_two_employment(path_folder_data:str,path_to_end_folder):
     """
     Фугкция для обработки данных формы 2 15 строк нозология
@@ -94,7 +102,6 @@ def prepare_form_two_employment(path_folder_data:str,path_to_end_folder):
                                                           'Описание ошибки'])
                     error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
                     continue
-
 
                 #     # Проверка на размер таблицы, должно бьть кратно 14
                 count_spec = df.shape[0] // 14  # количество специальностей
@@ -191,11 +198,20 @@ def prepare_form_two_employment(path_folder_data:str,path_to_end_folder):
         #
         t = time.localtime()  # получаем текущее время
         current_time = time.strftime('%H_%M_%S', t)
-        wb_check_tables = create_check_tables_form_two(high_level_dct)  # проверяем данные по каждой специальности
-        if 'Sheet' in wb_check_tables.sheetnames:
-            del wb_check_tables['Sheet']
-        wb_check_tables.save(
-            f'{path_to_end_folder}/Данные для проверки правильности заполнения файлов от {current_time}.xlsx')
+            # Сохраняем ошибки
+        wb = openpyxl.Workbook()
+        for r in dataframe_to_rows(error_df, index=False, header=True):
+            wb['Sheet'].append(r)
+
+        wb['Sheet'].column_dimensions['A'].width = 30
+        wb['Sheet'].column_dimensions['B'].width = 40
+        wb['Sheet'].column_dimensions['C'].width = 50
+
+        wb.save(f'{path_to_end_folder}/ОШИБКИ Форма 2 нозологии (15 строк) от {current_time}.xlsx')
+
+        if len(high_level_dct) == 0:
+            raise NotCorrectFile
+
         #
         # получаем уникальные специальности
         all_spec_code = set()
@@ -337,16 +353,12 @@ def prepare_form_two_employment(path_folder_data:str,path_to_end_folder):
             small_finish_df.to_excel(writer, sheet_name='5 строк', index=False)
             one_finish_df.to_excel(writer, sheet_name='1 строка (Всего выпускников)', index=False)
 
-            # Создаем документ
-        wb = openpyxl.Workbook()
-        for r in dataframe_to_rows(error_df, index=False, header=True):
-            wb['Sheet'].append(r)
+        wb_check_tables = create_check_tables_form_two(high_level_dct)  # проверяем данные по каждой специальности
+        if 'Sheet' in wb_check_tables.sheetnames:
+            del wb_check_tables['Sheet']
+        wb_check_tables.save(
+            f'{path_to_end_folder}/Данные для проверки правильности заполнения файлов от {current_time}.xlsx')
 
-        wb['Sheet'].column_dimensions['A'].width = 30
-        wb['Sheet'].column_dimensions['B'].width = 40
-        wb['Sheet'].column_dimensions['C'].width = 50
-
-        wb.save(f'{path_to_end_folder}/ОШИБКИ Форма 2 нозологии (15 строк) от {current_time}.xlsx')
     except NameError:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
                              f'Выберите файлы с данными и папку куда будет генерироваться файл')
@@ -361,6 +373,9 @@ def prepare_form_two_employment(path_folder_data:str,path_to_end_folder):
     except PermissionError as e:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
                              f'Закройте открытые файлы Excel {e.args}')
+    except NotCorrectFile as e:
+        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
+                             f'Не найдено ни одного файла БЕЗ ошибок. Откройте файл с ошибками и исправьте указанные ошибки!')
     # except:
     #     messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
     #                          f'При обработке файла {name_file} возникла ошибка !!!\n'
