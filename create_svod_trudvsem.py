@@ -207,6 +207,49 @@ def extract_salary(cell):
     else:
         return cell
 
+
+def extract_phone_number(value):
+    """
+    Фунция для извлечения номера телефона контактного лица
+    """
+    try:
+        if value:
+            data = json.loads(value)
+            for item in data:
+                if item.get('contactType') == 'Телефон':
+                    phone_number = item.get('contactValue','Не указан')
+                    break
+            if phone_number:
+                return phone_number
+            else:
+                return None
+        else:
+            return None
+    except:
+        return None
+
+def extract_contact_email(value):
+    """
+    Фунция для извлечения email контактного лица
+    """
+    try:
+        if value:
+            data = json.loads(value)
+            for item in data:
+                if item.get('contactType') == 'Эл. почта':
+                    email = item.get('contactValue','Не указан')
+                    break
+            if email:
+                return email
+            else:
+                return None
+        else:
+            return None
+    except:
+        return None
+
+
+
 def filtred_df(df:pd.DataFrame,params_filter:str):
     """
     Функция для фильтрации датафрейма по указанным значениям в колонке
@@ -425,7 +468,10 @@ def prepare_data_vacancy(df: pd.DataFrame, dct_name_columns: dict, lst_columns: 
     df['КПП работодателя'] = df['Данные компании'].apply(lambda x: json.loads(x).get('kpp', 'Не указано'))
     df['ОГРН работодателя'] = df['Данные компании'].apply(lambda x: json.loads(x).get('ogrn', 'Не указано'))
     df['ИНН работодателя'] = df['Данные компании'].apply(lambda x: json.loads(x).get('inn', 'Не указано'))
-    df['Контактный телефон'] = df['Данные компании'].apply(lambda x: json.loads(x).get('phone', 'Не указано'))
+    # df['Контактный телефон'] = df['Данные компании'].apply(lambda x: json.loads(x).get('phone', 'Не указано'))
+    df['Контактный телефон'] = df['Контактные данные'].apply(extract_phone_number)
+    df['Email контактного лица'] = df['Контактные данные'].apply(extract_contact_email)
+
     df['Email работодателя'] = df['Данные компании'].apply(lambda x: json.loads(x).get('email', 'Не указано'))
     df['Профиль работодателя'] = df['Данные компании'].apply(lambda x: json.loads(x).get('url', 'Не указано'))
     df['Сайт работодателя'] = df['Данные компании'].apply(lambda x: json.loads(x).get('site', 'Не указано'))
@@ -441,7 +487,7 @@ def prepare_data_vacancy(df: pd.DataFrame, dct_name_columns: dict, lst_columns: 
         lambda x: ','.join(ast.literal_eval(x)))
 
     df.drop(columns=['Данные компании', 'Данные по языкам', 'Данные по хардскиллам', 'Данные по софтскиллам','Данные по образованию',
-                     'Геоданные'],
+                     'Геоданные','Контактные данные'],
             inplace=True)
 
     df = df.reindex(columns=lst_columns)
@@ -738,6 +784,7 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
                         'softSkills': 'Данные по софтскиллам',
                         'vacancyUrl': 'Ссылка на вакансию',
                         'geo': 'Геоданные',
+                        'contactList': 'Контактные данные',
                         }
 
     try:
@@ -757,7 +804,7 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
                        'Требуемый опыт работы в годах','Требуется медкнижка','Требуемые доп. документы','Требуемые водительские права',
                        'Требуемые языки','Требуемые хардскиллы','Требуемые софтскиллы',
                        'Источник вакансии','Статус проверки вакансии','Размер организации','Полное название работодателя','Краткое название работодателя','Муниципалитет','Адрес вакансии','Доп информация по адресу вакансии',
-                       'ИНН работодателя','КПП работодателя','ОГРН работодателя','Контактное лицо','Контактный телефон','Email работодателя',
+                       'ИНН работодателя','КПП работодателя','ОГРН работодателя','Контактное лицо','Контактный телефон','Email контактного лица','Email работодателя',
                        'Профиль работодателя','Сайт работодателя','Широта адрес вакансии','Долгота адрес вакансии','ID вакансии','ID работодателя','Ссылка на вакансию']
 
         # Список колонок с текстом
