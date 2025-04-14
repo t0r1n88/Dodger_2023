@@ -468,7 +468,6 @@ def prepare_data_vacancy(df: pd.DataFrame, dct_name_columns: dict, lst_columns: 
     df['КПП работодателя'] = df['Данные компании'].apply(lambda x: json.loads(x).get('kpp', 'Не указано'))
     df['ОГРН работодателя'] = df['Данные компании'].apply(lambda x: json.loads(x).get('ogrn', 'Не указано'))
     df['ИНН работодателя'] = df['Данные компании'].apply(lambda x: json.loads(x).get('inn', 'Не указано'))
-    # df['Контактный телефон'] = df['Данные компании'].apply(lambda x: json.loads(x).get('phone', 'Не указано'))
     df['Контактный телефон'] = df['Контактные данные'].apply(extract_phone_number)
     df['Email контактного лица'] = df['Контактные данные'].apply(extract_contact_email)
 
