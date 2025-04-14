@@ -421,7 +421,6 @@ def prepare_data_vacancy(df: pd.DataFrame, dct_name_columns: dict, lst_columns: 
     df['Долгота адрес вакансии'] = df['Геоданные'].apply(lambda x: json.loads(x).get('longitude', 'Не указано'))
 
 
-
     # данные по работодателю
     df['КПП работодателя'] = df['Данные компании'].apply(lambda x: json.loads(x).get('kpp', 'Не указано'))
     df['ОГРН работодателя'] = df['Данные компании'].apply(lambda x: json.loads(x).get('ogrn', 'Не указано'))
