@@ -38,6 +38,9 @@ def prepare_form_two_employment(path_folder_data:str,path_to_end_folder):
     # создаем датафрейм для регистрации ошибок
     error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
 
+    # Создаем датафрейм для контроля дублирующихся кодов специальностей
+    main_dupl_df = pd.DataFrame(columns=['Название файла','Полное наименование'])
+
     tup_correct = (6, 19)  # создаем кортеж  с поправками где 6 это первая строка с данными а 19 строка где заканчивается первый диапазон
     try:
         for file in os.listdir(path_folder_data):
@@ -136,6 +139,18 @@ def prepare_form_two_employment(path_folder_data:str,path_to_end_folder):
                 # добавляем в получившийся датафейм ошибки однородности диапазона
                 file_error_df = pd.concat([file_error_df, sameness_error_df], axis=0, ignore_index=True)
                 file_error_df = pd.concat([file_error_df, blankness_error_df], axis=0, ignore_index=True)
+
+                # Добавляем в датафрейм для проверки на дубликаты
+                temp_dupl_df = df['гр.02'].to_frame()
+                temp_dupl_df['Название файла'] = name_file
+                temp_dupl_df = temp_dupl_df.reindex(columns=['Название файла','гр.02'])
+                temp_dupl_df.columns = ['Название файла','Полное наименование']
+                temp_dupl_df.drop_duplicates(subset='Полное наименование',inplace=True)
+
+                main_dupl_df = pd.concat([main_dupl_df,temp_dupl_df])
+
+
+
                 # добавляем в словарь в полные имена из кода и наименования
                 for full_name in df['гр.02'].tolist():
                     code = extract_code_nose(full_name)  # получаем только цифры
@@ -198,6 +213,38 @@ def prepare_form_two_employment(path_folder_data:str,path_to_end_folder):
         #
         t = time.localtime()  # получаем текущее время
         current_time = time.strftime('%H_%M_%S', t)
+
+        # Общий список всех специальностей что встречаются
+        main_dupl_df.sort_values(by='Полное наименование', inplace=True)
+        # Уникальный специальности
+        unique_spec_df = main_dupl_df.drop_duplicates(subset='Полное наименование')
+        unique_spec_df.drop(columns='Название файла',inplace=True)
+
+        # Дубликаты
+        dupl_df = unique_spec_df.copy()
+        dupl_df['Код специальности'] = dupl_df['Полное наименование'].apply(extract_code_nose)
+        out_dupl_df = dupl_df[dupl_df['Код специальности'].duplicated(keep=False)]  # получаем дубликаты
+
+        # Свод
+        svod_df_spec = main_dupl_df['Полное наименование'].value_counts().to_frame()
+        svod_df_spec = svod_df_spec.reset_index()
+        svod_df_spec.columns = ['Специальность/профессия','Количество ПОО в которых она есть']
+
+
+        with pd.ExcelWriter(f'{path_to_end_folder}/Дублирующиеся коды от {current_time}.xlsx') as writer:
+            out_dupl_df.to_excel(writer, sheet_name='Дублирующиеся коды', index=False)
+            unique_spec_df.to_excel(writer, sheet_name='Уникальные', index=False)
+            svod_df_spec.to_excel(writer, sheet_name='Свод по количеству', index=False)
+            main_dupl_df.to_excel(writer, sheet_name='Полный список', index=False)
+
+
+
+
+
+
+
+
+
             # Сохраняем ошибки
         wb = openpyxl.Workbook()
         for r in dataframe_to_rows(error_df, index=False, header=True):
