@@ -791,7 +791,7 @@ if __name__ == '__main__':
     lbl_hello_diff_svod_trudvsem = Label(svod_trudvsem_frame_description,
                                          text='Центр опережающей профессиональной подготовки Республики Бурятия\n'
                                               'Подсчет изменений по кадровой ситуации на основании сводов \n'
-                                              'полученнных с помощью вкладки Свод Работа в России',
+                                              'полученных с помощью вкладки Свод Работа в России',
                                          width=60)
     lbl_hello_diff_svod_trudvsem.pack(side=LEFT, anchor=N, ipadx=25, ipady=10)
 
