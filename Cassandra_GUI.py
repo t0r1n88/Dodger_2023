@@ -494,6 +494,10 @@ if __name__ == '__main__':
     global name_file_params
     name_file_params = 'Не выбрано' # костыль конечно но что поделать
 
+    global file_org_svod_trudvsem
+    file_org_svod_trudvsem = 'Не выбрано' # костыль
+
+
     """
     Создаем вкладку для обработки формы 1 (пятистрочная)
     """
@@ -731,8 +735,8 @@ if __name__ == '__main__':
 
     # Создаем кнопку для выбора файла с работодателями
 
-    btn_choose_data_org_svod_trudvsem = Button(frame_data_svod_trudvsem, text='2) Выберите файл с работодателями',
-                                                 font=('Arial Bold', 15),
+    btn_choose_data_org_svod_trudvsem = Button(frame_data_svod_trudvsem, text='Необязательная опция\n Выберите файл с работодателями',
+                                                 font=('Arial Bold', 10),
                                                  command=select_file_org_trudvsem
                                                  )
     btn_choose_data_org_svod_trudvsem.pack(padx=10, pady=10)
@@ -743,7 +747,7 @@ if __name__ == '__main__':
     entry_region = StringVar()
     # Описание поля
     label_svod_trudvsem = Label(frame_data_svod_trudvsem,
-                                             text='3) Введите название региона')
+                                             text='2) Введите название региона')
     label_svod_trudvsem.pack(padx=10, pady=10)
     # поле ввода имени листа
     svod_trudvsem_entry = Entry(frame_data_svod_trudvsem, textvariable=entry_region,
@@ -760,7 +764,7 @@ if __name__ == '__main__':
 
 
     # Кнопка для выбора конечной папки
-    btn_choose_end_folder_svod_trudvsem = Button(frame_data_svod_trudvsem, text='4) Выберите конечную папку',
+    btn_choose_end_folder_svod_trudvsem = Button(frame_data_svod_trudvsem, text='3) Выберите конечную папку',
                                                  font=('Arial Bold', 15),
                                                  command=select_end_folder_svod_trudvsem
                                                  )
@@ -768,7 +772,7 @@ if __name__ == '__main__':
 
 
 
-    btn_proccessing_data_svod_trudvsem = Button(tab_svod_trudvsem, text='5) Обработать данные',
+    btn_proccessing_data_svod_trudvsem = Button(tab_svod_trudvsem, text='4) Обработать данные',
                                                 font=('Arial Bold', 20),
                                                 command=processing_svod_trudvsem
                                                 )

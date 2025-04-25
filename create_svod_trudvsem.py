@@ -792,7 +792,11 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
         current_date = time.strftime('%d_%m_%Y', t)
         # Получаем данные из csv
         main_df = pd.read_csv(file_data, encoding='UTF-8', sep='|', dtype=str, on_bad_lines='skip')
-        company_df = pd.read_excel(file_org, dtype=str,usecols='A:B') # получаем данные из файла с организациями
+        if file_org == '' or file_org == 'Не выбрано':
+            company_df = pd.DataFrame()
+        else:
+            company_df = pd.read_excel(file_org, dtype=str, usecols='A:B')  # получаем данные из файла с организациями
+
         company_df.dropna(inplace=True) # удаляем незаполненные строки
         # Список колонок итоговых таблиц с вакансиями
         lst_columns = ['Дата размещения вакансии','Дата изменения вакансии','Регион','Вакансия','Сфера деятельности','Количество рабочих мест',
