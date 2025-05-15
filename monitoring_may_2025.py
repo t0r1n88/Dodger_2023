@@ -3,7 +3,7 @@
 Скрипт для обработки данных Формы 2 нозология (15 строк) мониторинга занятости выпускников
 """
 from cass_support_functions import * # импортируем вспомогательные функции и исключения
-from cass_check_functions import check_error_main_may_2025, extract_code_nose # проверка основного листа
+from cass_check_functions import check_error_main_may_2025,check_error_target_may_2025, extract_code_nose # проверка основного листа
 import pandas as pd
 import numpy as np
 import os
@@ -14,7 +14,6 @@ pd.options.mode.chained_assignment = None  # default='warn'
 warnings.filterwarnings('ignore', category=UserWarning, module='openpyxl')
 warnings.filterwarnings('ignore', category=DeprecationWarning)
 warnings.filterwarnings('ignore', category=FutureWarning)
-import copy
 import openpyxl
 from openpyxl.utils.dataframe import dataframe_to_rows
 

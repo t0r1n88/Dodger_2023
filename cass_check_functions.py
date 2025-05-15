@@ -1868,6 +1868,19 @@ def check_error_main_may_2025(df:pd.DataFrame,name_file:str):
 
 
 
+def check_error_target_may_2025(df:pd.DataFrame,name_file:str):
+    """
+    Точка входа для проверки ошибок на листе целевиков
+    """
+    # создаем датафрейм для регистрации ошибок
+    error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
+    df = df.loc[:, '2':'17']
+    df = df.applymap(check_data)
+    # Проверяем 2 = сумма 3+4+ остальные колонки
+    first_error_df = check_first_error_may_2025(df.copy(), name_file)
+    error_df = pd.concat([error_df, first_error_df], axis=0, ignore_index=True)
+
+
 
 
 
