@@ -3,6 +3,7 @@
 Скрипт для обработки данных Формы 2 нозология (15 строк) мониторинга занятости выпускников
 """
 from cass_support_functions import * # импортируем вспомогательные функции и исключения
+from cass_check_functions import check_error_main_may_2025, extract_code_nose # проверка основного листа
 import pandas as pd
 import numpy as np
 import os
@@ -114,6 +115,64 @@ def prepare_may_2025(path_folder_data:str,path_to_end_folder):
                                                       'Описание ошибки'])
                 error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
                 continue
+
+            # отсекаем возможный первый столбец с данными ПОО,начинаем датафрейм с колонки 1 и отсекаем колонки с проверками
+            df = df.loc[:, '1':'18']
+            target_df = target_df.loc[:, '1':'27']
+
+            unique_code_lst_main = df['1'].unique()  # получаем список уникальных специальностей с основного листа
+            unique_code_lst_target = df['1'].unique()  # получаем список уникальных специальностей с листа целевиков
+
+            # проверяем на арифметические ошибки основной лист
+            file_error_df = check_error_main_may_2025(df.copy(), name_file)
+
+            # Добавляем в датафрейм для проверки на дубликаты
+            temp_dupl_df = df['1'].to_frame()
+            temp_dupl_df['Название файла'] = name_file
+            temp_dupl_df = temp_dupl_df.reindex(columns=['Название файла', '1'])
+            temp_dupl_df.columns = ['Название файла', 'Полное наименование']
+            temp_dupl_df.drop_duplicates(subset='Полное наименование', inplace=True)
+
+            main_dupl_df = pd.concat([main_dupl_df, temp_dupl_df])
+
+            # добавляем в словарь в полные имена из кода и наименования
+            for full_name in df['1'].tolist():
+                code = extract_code_nose(full_name)  # получаем только цифры
+                dct_code_and_name[code] = full_name
+            # очищаем от текста чтобы названия листов не обрезались
+            df['1'] = df['1'].apply(extract_code_nose)  # очищаем от текста в кодах
+            if 'error' in df['1'].values:
+                temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
+                                                    'Некорректные значения в колонке 1 Код и наименование профессии/специальности.Вместо кода присутствует дата, и т.п. проверьте правильность заполнения колонки 1!!!']],
+                                             columns=['Название файла', 'Строка или колонка с ошибкой',
+                                                      'Описание ошибки'])
+                file_error_df = pd.concat([file_error_df, temp_error_df], axis=0, ignore_index=True)
+            # добавляем в основной файл с ошибками
+            error_df = pd.concat([error_df, file_error_df], axis=0, ignore_index=True)
+            if file_error_df.shape[0] != 0:
+                temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
+                                                    'В файле обнаружены ошибки!!! ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
+                                             columns=['Название файла', 'Строка или колонка с ошибкой',
+                                                      'Описание ошибки'])
+                error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
+                continue
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
