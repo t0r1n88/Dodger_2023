@@ -126,6 +126,10 @@ def prepare_may_2025(path_folder_data:str,path_to_end_folder):
             # проверяем на арифметические ошибки основной лист
             file_error_df = check_error_main_may_2025(df.copy(), name_file)
 
+            # проверяем на арифметические ошибки лист целевиков
+            file_error_target_df = check_error_target_may_2025(target_df.copy(), name_file)
+
+
             # Добавляем в датафрейм для проверки на дубликаты
             temp_dupl_df = df['1'].to_frame()
             temp_dupl_df['Название файла'] = name_file
@@ -149,6 +153,7 @@ def prepare_may_2025(path_folder_data:str,path_to_end_folder):
                 file_error_df = pd.concat([file_error_df, temp_error_df], axis=0, ignore_index=True)
             # добавляем в основной файл с ошибками
             error_df = pd.concat([error_df, file_error_df], axis=0, ignore_index=True)
+            error_df = pd.concat([error_df, file_error_target_df], axis=0, ignore_index=True)
             if file_error_df.shape[0] != 0:
                 temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
                                                     'В файле обнаружены ошибки!!! ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
