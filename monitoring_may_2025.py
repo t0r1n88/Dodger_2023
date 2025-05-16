@@ -33,6 +33,9 @@ def prepare_may_2025(path_folder_data:str,path_to_end_folder):
     """
     # создаем словарь верхнего уровня для каждого поо
     high_level_dct = {}
+    # создаем для целевиков словарь верхнего уровня для каждого поо
+    target_high_level_dct = {}
+
     # создаем словарь верхнего уровня для хранения пары ключ значение где ключ это код специальности а значение- код и наименование
     dct_code_and_name = dict()
     # создаем датафрейм для регистрации ошибок
@@ -177,6 +180,27 @@ def prepare_may_2025(path_folder_data:str,path_to_end_folder):
                 data_row = row[4:27]  # получаем срез с нужными данными колонки в которых есть числа
                 for idx_col, value in enumerate(data_row, start=1):
                     high_level_dct[name_file][row[1]][f'Колонка {idx_col}'] +=check_data(value)
+
+
+            # Обрабатываем лист целевиков
+            if len(target_df) != 0:
+                # Создание словаря для хранения данных файла
+                code_spec = [spec for spec in target_df['1'].unique()]  # получаем список специальностей которые есть в файле
+                # Названия колонок
+                column_cat = [f'Колонка {i}' for i in range(1, 24)]
+
+                spec_dct = {key: 0 for key in column_cat}
+
+                target_high_level_dct[name_file] = {code: copy.deepcopy(spec_dct) for code in code_spec}
+
+                # Создание словаря для хранения данных с основного листа
+                for row in target_df.itertuples():
+                    data_row = row[5:28]  # получаем срез с нужными данными колонки в которых есть числа
+                    for idx_col, value in enumerate(data_row, start=1):
+                        target_high_level_dct[name_file][row[1]][f'Колонка {idx_col}'] += check_data(value)
+
+                print(target_high_level_dct)
+
 
 
 
