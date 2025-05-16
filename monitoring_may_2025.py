@@ -2,10 +2,12 @@
 """
 Скрипт для обработки данных Формы 2 нозология (15 строк) мониторинга занятости выпускников
 """
-from cass_support_functions import * # импортируем вспомогательные функции и исключения
-from cass_check_functions import check_error_main_may_2025,check_error_target_may_2025, extract_code_nose,check_data # проверка основного листа
-import pandas as pd
 import numpy as np
+
+from cass_support_functions import * # импортируем вспомогательные функции и исключения
+from cass_check_functions import check_error_main_may_2025,check_error_target_may_2025, extract_code_nose,check_data,create_check_tables_may_2025 # проверка основного листа
+import pandas as pd
+import copy
 import os
 import warnings
 from tkinter import messagebox
@@ -163,18 +165,22 @@ def prepare_may_2025(path_folder_data:str,path_to_end_folder):
 
             # Создание словаря для хранения данных файла
             code_spec = [spec for spec in df['1'].unique()]  # получаем список специальностей которые есть в файле
-            high_level_dct[name_file] = {code:[] for code in code_spec}
+            # Названия колонок
+            column_cat = [f'Колонка {i}' for i in range(1, 24)]
+
+            spec_dct = {key: 0 for key in column_cat}
+
+            high_level_dct[name_file] = {code:copy.deepcopy(spec_dct) for code in code_spec}
+
             # Создание словаря для хранения данных с основного листа
             for row in df.itertuples():
                 data_row = row[4:27]  # получаем срез с нужными данными колонки в которых есть числа
-                data_spec = list(map(check_data,data_row[:-1]))
-                data_spec.append(data_row[-1])
-                high_level_dct[name_file][row[1]] = data_spec
+                for idx_col, value in enumerate(data_row, start=1):
+                    high_level_dct[name_file][row[1]][f'Колонка {idx_col}'] +=check_data(value)
 
 
 
 
-    print(high_level_dct)
 
     t = time.localtime()  # получаем текущее время
     current_time = time.strftime('%H_%M_%S', t)
@@ -212,9 +218,43 @@ def prepare_may_2025(path_folder_data:str,path_to_end_folder):
         svod_df_spec.to_excel(writer, sheet_name='Свод по количеству', index=False)
         main_dupl_df.to_excel(writer, sheet_name='Полный список', index=False)
 
+    # # получаем уникальные специальности
+    all_spec_code = set()
+    for poo, spec in high_level_dct.items():
+        # ПОО и словарь со специальностями
+        for code_spec, _ in spec.items():
+            # специальность и словарь с данными
+            all_spec_code.add(code_spec)
 
+    itog_df = {key: copy.deepcopy(spec_dct) for key in all_spec_code}
+    # Складываем результаты неочищенного словаря
+    for poo, spec in high_level_dct.items():
+        # ПОО и словарь со специальностями
+        for code_spec, data in spec.items():
+            # специальность и словарь с данными
+            for col, col_data in data.items():
+                itog_df[code_spec][col] += col_data
 
+    # Сортируем получившийся словарь по возрастанию для удобства использования
+    sort_itog_dct = sorted(itog_df.items())
+    itog_df = {dct[0]: dct[1] for dct in sort_itog_dct}
 
+    finish_df = pd.DataFrame.from_dict(itog_df, orient='index')
+    finish_df = finish_df.reset_index()
+    finish_df.insert(1,'1.1',np.nan)
+    finish_df.insert(2,'1.2',np.nan)
+    finish_df.columns = ['1', '1.1', '1.2', '2', '3', '3.1', '3.2', '3.3',
+                           '4', '4.1', '4.2', '4.3', '5', '6', '7', '8', '9', '10', '11', '12',
+                           '13', '14', '15', '16', '17', '18']
+
+    finish_df['1'] = finish_df['1'].apply(
+        lambda x: dct_code_and_name[x])  # делаем код чтобы отображался код и наименование
+
+    wb_check_tables = create_check_tables_may_2025(high_level_dct)  # проверяем данные по каждой специальности
+    if 'Sheet' in wb_check_tables.sheetnames:
+        del wb_check_tables['Sheet']
+    wb_check_tables.save(
+        f'{path_to_end_folder}/Данные для проверки правильности заполнения файлов от {current_time}.xlsx')
 
 
 

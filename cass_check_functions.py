@@ -1359,6 +1359,60 @@ def create_check_tables_form_three(high_level_dct: dict):
     return wb
 
 
+def create_check_tables_may_2025(high_level_dct: dict):
+    """
+    Функция для создания файла с данными по каждой специальности
+    """
+    # Создаем словарь в котором будут храниться словари по специальностям
+    code_spec_dct = {}
+
+    # инвертируем словарь так чтобы код специальности стал внешним ключом а названия файлов внутренними
+    for poo, spec_data in high_level_dct.items():
+        for code_spec, data in spec_data.items():
+            if code_spec not in code_spec_dct:
+                code_spec_dct[code_spec] = {f'{poo}': high_level_dct[poo][code_spec]}
+            else:
+                code_spec_dct[code_spec].update({f'{poo}': high_level_dct[poo][code_spec]})
+
+    # Сортируем получившийся словарь по возрастанию для удобства использования
+    sort_code_spec_dct = sorted(code_spec_dct.items())
+    code_spec_dct = {dct[0]: dct[1] for dct in sort_code_spec_dct}
+
+    # Создаем файл
+    wb = openpyxl.Workbook()
+    # Создаем листы
+    for idx, code_spec in enumerate(code_spec_dct.keys()):
+        if code_spec != 'nan':
+            wb.create_sheet(title=code_spec, index=idx)
+
+    for code_spec in code_spec_dct.keys():
+        if code_spec != 'nan':
+            temp_code_df = pd.DataFrame.from_dict(code_spec_dct[code_spec], orient='index')
+            temp_code_df = temp_code_df.reset_index()
+            temp_code_df.columns = ['Наименование файла','2', '3', '3.1', '3.2', '3.3',
+                                 '4', '4.1', '4.2', '4.3', '5', '6', '7', '8', '9', '10', '11', '12',
+                                 '13', '14', '15', '16', '17', '18']
+            for r in dataframe_to_rows(temp_code_df, index=False, header=True):
+                wb[code_spec].append(r)
+            wb[code_spec].column_dimensions['A'].width = 20
+            wb[code_spec].column_dimensions['B'].width = 40
+
+
+
+
+
+
+
+    return wb
+
+
+
+
+
+
+
+
+
 def check_error_nose(df: pd.DataFrame, name_file, tup_correct: tuple):
     """
     Функция для проверки данных нозологий
