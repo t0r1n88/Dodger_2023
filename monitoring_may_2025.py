@@ -3,7 +3,7 @@
 Скрипт для обработки данных Формы 2 нозология (15 строк) мониторинга занятости выпускников
 """
 from cass_support_functions import * # импортируем вспомогательные функции и исключения
-from cass_check_functions import check_error_main_may_2025,check_error_target_may_2025, extract_code_nose # проверка основного листа
+from cass_check_functions import check_error_main_may_2025,check_error_target_may_2025, extract_code_nose,check_data # проверка основного листа
 import pandas as pd
 import numpy as np
 import os
@@ -161,27 +161,20 @@ def prepare_may_2025(path_folder_data:str,path_to_end_folder):
                 error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
                 continue
 
+            # Создание словаря для хранения данных файла
+            code_spec = [spec for spec in df['1'].unique()]  # получаем список специальностей которые есть в файле
+            high_level_dct[name_file] = {code:[] for code in code_spec}
+            # Создание словаря для хранения данных с основного листа
+            for row in df.itertuples():
+                data_row = row[4:27]  # получаем срез с нужными данными колонки в которых есть числа
+                data_spec = list(map(check_data,data_row[:-1]))
+                data_spec.append(data_row[-1])
+                high_level_dct[name_file][row[1]] = data_spec
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    print(high_level_dct)
 
     t = time.localtime()  # получаем текущее время
     current_time = time.strftime('%H_%M_%S', t)
@@ -196,6 +189,32 @@ def prepare_may_2025(path_folder_data:str,path_to_end_folder):
     wb['Sheet'].column_dimensions['C'].width = 50
 
     wb.save(f'{path_to_end_folder}/ОШИБКИ Май 2025 от {current_time}.xlsx')
+
+    # Общий список всех специальностей что встречаются
+    main_dupl_df.sort_values(by='Полное наименование', inplace=True)
+    # Уникальный специальности
+    unique_spec_df = main_dupl_df.drop_duplicates(subset='Полное наименование')
+    unique_spec_df.drop(columns='Название файла', inplace=True)
+
+    # Дубликаты
+    dupl_df = unique_spec_df.copy()
+    dupl_df['Код специальности'] = dupl_df['Полное наименование'].apply(extract_code_nose)
+    out_dupl_df = dupl_df[dupl_df['Код специальности'].duplicated(keep=False)]  # получаем дубликаты
+
+    # Свод
+    svod_df_spec = main_dupl_df['Полное наименование'].value_counts().to_frame()
+    svod_df_spec = svod_df_spec.reset_index()
+    svod_df_spec.columns = ['Специальность/профессия', 'Количество ПОО в которых она есть']
+
+    with pd.ExcelWriter(f'{path_to_end_folder}/Дублирующиеся коды от {current_time}.xlsx') as writer:
+        out_dupl_df.to_excel(writer, sheet_name='Дублирующиеся коды', index=False)
+        unique_spec_df.to_excel(writer, sheet_name='Уникальные', index=False)
+        svod_df_spec.to_excel(writer, sheet_name='Свод по количеству', index=False)
+        main_dupl_df.to_excel(writer, sheet_name='Полный список', index=False)
+
+
+
+
 
 
 

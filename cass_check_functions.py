@@ -1784,7 +1784,7 @@ def check_first_error_may_2025(df:pd.DataFrame, name_file):
     finish_lst_index = list(map(lambda x: f'Строка {str(x)}', finish_lst_index))
     temp_error_df['Строка или колонка с ошибкой'] = finish_lst_index
     temp_error_df['Название файла'] = name_file
-    temp_error_df['Описание ошибки'] = 'Не выполняется условие: Колонка 2 = сумма колонок (3,4,5 по 17)'
+    temp_error_df['Описание ошибки'] = 'Не выполняется условие:на листе 1. Форма сбора Колонка 2 = сумма колонок (3,4,5 по 17)'
     return temp_error_df
 
 
@@ -1809,7 +1809,7 @@ def check_second_error_may_2025(df:pd.DataFrame, name_file):
     finish_lst_index = list(map(lambda x: f'Строка {str(x)}', finish_lst_index))
     temp_error_df['Строка или колонка с ошибкой'] = finish_lst_index
     temp_error_df['Название файла'] = name_file
-    temp_error_df['Описание ошибки'] = 'Не выполняется условие: Колонка 3 >= сумма колонок (3.1, 3.2, 3.3)'
+    temp_error_df['Описание ошибки'] = 'Не выполняется условие: на листе 1. Форма сбора Колонка 3 >= сумма колонок (3.1, 3.2, 3.3)'
     return temp_error_df
 
 
@@ -1834,8 +1834,40 @@ def check_third_error_may_2025(df:pd.DataFrame, name_file):
     finish_lst_index = list(map(lambda x: f'Строка {str(x)}', finish_lst_index))
     temp_error_df['Строка или колонка с ошибкой'] = finish_lst_index
     temp_error_df['Название файла'] = name_file
-    temp_error_df['Описание ошибки'] = 'Не выполняется условие: Колонка 4 >= сумма колонок (4.1, 4.2, 4.3)'
+    temp_error_df['Описание ошибки'] = 'Не выполняется условие: на листе 1. Форма сбора Колонка 4 >= сумма колонок (4.1, 4.2, 4.3)'
     return temp_error_df
+
+
+
+def check_fourth_error_may_2025(df:pd.DataFrame, name_file):
+    """
+    Функция для проверки 5 = сумма остальные колонки
+    """
+    lst_sum = ['6', '7', '8', '9', '10', '11',
+                                   '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23',
+                                   '24', '25', '26', '27']
+
+    # получаем сумму колонок
+    df['Сумма'] = df[lst_sum].sum(axis=1)
+    # Проводим проверку
+    df['Результат'] = df['5'] == df['Сумма']
+    # заменяем булевые значения на понятные
+    df['Результат'] = df['Результат'].apply(lambda x: 'Правильно' if x else 'Неправильно')
+    # получаем датафрейм с ошибками и извлекаем индекс
+    df = df[df['Результат'] == 'Неправильно'].reset_index()
+    # создаем датафрейм дял добавления в ошибки
+    temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
+    # обрабатываем индексы строк с ошибками чтобы строки совпадали с файлом excel
+    raw_lst_index = df['index'].tolist()  # делаем список
+    finish_lst_index = list(map(lambda x: x + 4, raw_lst_index))
+    finish_lst_index = list(map(lambda x: f'Строка {str(x)}', finish_lst_index))
+    temp_error_df['Строка или колонка с ошибкой'] = finish_lst_index
+    temp_error_df['Название файла'] = name_file
+    temp_error_df['Описание ошибки'] = 'Не выполняется условие:на листе 3. Целевики Колонка 5 = сумма колонок 6:27'
+    return temp_error_df
+
+
+
 
 
 
@@ -1861,9 +1893,6 @@ def check_error_main_may_2025(df:pd.DataFrame,name_file:str):
     third_error_df = check_third_error_may_2025(df.copy(), name_file)
     error_df = pd.concat([error_df, third_error_df], axis=0, ignore_index=True)
 
-
-
-
     return error_df
 
 
@@ -1874,11 +1903,14 @@ def check_error_target_may_2025(df:pd.DataFrame,name_file:str):
     """
     # создаем датафрейм для регистрации ошибок
     error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
-    df = df.loc[:, '2':'17']
+    df = df.loc[:, '2':'27']
     df = df.applymap(check_data)
-    # Проверяем 2 = сумма 3+4+ остальные колонки
-    first_error_df = check_first_error_may_2025(df.copy(), name_file)
-    error_df = pd.concat([error_df, first_error_df], axis=0, ignore_index=True)
+    # Проверяем 5 = сумма остальные колонки
+    fourth_error_df = check_fourth_error_may_2025(df.copy(), name_file)
+    error_df = pd.concat([error_df, fourth_error_df], axis=0, ignore_index=True)
+
+    return error_df
+
 
 
 
