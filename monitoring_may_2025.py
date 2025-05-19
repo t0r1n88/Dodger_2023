@@ -192,6 +192,13 @@ def prepare_may_2025(path_folder_data:str,path_to_end_folder):
                                                       'Описание ошибки'])
                 error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
                 continue
+            if file_error_target_df.shape[0] != 0:
+                temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
+                                                    'В файле обнаружены ошибки!!! ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
+                                             columns=['Название файла', 'Строка или колонка с ошибкой',
+                                                      'Описание ошибки'])
+                error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
+                continue
 
             # Создание словаря для хранения данных файла
             code_spec = [spec for spec in df['1'].unique()]  # получаем список специальностей которые есть в файле
