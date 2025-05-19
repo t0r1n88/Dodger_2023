@@ -208,24 +208,6 @@ def prepare_may_2025(path_folder_data:str,path_to_end_folder):
 
 
 
-
-
-
-                # Создание словаря для хранения данных файла
-                code_spec = [spec for spec in df['1'].unique()]  # получаем список специальностей которые есть в файле
-                # Названия колонок
-                column_cat = [f'Колонка {i}' for i in range(1, 24)]
-
-                spec_dct = {key: 0 for key in column_cat}
-
-                high_level_dct[name_file] = {code:copy.deepcopy(spec_dct) for code in code_spec}
-
-                # Создание словаря для хранения данных с основного листа
-                for row in df.itertuples():
-                    data_row = row[4:27]  # получаем срез с нужными данными колонки в которых есть числа
-                    for idx_col, value in enumerate(data_row, start=1):
-                        high_level_dct[name_file][row[1]][f'Колонка {idx_col}'] +=check_data(value)
-
                 # для ошибок в инн кпп или количестве
                 second_target_error__df = pd.DataFrame(
                     columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
@@ -274,15 +256,16 @@ def prepare_may_2025(path_folder_data:str,path_to_end_folder):
                     # Проверяем длину ИНН и КПП
                     inn_kp_df = target_df.copy()
                     inn_kp_df=inn_kp_df.applymap(str)
+                    # Проверяем длину ИНН
                     inn_kp_df['Результат_ИНН'] = inn_kp_df['3'].apply(lambda x:check_dight(x,10))
                     # получаем датафрейм с ошибками и извлекаем индекс
-                    inn_kp_df = inn_kp_df[inn_kp_df['Результат_ИНН'] == 'Неправильно'].reset_index()
-                    if len(inn_kp_df) !=0:
+                    inn_df = inn_kp_df[inn_kp_df['Результат_ИНН'] == 'Неправильно'].reset_index()
+                    if len(inn_df) !=0:
                         # создаем датафрейм дял добавления в ошибки
                         temp_error_df = pd.DataFrame(
                             columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
                         # обрабатываем индексы строк с ошибками чтобы строки совпадали с файлом excel
-                        raw_lst_index = inn_kp_df['index'].tolist()  # делаем список
+                        raw_lst_index = inn_df['index'].tolist()  # делаем список
                         finish_lst_index = list(map(lambda x: x + 4, raw_lst_index))
                         finish_lst_index = list(map(lambda x: f'Строка {str(x)}', finish_lst_index))
                         temp_error_df['Строка или колонка с ошибкой'] = finish_lst_index
@@ -291,6 +274,23 @@ def prepare_may_2025(path_folder_data:str,path_to_end_folder):
                             'Описание ошибки'] = 'Количество цифр в ИНН (колонка 3 на листе 3. Целевики) на указанной строке не равно 10'
                         second_target_error__df = pd.concat([second_target_error__df, temp_error_df], axis=0, ignore_index=True)
 
+                    # Проверяем длину КПП
+                    inn_kp_df['Результат_КПП'] = inn_kp_df['4'].apply(lambda x:check_dight(x,9))
+                    # получаем датафрейм с ошибками и извлекаем индекс
+                    kpp_df = inn_kp_df[inn_kp_df['Результат_КПП'] == 'Неправильно'].reset_index()
+                    if len(kpp_df) !=0:
+                        # создаем датафрейм дял добавления в ошибки
+                        temp_error_df = pd.DataFrame(
+                            columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
+                        # обрабатываем индексы строк с ошибками чтобы строки совпадали с файлом excel
+                        raw_lst_index = kpp_df['index'].tolist()  # делаем список
+                        finish_lst_index = list(map(lambda x: x + 4, raw_lst_index))
+                        finish_lst_index = list(map(lambda x: f'Строка {str(x)}', finish_lst_index))
+                        temp_error_df['Строка или колонка с ошибкой'] = finish_lst_index
+                        temp_error_df['Название файла'] = name_file
+                        temp_error_df[
+                            'Описание ошибки'] = 'Количество цифр в КПП (колонка 4 на листе 3. Целевики) на указанной строке не равно 9'
+                        second_target_error__df = pd.concat([second_target_error__df, temp_error_df], axis=0, ignore_index=True)
 
 
                     target_df.insert(0,'Наименование файла',name_file)
@@ -305,6 +305,26 @@ def prepare_may_2025(path_folder_data:str,path_to_end_folder):
                     error_df = pd.concat([error_df, second_target_error__df], axis=0, ignore_index=True)
                     error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
                     continue
+
+                # После всех проверок добавляем в данные.
+                # Создание словаря для хранения данных файла
+                code_spec = [spec for spec in
+                             df['1'].unique()]  # получаем список специальностей которые есть в файле
+                # Названия колонок
+                column_cat = [f'Колонка {i}' for i in range(1, 24)]
+
+                spec_dct = {key: 0 for key in column_cat}
+
+                high_level_dct[name_file] = {code: copy.deepcopy(spec_dct) for code in code_spec}
+
+                # Создание словаря для хранения данных с основного листа
+                for row in df.itertuples():
+                    data_row = row[4:27]  # получаем срез с нужными данными колонки в которых есть числа
+                    for idx_col, value in enumerate(data_row, start=1):
+                        high_level_dct[name_file][row[1]][f'Колонка {idx_col}'] += check_data(value)
+
+
+
 
 
 
