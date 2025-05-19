@@ -1982,6 +1982,21 @@ def check_error_target_may_2025(df:pd.DataFrame,name_file:str):
 
     return error_df
 
+def check_dight(value:str,quantity:int):
+    """
+    Функция для проверки количества цифр в ячейке
+    """
+    result = re.search(r'\d+',value)
+    if result:
+        out_value = result.group()
+        if len(out_value) == quantity:
+            return 'Правильно'
+        else:
+            return 'Неправильно'
+    else:
+        return 'Неправильно'
+
+
 
 
 

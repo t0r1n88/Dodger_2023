@@ -5,7 +5,8 @@
 from form_one_five_row import prepare_form_one_employment  # импортируем функцию для обработки Формы 1 (5 строк)
 from form_two_fifteen_row_nose import prepare_form_two_employment  # импортируем функцию для обработки Форма 2 нозологии 15 строк
 from form_three_expected_release import prepare_form_three_employment # импортируем функцию для обработки Формы 3 Ожидаемый выпуск
-from monitoring_graduate_employment import prepare_graduate_employment
+#from monitoring_graduate_employment import prepare_graduate_employment
+from monitoring_may_2025 import prepare_may_2025 # мониториг май 2025
 from ck_employment import prepare_ck_employment  # импортируем функцию для обработки данных для отчета центров карьеры
 from opk_employment import prepare_opk_employment  # импортируем функцию для обработки данных по ОПК
 from create_svod_trudvsem import processing_data_trudvsem # импортируем функцию для обработки данных с трудвсем
@@ -278,13 +279,13 @@ def processing_form_three_employment():
 
 
 
-def processing_mon_grad():
+def processing_mon_may_2025():
     """
     Функция для обработки данных мониторинга занятости выпускников 2024 для сайта СССР
     :return:
     """
     try:
-        prepare_graduate_employment(path_folder_data_mon_grad, path_to_end_folder_mon_grad)
+        prepare_may_2025(path_folder_data_mon_grad, path_to_end_folder_mon_grad)
 
     except NameError:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
@@ -648,14 +649,14 @@ if __name__ == '__main__':
 
 
     tab_employment_grad_mon = ttk.Frame(tab_control)
-    tab_control.add(tab_employment_grad_mon, text='Мониторинг занятости\nвыпускников')
+    tab_control.add(tab_employment_grad_mon, text='Мониторинг занятости\nвыпускников Май 2025')
 
     employment_grad_mon_frame_description = LabelFrame(tab_employment_grad_mon)
     employment_grad_mon_frame_description.pack()
 
     lbl_hello_employment_grad_mon = Label(employment_grad_mon_frame_description,
                                           text='Центр опережающей профессиональной подготовки Республики Бурятия\n'
-                                               'Мониторинг занятости выпускников 2024 для сервиса\n'
+                                               'Мониторинг занятости выпускников 2025 для сервиса\n'
                                                '«Система сбора и синхронизации ресурсов» (https://data.firpo.ru).',
                                           width=60)
     lbl_hello_employment_grad_mon.pack(side=LEFT, anchor=N, ipadx=25, ipady=10)
@@ -690,7 +691,7 @@ if __name__ == '__main__':
 
     btn_proccessing_data_employment_grad_mon = Button(tab_employment_grad_mon, text='3) Обработать данные',
                                                       font=('Arial Bold', 20),
-                                                      command=processing_mon_grad
+                                                      command=processing_mon_may_2025
                                                       )
     btn_proccessing_data_employment_grad_mon.pack(padx=10, pady=10)
 
