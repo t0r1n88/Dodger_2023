@@ -35,7 +35,7 @@ def prepare_may_2025(path_folder_data:str,path_to_end_folder):
     # создаем словарь верхнего уровня для каждого поо
     high_level_dct = {}
     # создаем базовый датафрейм для целевиков
-    main_target_df = pd.DataFrame(columns=['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11',
+    main_target_df = pd.DataFrame(columns=['Наименование файла','1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11',
                                    '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23',
                                    '24', '25', '26', '27'])
     # создаем словарь верхнего уровня для хранения пары ключ значение где ключ это код специальности а значение- код и наименование
@@ -211,6 +211,7 @@ def prepare_may_2025(path_folder_data:str,path_to_end_folder):
 
             # Обрабатываем лист целевиков
             if len(target_df) != 0:
+                target_df.insert(0,'Наименование файла',name_file)
                 main_target_df = pd.concat([main_target_df,target_df])
 
 
@@ -288,7 +289,7 @@ def prepare_may_2025(path_folder_data:str,path_to_end_folder):
     if 'Sheet' in wb_check_tables.sheetnames:
         del wb_check_tables['Sheet']
     wb_check_tables.save(
-        f'{path_to_end_folder}/Данные для проверки правильности заполнения файлов от {current_time}.xlsx')
+        f'{path_to_end_folder}/Данные для проверки заполнения общего выпуска от {current_time}.xlsx')
 
 
 
@@ -296,11 +297,19 @@ def prepare_may_2025(path_folder_data:str,path_to_end_folder):
     """
     Обработка листа с целевиками
     """
-    wb_check_target_tables = create_check_tables_target_may_2025(main_target_df)  # проверяем данные по каждой специальности
+    wb_check_target_tables = create_check_tables_target_may_2025(main_target_df.copy())  # проверяем данные по каждой специальности
     if 'Sheet' in wb_check_target_tables.sheetnames:
         del wb_check_target_tables['Sheet']
     wb_check_target_tables.save(
-        f'{path_to_end_folder}/Данные для проверки правильности целевиков от {current_time}.xlsx')
+        f'{path_to_end_folder}/Данные для проверки заполнения целевиков от {current_time}.xlsx')
+
+
+    finish_df.sort_values(by='1',ascending=True,inplace=True)
+    main_target_df.sort_values(by='1',ascending=True,inplace=True)
+
+    with pd.ExcelWriter(f'{path_to_end_folder}/Мониторинг Май 2025 от {current_time}.xlsx') as writer:
+        finish_df.to_excel(writer, sheet_name='1. Форма сбора', index=False)
+        main_target_df.to_excel(writer, sheet_name='3. Целевики', index=False)
 
 
 
