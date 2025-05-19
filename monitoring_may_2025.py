@@ -5,7 +5,8 @@
 import numpy as np
 
 from cass_support_functions import * # импортируем вспомогательные функции и исключения
-from cass_check_functions import check_error_main_may_2025,check_error_target_may_2025, extract_code_nose,check_data,create_check_tables_may_2025 # проверка основного листа
+from cass_check_functions import check_error_main_may_2025,check_error_target_may_2025, extract_code_nose,check_data,create_check_tables_may_2025,create_check_tables_target_may_2025
+# проверка основного листа
 import pandas as pd
 import copy
 import os
@@ -33,11 +34,17 @@ def prepare_may_2025(path_folder_data:str,path_to_end_folder):
     """
     # создаем словарь верхнего уровня для каждого поо
     high_level_dct = {}
-    # создаем для целевиков словарь верхнего уровня для каждого поо
-    target_high_level_dct = {}
-
+    # создаем базовый датафрейм для целевиков
+    main_target_df = pd.DataFrame(columns=['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11',
+                                   '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23',
+                                   '24', '25', '26', '27'])
     # создаем словарь верхнего уровня для хранения пары ключ значение где ключ это код специальности а значение- код и наименование
     dct_code_and_name = dict()
+
+    # создаем словарь верхнего уровня для хранения пары ключ значение где ключ это код специальности а значение- код и наименование
+    target_dct_code_and_name = dict()
+
+
     # создаем датафрейм для регистрации ошибок
     error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
 
@@ -125,7 +132,7 @@ def prepare_may_2025(path_folder_data:str,path_to_end_folder):
             target_df = target_df.loc[:, '1':'27']
 
             unique_code_lst_main = df['1'].unique()  # получаем список уникальных специальностей с основного листа
-            unique_code_lst_target = df['1'].unique()  # получаем список уникальных специальностей с листа целевиков
+            unique_code_lst_target = target_df['1'].unique()  # получаем список уникальных специальностей с листа целевиков
 
             # проверяем на арифметические ошибки основной лист
             file_error_df = check_error_main_may_2025(df.copy(), name_file)
@@ -151,10 +158,30 @@ def prepare_may_2025(path_folder_data:str,path_to_end_folder):
             df['1'] = df['1'].apply(extract_code_nose)  # очищаем от текста в кодах
             if 'error' in df['1'].values:
                 temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
-                                                    'Некорректные значения в колонке 1 Код и наименование профессии/специальности.Вместо кода присутствует дата, и т.п. проверьте правильность заполнения колонки 1!!!']],
+                                                    'Некорректные значения в колонке 1 Код и наименование профессии/специальности на листе 1. Форма сбора.Вместо кода присутствует дата, и т.п. проверьте правильность заполнения колонки 1!!!']],
                                              columns=['Название файла', 'Строка или колонка с ошибкой',
                                                       'Описание ошибки'])
                 file_error_df = pd.concat([file_error_df, temp_error_df], axis=0, ignore_index=True)
+
+
+
+            # добавляем в словарь в полные имена из кода и наименования
+            for full_name in target_df['1'].tolist():
+                code = extract_code_nose(full_name)  # получаем только цифры
+                target_dct_code_and_name[code] = full_name
+            # очищаем от текста чтобы названия листов не обрезались
+            # Проверяем правильность написания кодов
+            checked_code_target_df = target_df.copy()
+            checked_code_target_df['1'] = checked_code_target_df['1'].apply(extract_code_nose)  # очищаем от текста в кодах
+            if 'error' in checked_code_target_df['1'].values:
+                temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
+                                                    'Некорректные значения в колонке 1 Код и наименование профессии/специальности на листе 3. Целевики.Вместо кода присутствует дата, и т.п. проверьте правильность заполнения колонки 1!!!']],
+                                             columns=['Название файла', 'Строка или колонка с ошибкой',
+                                                      'Описание ошибки'])
+                file_error_target_df = pd.concat([file_error_target_df, temp_error_df], axis=0, ignore_index=True)
+
+
+
             # добавляем в основной файл с ошибками
             error_df = pd.concat([error_df, file_error_df], axis=0, ignore_index=True)
             error_df = pd.concat([error_df, file_error_target_df], axis=0, ignore_index=True)
@@ -184,25 +211,7 @@ def prepare_may_2025(path_folder_data:str,path_to_end_folder):
 
             # Обрабатываем лист целевиков
             if len(target_df) != 0:
-                # Создание словаря для хранения данных файла
-                code_spec = [spec for spec in target_df['1'].unique()]  # получаем список специальностей которые есть в файле
-                # Названия колонок
-                column_cat = [f'Колонка {i}' for i in range(1, 24)]
-
-                spec_dct = {key: 0 for key in column_cat}
-
-                target_high_level_dct[name_file] = {code: copy.deepcopy(spec_dct) for code in code_spec}
-
-                # Создание словаря для хранения данных с основного листа
-                for row in target_df.itertuples():
-                    data_row = row[5:28]  # получаем срез с нужными данными колонки в которых есть числа
-                    for idx_col, value in enumerate(data_row, start=1):
-                        target_high_level_dct[name_file][row[1]][f'Колонка {idx_col}'] += check_data(value)
-
-                print(target_high_level_dct)
-
-
-
+                main_target_df = pd.concat([main_target_df,target_df])
 
 
 
@@ -242,6 +251,7 @@ def prepare_may_2025(path_folder_data:str,path_to_end_folder):
         svod_df_spec.to_excel(writer, sheet_name='Свод по количеству', index=False)
         main_dupl_df.to_excel(writer, sheet_name='Полный список', index=False)
 
+
     # # получаем уникальные специальности
     all_spec_code = set()
     for poo, spec in high_level_dct.items():
@@ -279,6 +289,26 @@ def prepare_may_2025(path_folder_data:str,path_to_end_folder):
         del wb_check_tables['Sheet']
     wb_check_tables.save(
         f'{path_to_end_folder}/Данные для проверки правильности заполнения файлов от {current_time}.xlsx')
+
+
+
+
+    """
+    Обработка листа с целевиками
+    """
+    wb_check_target_tables = create_check_tables_target_may_2025(main_target_df)  # проверяем данные по каждой специальности
+    if 'Sheet' in wb_check_target_tables.sheetnames:
+        del wb_check_target_tables['Sheet']
+    wb_check_target_tables.save(
+        f'{path_to_end_folder}/Данные для проверки правильности целевиков от {current_time}.xlsx')
+
+
+
+
+
+
+
+
 
 
 

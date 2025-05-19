@@ -1397,15 +1397,32 @@ def create_check_tables_may_2025(high_level_dct: dict):
             wb[code_spec].column_dimensions['A'].width = 20
             wb[code_spec].column_dimensions['B'].width = 40
 
+    return wb
 
+def create_check_tables_target_may_2025(df: pd.DataFrame):
+    """
+    Функция для создания файла с данными по каждой специальности
+    """
+    df['Код'] = df['1'].apply(extract_code_nose)  # очищаем от текста в кодах
+    lst_unique_code = sorted(df['Код'].unique()) # список уникальных
 
+    # Создаем файл
+    wb = openpyxl.Workbook()
+    # Создаем листы
+    for idx, code_spec in enumerate(lst_unique_code):
+        if code_spec != 'nan':
+            wb.create_sheet(title=code_spec, index=idx)
 
-
+    for code in lst_unique_code:
+        temp_df = df[df['Код'] == code]
+        temp_df.drop(columns=['Код'],inplace=True)
+        for r in dataframe_to_rows(temp_df, index=False, header=True):
+            wb[code].append(r)
+        wb[code].column_dimensions['A'].width = 40
+        wb[code].column_dimensions['B'].width = 20
 
 
     return wb
-
-
 
 
 
