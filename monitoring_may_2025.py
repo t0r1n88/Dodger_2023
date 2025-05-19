@@ -131,15 +131,12 @@ def prepare_may_2025(path_folder_data:str,path_to_end_folder):
             df = df.loc[:, '1':'18']
             target_df = target_df.loc[:, '1':'27']
 
-            unique_code_lst_main = df['1'].unique()  # получаем список уникальных специальностей с основного листа
-            unique_code_lst_target = target_df['1'].unique()  # получаем список уникальных специальностей с листа целевиков
 
             # проверяем на арифметические ошибки основной лист
             file_error_df = check_error_main_may_2025(df.copy(), name_file)
 
             # проверяем на арифметические ошибки лист целевиков
             file_error_target_df = check_error_target_may_2025(target_df.copy(), name_file)
-
 
             # Добавляем в датафрейм для проверки на дубликаты
             temp_dupl_df = df['1'].to_frame()
@@ -149,6 +146,8 @@ def prepare_may_2025(path_folder_data:str,path_to_end_folder):
             temp_dupl_df.drop_duplicates(subset='Полное наименование', inplace=True)
 
             main_dupl_df = pd.concat([main_dupl_df, temp_dupl_df])
+
+
 
             # добавляем в словарь в полные имена из кода и наименования
 
@@ -161,6 +160,7 @@ def prepare_may_2025(path_folder_data:str,path_to_end_folder):
                 dct_code_and_name[code] = full_name
             # очищаем от текста чтобы названия листов не обрезались
             df['1'] = df['1'].apply(extract_code_nose)  # очищаем от текста в кодах
+
             if 'error' in df['1'].values:
                 temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
                                                     'Некорректные значения в колонке 1 Код и наименование профессии/специальности на листе 1. Форма сбора.Вместо кода присутствует дата, и т.п. проверьте правильность заполнения колонки 1!!!']],
@@ -184,6 +184,27 @@ def prepare_may_2025(path_folder_data:str,path_to_end_folder):
                                              columns=['Название файла', 'Строка или колонка с ошибкой',
                                                       'Описание ошибки'])
                 file_error_target_df = pd.concat([file_error_target_df, temp_error_df], axis=0, ignore_index=True)
+
+
+
+            # добавляем в основной файл с ошибками
+            error_df = pd.concat([error_df, file_error_df], axis=0, ignore_index=True)
+            error_df = pd.concat([error_df, file_error_target_df], axis=0, ignore_index=True)
+            if file_error_df.shape[0] != 0:
+                temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
+                                                    'В файле обнаружены ошибки!!! ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
+                                             columns=['Название файла', 'Строка или колонка с ошибкой',
+                                                      'Описание ошибки'])
+                error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
+                continue
+            if file_error_target_df.shape[0] != 0:
+                temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
+                                                    'В файле обнаружены ошибки!!! ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
+                                             columns=['Название файла', 'Строка или колонка с ошибкой',
+                                                      'Описание ошибки'])
+                error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
+                continue
+
 
 
 
@@ -220,21 +241,34 @@ def prepare_may_2025(path_folder_data:str,path_to_end_folder):
 
 
 
+                # проверяем превышение количества целевиков
+                cross_check_df['2'] = cross_check_df['2'].apply(check_data)
+                cross_code_df = cross_check_df.groupby(by='1').agg({'2':'sum'})
+                target_df['5'] = target_df['5'].apply(check_data)
+                target_code_df = target_df.groupby(by='1').agg({'5':'sum'})
 
+                check_target_df = target_code_df.join(cross_code_df)
+                check_target_df = check_target_df.reset_index()
+                check_target_df.columns= ['Профессия/специальность','Количество целевиков','Общий выпуск']
+                check_target_df = check_target_df.reindex(columns=['Профессия/специальность','Общий выпуск','Количество целевиков'])
+
+                check_target_df['Результат'] = check_target_df['Общий выпуск'] >= check_target_df['Количество целевиков']
+                check_target_df['Результат'] = check_target_df['Результат'].apply(lambda x: 'Правильно' if x else 'Неправильно')
+                # получаем датафрейм с ошибками и извлекаем индекс
+                temp_target_error_df = check_target_df[check_target_df['Результат'] == 'Неправильно']
+                if len(temp_target_error_df) != 0:
+                    error_code_target = temp_target_error_df['Профессия/специальность'].tolist()
+                    temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
+                                                        f'На листе 3. Целевики обнаружены специальности {error_code_target} численность выпускников которых превышает количество для этих специальностей указанное на листе 1. Форма сбора на листе 1. Форма сбора!!! ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
+                                                 columns=['Название файла', 'Строка или колонка с ошибкой',
+                                                          'Описание ошибки'])
+                    file_error_target_df = pd.concat([file_error_target_df, temp_error_df], axis=0, ignore_index=True)
 
                 target_df.insert(0,'Наименование файла',name_file)
                 main_target_df = pd.concat([main_target_df,target_df])
 
-            # добавляем в основной файл с ошибками
-            error_df = pd.concat([error_df, file_error_df], axis=0, ignore_index=True)
-            error_df = pd.concat([error_df, file_error_target_df], axis=0, ignore_index=True)
-            if file_error_df.shape[0] != 0:
-                temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
-                                                    'В файле обнаружены ошибки!!! ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
-                                             columns=['Название файла', 'Строка или колонка с ошибкой',
-                                                      'Описание ошибки'])
-                error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
-                continue
+
+
             if file_error_target_df.shape[0] != 0:
                 temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
                                                     'В файле обнаружены ошибки!!! ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!!']],
