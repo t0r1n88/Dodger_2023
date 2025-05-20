@@ -293,8 +293,7 @@ def prepare_may_2025(path_folder_data:str,path_to_end_folder):
                         second_target_error__df = pd.concat([second_target_error__df, temp_error_df], axis=0, ignore_index=True)
 
 
-                    target_df.insert(0,'Наименование файла',name_file)
-                    main_target_df = pd.concat([main_target_df,target_df])
+
 
 
                 if second_target_error__df.shape[0] != 0:
@@ -322,6 +321,10 @@ def prepare_may_2025(path_folder_data:str,path_to_end_folder):
                     data_row = row[4:27]  # получаем срез с нужными данными колонки в которых есть числа
                     for idx_col, value in enumerate(data_row, start=1):
                         high_level_dct[name_file][row[1]][f'Колонка {idx_col}'] += check_data(value)
+
+                # добавляем целевиков
+                target_df.insert(0, 'Наименование файла', name_file)
+                main_target_df = pd.concat([main_target_df, target_df])
 
 
 
