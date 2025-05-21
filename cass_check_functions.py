@@ -1861,13 +1861,11 @@ def check_first_error_may_2025(df:pd.DataFrame, name_file):
 
 def check_second_error_may_2025(df:pd.DataFrame, name_file):
     """
-    Функция для проверки 3 >= сумма 3.1 3.2 3.3
+    Функция для проверки 3 >= каждой из 3.1 3.2 3.3
     """
-    lst_sum = ['3.1', '3.2', '3.3']
 
-    df['Сумма'] = df[lst_sum].sum(axis=1)
     # Проводим проверку
-    df['Результат'] = df['3'] >= df['Сумма']
+    df['Результат'] = (df['3'] >= df['3.1']) & (df['3'] >= df['3.2']) & (df['3'] >= df['3.3'])
     # заменяем булевые значения на понятные
     df['Результат'] = df['Результат'].apply(lambda x: 'Правильно' if x else 'Неправильно')
     # получаем датафрейм с ошибками и извлекаем индекс
@@ -1880,19 +1878,17 @@ def check_second_error_may_2025(df:pd.DataFrame, name_file):
     finish_lst_index = list(map(lambda x: f'Строка {str(x)}', finish_lst_index))
     temp_error_df['Строка или колонка с ошибкой'] = finish_lst_index
     temp_error_df['Название файла'] = name_file
-    temp_error_df['Описание ошибки'] = 'Не выполняется условие: на листе 1. Форма сбора Колонка 3 >= сумма колонок (3.1, 3.2, 3.3)'
+    temp_error_df['Описание ошибки'] = 'Не выполняется условие: на листе 1. Форма сбора Колонка 3 >= значений в колонках  (3.1, 3.2, 3.3)'
     return temp_error_df
 
 
 def check_third_error_may_2025(df:pd.DataFrame, name_file):
     """
-    Функция для проверки 4 >= сумма 4.1 4.2 4.3
+    Функция для проверки 4 >= каждой из колонок 4.1 4.2 4.3
     """
-    lst_sum = ['4.1', '4.2', '4.3']
 
-    df['Сумма'] = df[lst_sum].sum(axis=1)
     # Проводим проверку
-    df['Результат'] = df['4'] >= df['Сумма']
+    df['Результат'] = df['Результат'] = (df['4'] >= df['4.1']) & (df['4'] >= df['4.2']) & (df['4'] >= df['4.3'])
     # заменяем булевые значения на понятные
     df['Результат'] = df['Результат'].apply(lambda x: 'Правильно' if x else 'Неправильно')
     # получаем датафрейм с ошибками и извлекаем индекс
@@ -1982,20 +1978,45 @@ def check_error_target_may_2025(df:pd.DataFrame,name_file:str):
 
     return error_df
 
-def check_dight(value:str,quantity:int):
+def check_dight(value:str,quantity_tuple:tuple):
     """
     Функция для проверки количества цифр в ячейке
     """
     result = re.search(r'\d+',value)
     if result:
         out_value = result.group()
-        if len(out_value) == quantity:
+        if len(out_value) in quantity_tuple:
             return 'Правильно'
         else:
             return 'Неправильно'
     else:
         return 'Неправильно'
 
+
+def check_kpp(row:pd.Series):
+    """
+    Функция для проверки КПП
+    """
+    lst_row = row.tolist()
+    kpp = re.search(r'\d+',lst_row[1])
+    inn = re.search(r'\d+',lst_row[0])
+    if kpp:
+        if inn:
+            # есть есть цифры и в ИНН и в КППП
+            if len(inn.group()) == 10 and len(kpp.group()) == 9:
+                return 'Правильно'
+            else:
+                return 'Неправильно'
+        else:
+            return 'Неправильно'
+    else:
+        if inn:
+            if len(inn.group()) == 12:
+                return 'Правильно'
+            else:
+                return 'Неправильно'
+        else:
+            return 'Неправильно'
 
 
 

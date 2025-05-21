@@ -5,7 +5,8 @@
 import numpy as np
 
 from cass_support_functions import * # импортируем вспомогательные функции и исключения
-from cass_check_functions import check_error_main_may_2025,check_error_target_may_2025, extract_code_nose,check_data,create_check_tables_may_2025,create_check_tables_target_may_2025,check_dight
+from cass_check_functions import (check_error_main_may_2025,check_error_target_may_2025,
+                                  extract_code_nose,check_data,create_check_tables_may_2025,create_check_tables_target_may_2025,check_dight,check_kpp)
 # проверка основного листа
 import pandas as pd
 import copy
@@ -257,7 +258,7 @@ def prepare_may_2025(path_folder_data:str,path_to_end_folder):
                     inn_kp_df = target_df.copy()
                     inn_kp_df=inn_kp_df.applymap(str)
                     # Проверяем длину ИНН
-                    inn_kp_df['Результат_ИНН'] = inn_kp_df['3'].apply(lambda x:check_dight(x,10))
+                    inn_kp_df['Результат_ИНН'] = inn_kp_df['3'].apply(lambda x:check_dight(x,(10,12)))
                     # получаем датафрейм с ошибками и извлекаем индекс
                     inn_df = inn_kp_df[inn_kp_df['Результат_ИНН'] == 'Неправильно'].reset_index()
                     if len(inn_df) !=0:
@@ -271,11 +272,11 @@ def prepare_may_2025(path_folder_data:str,path_to_end_folder):
                         temp_error_df['Строка или колонка с ошибкой'] = finish_lst_index
                         temp_error_df['Название файла'] = name_file
                         temp_error_df[
-                            'Описание ошибки'] = 'Количество цифр в ИНН (колонка 3 на листе 3. Целевики) на указанной строке не равно 10'
+                            'Описание ошибки'] = 'Количество цифр в ИНН (колонка 3 на листе 3. Целевики) на указанной строке не равно 10 (юрлица) или 12 (в случае ИП)'
                         second_target_error__df = pd.concat([second_target_error__df, temp_error_df], axis=0, ignore_index=True)
 
                     # Проверяем длину КПП
-                    inn_kp_df['Результат_КПП'] = inn_kp_df['4'].apply(lambda x:check_dight(x,9))
+                    inn_kp_df['Результат_КПП'] = inn_kp_df[['3','4']].apply(lambda x:check_kpp(x),axis=1)
                     # получаем датафрейм с ошибками и извлекаем индекс
                     kpp_df = inn_kp_df[inn_kp_df['Результат_КПП'] == 'Неправильно'].reset_index()
                     if len(kpp_df) !=0:
@@ -289,7 +290,7 @@ def prepare_may_2025(path_folder_data:str,path_to_end_folder):
                         temp_error_df['Строка или колонка с ошибкой'] = finish_lst_index
                         temp_error_df['Название файла'] = name_file
                         temp_error_df[
-                            'Описание ошибки'] = 'Количество цифр в КПП (колонка 4 на листе 3. Целевики) на указанной строке не равно 9'
+                            'Описание ошибки'] = 'Количество цифр в КПП (колонка 4 на листе 3. Целевики) на указанной строке не равно 9 для юридических лиц или указан КПП для ИП'
                         second_target_error__df = pd.concat([second_target_error__df, temp_error_df], axis=0, ignore_index=True)
 
 
@@ -415,11 +416,12 @@ def prepare_may_2025(path_folder_data:str,path_to_end_folder):
         """
         Обработка листа с целевиками
         """
-        wb_check_target_tables = create_check_tables_target_may_2025(main_target_df.copy())  # проверяем данные по каждой специальности
-        if 'Sheet' in wb_check_target_tables.sheetnames:
-            del wb_check_target_tables['Sheet']
-        wb_check_target_tables.save(
-            f'{path_to_end_folder}/Данные для проверки заполнения целевиков от {current_time}.xlsx')
+        if len(main_target_df) != 0:
+            wb_check_target_tables = create_check_tables_target_may_2025(main_target_df.copy())  # проверяем данные по каждой специальности
+            if 'Sheet' in wb_check_target_tables.sheetnames:
+                del wb_check_target_tables['Sheet']
+            wb_check_target_tables.save(
+                f'{path_to_end_folder}/Данные для проверки заполнения целевиков от {current_time}.xlsx')
 
 
         finish_df.sort_values(by='1',ascending=True,inplace=True)
