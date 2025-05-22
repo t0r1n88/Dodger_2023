@@ -427,9 +427,22 @@ def prepare_may_2025(path_folder_data:str,path_to_end_folder):
         finish_df.sort_values(by='1',ascending=True,inplace=True)
         main_target_df.sort_values(by='1',ascending=True,inplace=True)
 
-        with pd.ExcelWriter(f'{path_to_end_folder}/Мониторинг Май 2025 от {current_time}.xlsx') as writer:
-            finish_df.to_excel(writer, sheet_name='1. Форма сбора', index=False)
-            main_target_df.to_excel(writer, sheet_name='3. Целевики', index=False)
+        if len(main_target_df) != 0:
+            # Создаем третий лист для свода по целевикам
+            svod_target = main_target_df.groupby(by='1').agg({'5':'sum'})
+            svod_target = svod_target.reset_index()
+            svod_target.columns = ['Специальность/профессия','Количество']
+            svod_target.sort_values(by='Специальность/профессия', ascending=True, inplace=True)
+            with pd.ExcelWriter(f'{path_to_end_folder}/Мониторинг Май 2025 от {current_time}.xlsx') as writer:
+                finish_df.to_excel(writer, sheet_name='1. Форма сбора', index=False)
+                main_target_df.to_excel(writer, sheet_name='3. Целевики', index=False)
+                svod_target.to_excel(writer, sheet_name='Свод по целевикам', index=False)
+
+        else:
+            with pd.ExcelWriter(f'{path_to_end_folder}/Мониторинг Май 2025 от {current_time}.xlsx') as writer:
+                finish_df.to_excel(writer, sheet_name='1. Форма сбора', index=False)
+                main_target_df.to_excel(writer, sheet_name='3. Целевики', index=False)
+
 
     except NameError:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
