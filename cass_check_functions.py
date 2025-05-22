@@ -1901,7 +1901,7 @@ def check_third_error_may_2025(df:pd.DataFrame, name_file):
     finish_lst_index = list(map(lambda x: f'Строка {str(x)}', finish_lst_index))
     temp_error_df['Строка или колонка с ошибкой'] = finish_lst_index
     temp_error_df['Название файла'] = name_file
-    temp_error_df['Описание ошибки'] = 'Не выполняется условие: на листе 1. Форма сбора Колонка 4 >= сумма колонок (4.1, 4.2, 4.3)'
+    temp_error_df['Описание ошибки'] = 'Не выполняется условие: на листе 1. Форма сбора Колонка 4 >= значений в колонках(4.1, 4.2, 4.3)'
     return temp_error_df
 
 

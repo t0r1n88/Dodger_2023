@@ -118,7 +118,9 @@ def prepare_may_2025(path_folder_data:str,path_to_end_folder):
                     continue
 
                 df = df[df['1'].notna()]  # убираем возможные наны из за лишних строк
+                df = df[df['1'].str.strip() != ''] # убираем строки где только пробелы
                 target_df = target_df[target_df['1'].notna()]  # убираем возможные наны из за лишних строк
+                target_df = target_df[target_df['1'].str.strip() != ''] # убираем строки где только пробелы
 
                 # Проверяем на заполнение лист с общими данными
                 if len(df) == 0:
@@ -179,6 +181,7 @@ def prepare_may_2025(path_folder_data:str,path_to_end_folder):
                 # очищаем от текста чтобы названия листов не обрезались
                 # Проверяем правильность написания кодов
                 checked_code_target_df = target_df.copy()
+
                 checked_code_target_df['1'] = checked_code_target_df['1'].apply(extract_code_nose)  # очищаем от текста в кодах
                 if 'error' in checked_code_target_df['1'].values:
                     temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
@@ -357,6 +360,9 @@ def prepare_may_2025(path_folder_data:str,path_to_end_folder):
 
         # Дубликаты
         dupl_df = unique_spec_df.copy()
+        dupl_df['Полное наименование'] = dupl_df['Полное наименование'].apply(str.strip)
+        dupl_df = dupl_df.drop_duplicates(subset=['Полное наименование'])
+
         dupl_df['Код специальности'] = dupl_df['Полное наименование'].apply(extract_code_nose)
         out_dupl_df = dupl_df[dupl_df['Код специальности'].duplicated(keep=False)]  # получаем дубликаты
 
@@ -364,6 +370,7 @@ def prepare_may_2025(path_folder_data:str,path_to_end_folder):
         svod_df_spec = main_dupl_df['Полное наименование'].value_counts().to_frame()
         svod_df_spec = svod_df_spec.reset_index()
         svod_df_spec.columns = ['Специальность/профессия', 'Количество ПОО в которых она есть']
+        svod_df_spec.sort_values(by='Специальность/профессия',ascending=True,inplace=True)
 
         with pd.ExcelWriter(f'{path_to_end_folder}/Дублирующиеся коды от {current_time}.xlsx') as writer:
             out_dupl_df.to_excel(writer, sheet_name='Дублирующиеся коды', index=False)
