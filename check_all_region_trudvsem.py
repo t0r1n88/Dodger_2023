@@ -419,6 +419,28 @@ def create_svod_for_df(prepared_df:pd.DataFrame,svod_region_folder:str,name_file
         svod_vac_mun_region_df.rename(columns={'sum': 'Количество вакансий'}, inplace=True)
         svod_vac_mun_region_df = svod_vac_mun_region_df.reset_index()
 
+
+    # Свод по муниципалитетам и отраслям
+    svod_vac_mun_sphere_region_df = pd.pivot_table(prepared_df,
+                                            index=['Муниципалитет','Сфера деятельности'],
+                                            values=['Количество рабочих мест'],
+                                            aggfunc={'Количество рабочих мест': [np.sum]})
+    svod_vac_mun_sphere_region_df = svod_vac_mun_sphere_region_df.droplevel(level=0, axis=1)  # убираем мультииндекс
+    if len(svod_vac_mun_sphere_region_df) != 0:
+        svod_vac_mun_sphere_region_df = svod_vac_mun_sphere_region_df.reset_index()
+        svod_vac_mun_sphere_region_df.rename(columns={'sum':'Количество вакансий'},inplace=True)
+
+    # Свод по отраслям и муниципалитетам
+    svod_vac_sphere_mun_region_df = pd.pivot_table(prepared_df,
+                                            index=['Сфера деятельности','Муниципалитет'],
+                                            values=['Количество рабочих мест'],
+                                            aggfunc={'Количество рабочих мест': [np.sum]})
+    svod_vac_sphere_mun_region_df = svod_vac_sphere_mun_region_df.droplevel(level=0, axis=1)  # убираем мультииндекс
+    if len(svod_vac_sphere_mun_region_df) != 0:
+        svod_vac_sphere_mun_region_df = svod_vac_sphere_mun_region_df.reset_index()
+        svod_vac_sphere_mun_region_df.rename(columns={'sum':'Количество вакансий'},inplace=True)
+
+
     # Свод по количеству рабочих мест по организациям
     svod_vac_org_region_df = pd.pivot_table(prepared_df,
                                             index=['Краткое название работодателя'],
@@ -621,6 +643,8 @@ def create_svod_for_df(prepared_df:pd.DataFrame,svod_region_folder:str,name_file
         svod_vac_reg_region_df.to_excel(writer, sheet_name='Вакансии по отраслям', index=False)
         svod_vac_mun_region_df.to_excel(writer, sheet_name='Вакансии по муниципалитетам', index=False)
         svod_vac_org_region_df.to_excel(writer, sheet_name='Вакансии по работодателям', index=False)
+        svod_vac_mun_sphere_region_df.to_excel(writer, sheet_name='Муниципалитеты отрасли', index=False)
+        svod_vac_sphere_mun_region_df.to_excel(writer, sheet_name='Отрасли муниципалитеты', index=False)
         svod_vac_particular_org_region_df.to_excel(writer, sheet_name='Вакансии для динамики', index=False)
         svod_shpere_pay_region_df.to_excel(writer, sheet_name='Зарплата по отраслям', index=False)
         svod_shpere_category_pay_region_df.to_excel(writer, sheet_name='Категории ЗП по отраслям', index=False)
@@ -707,7 +731,7 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
         lst_text_columns = ['Вакансия', 'Требуемая специализация', 'Требования',
                             'Бонусы', 'Требуемые доп. документы',
                             'Требуемые хардскиллы', 'Требуемые софтскиллы', 'Полное название работодателя','Краткое название работодателя',
-                            'Муниципалитет','Адрес вакансии', 'Доп информация по адресу вакансии', 'Email работодателя',
+                            'Муниципалитет','Адрес вакансии', 'Доп информация по адресу вакансии', 'Email контактного лица','Email работодателя',
                             'Контактное лицо']
         lst_region = df['regionName'].unique()  # Получаем список регионов
         # проверяем
