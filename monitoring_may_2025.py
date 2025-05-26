@@ -86,7 +86,15 @@ def prepare_may_2025(path_folder_data:str,path_to_end_folder):
                     continue
 
                 # Считываем данные листа с общими данными
-                df = pd.read_excel(f'{path_folder_data}/{file}', sheet_name='1. Форма сбора', skiprows=2, dtype=str)
+                try:
+                    df = pd.read_excel(f'{path_folder_data}/{file}', sheet_name='1. Форма сбора', skiprows=2, dtype=str)
+                except:
+                    temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
+                                                        'Не удалось прочитать файл! Отключите фильтры в файле, проверьте файл на целостность и соответствие шаблону']],
+                                                 columns=['Название файла', 'Строка или колонка с ошибкой',
+                                                          'Описание ошибки'])
+                    error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
+                    continue
                 df.columns = list(map(str, df.columns))  # делаем названия колонок строковыми
                 # создаем множество колонок наличие которых мы проверяем
                 check_cols = {'1', '1.1', '1.2', '2', '3', '3.1', '3.2', '3.3',
@@ -102,7 +110,15 @@ def prepare_may_2025(path_folder_data:str,path_to_end_folder):
                     continue
 
                 # Считываем данные листа с целевиками
-                target_df = pd.read_excel(f'{path_folder_data}/{file}', sheet_name='3. Целевики', skiprows=2, dtype=str)
+                try:
+                    target_df = pd.read_excel(f'{path_folder_data}/{file}', sheet_name='3. Целевики', skiprows=2, dtype=str)
+                except:
+                    temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
+                                                        'Не удалось прочитать файл! Отключите фильтры в файле, проверьте файл на целостность и соответствие шаблону']],
+                                                 columns=['Название файла', 'Строка или колонка с ошибкой',
+                                                          'Описание ошибки'])
+                    error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
+                    continue
                 target_df.columns = list(map(str, target_df.columns))  # делаем названия колонок строковыми
                 # создаем множество колонок наличие которых мы проверяем
                 check_cols_target = {'1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11',
