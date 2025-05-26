@@ -66,7 +66,15 @@ def prepare_form_two_employment(path_folder_data:str,path_to_end_folder):
                                                           'Описание ошибки'])
                     error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
                     continue
-                df = pd.read_excel(f'{path_folder_data}/{file}',sheet_name='Форма нозологии', skiprows=4, dtype=str)
+                try:
+                    df = pd.read_excel(f'{path_folder_data}/{file}',sheet_name='Форма нозологии', skiprows=4, dtype=str)
+                except:
+                    temp_error_df = pd.DataFrame(data=[[f'{name_file}', '',
+                                                        'Не удалось прочитать файл! Отключите фильтры в файле, проверьте файл на целостность и соответствие шаблону']],
+                                                 columns=['Название файла', 'Строка или колонка с ошибкой',
+                                                          'Описание ошибки'])
+                    error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
+                    continue
                 df.columns = list(map(str, df.columns))  # делаем названия колонок строковыми
                 # создаем множество колонок наличие которых мы проверяем
                 check_cols = ['гр.01', 'гр.02', 'гр.03', 'гр.04', 'гр.05', 'гр.06', 'гр.07', 'гр.08', 'гр.09', 'гр.10', 'гр.11', 'гр.12', 'гр.13', 'гр.14', 'гр.15',
