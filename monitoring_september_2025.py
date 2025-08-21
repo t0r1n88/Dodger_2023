@@ -116,7 +116,7 @@ def prepare_september_2025(path_folder_data:str,path_to_end_folder):
             # создаем множество колонок наличие которых мы проверяем
             check_cols = {'1', '2', '3', '3.1', '3.2', '3.3',
                           '4', '4.1', '4.2', '4.3', '5', '6', '7', '8', '9', '10', '11', '12',
-                          '13', '14', '15', '16', '17'}
+                          '13', '14', '15', '16', '17','18'}
             diff_cols = check_cols.difference(list(df.columns))
             if len(diff_cols) != 0:
                 temp_error_df = pd.DataFrame(data=[[f'{name_file}', f'{diff_cols}',
@@ -169,6 +169,30 @@ def prepare_september_2025(path_folder_data:str,path_to_end_folder):
                                                       'Описание ошибки'])
                 error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
                 continue
+
+            # очищаем от незаполненных строк
+            df = df[df['1'].notna()]  # убираем возможные наны из за лишних строк
+            df = df[df['1'].str.strip() != '']  # убираем строки где только пробелы
+            nose_df = nose_df[nose_df['1'].notna()]  # убираем возможные наны из за лишних строк
+            nose_df = nose_df[nose_df['1'].str.strip() != '']  # убираем строки где только пробелы
+            target_df = target_df[target_df['1'].notna()]  # убираем возможные наны из за лишних строк
+            target_df = target_df[target_df['1'].str.strip() != '']  # убираем строки где только пробелы
+
+            # Проверяем на заполнение лист с общими данными
+            if len(df) == 0:
+                temp_error_df = pd.DataFrame(data=[[f'{name_file}', f'Отсутствуют коды специальностей в колонке 1',
+                                                    'Лист 1. Форма сбора пустой. ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!! ']],
+                                             columns=['Название файла', 'Строка или колонка с ошибкой',
+                                                      'Описание ошибки'])
+                error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
+                continue
+
+            # отсекаем возможный первый столбец с данными ПОО,начинаем датафрейм с колонки 1 и отсекаем колонки с проверками
+            df = df.loc[:, '1':'18']
+            nose_df = nose_df.loc[:, '1':'7']
+            target_df = target_df.loc[:, '1':'10']
+
+
 
 
 
