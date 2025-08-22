@@ -51,6 +51,14 @@ def find_header_lenght(wb: openpyxl.Workbook, name_sheet: str, target_column: in
 
     return header_lenght
 
+def replace_empty_with_word(value):
+    if isinstance(value, str) and value.strip() == '':
+        return 'Неправильно'
+    else:
+        return value
+
+
+
 
 def base_check_file(file: str, path_folder_data: str, requred_columns_first_sheet: list,
                     requred_columns_second_sheet: list,requred_columns_prof_sheet:list):
@@ -2173,6 +2181,47 @@ def check_leaver_in_main_df(main_df:pd.DataFrame,df:pd.DataFrame,name_file:str):
     temp_error_df['Описание ошибки'] = f'Количество студентов на листе 2.Нозологии с указанными специальностями больше чем общее количество студентов этих специальностей'
     return temp_error_df
 
+def check_id(df:pd.DataFrame,name_file:str):
+    """
+    Функция для проверки заполненности ID в колонке 2
+    """
+    df['2'] = df['2'].fillna('Неправильно')
+    df['2'] = df['2'].apply(replace_empty_with_word)
+
+    df = df[df['2'] == 'Неправильно'].reset_index()
+    # создаем датафрейм дял добавления в ошибки
+    temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
+    # обрабатываем индексы строк с ошибками чтобы строки совпадали с файлом excel
+    raw_lst_index = df['index'].tolist()  # делаем список
+    finish_lst_index = list(map(lambda x: x + 3, raw_lst_index))
+    finish_lst_index = list(map(lambda x: f'Строка {str(x)}', finish_lst_index))
+    temp_error_df['Строка или колонка с ошибкой'] = finish_lst_index
+    temp_error_df['Название файла'] = name_file
+    temp_error_df[
+        'Описание ошибки'] = 'На листе 2. Нозологии не заполнена колонка уникальный номер выпускника'
+    return temp_error_df
+
+
+
+def check_dupl(df:pd.DataFrame,name_column_dupl:str,name_file:str):
+    """
+    Функция для проверки дубликатов ID в колонке 2
+    """
+    temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
+
+
+    temp_df = df[df[name_column_dupl].duplicated(keep=False)]  # получаем дубликаты
+    if len(temp_df) == 0:
+        return temp_error_df
+
+    temp_df.insert(0, '№ строки дубликата ', list(map(lambda x: x + 3, list(temp_df.index))))
+    temp_error_df['Строка или колонка с ошибкой'] = temp_df['№ строки дубликата ']
+    temp_error_df['Название файла'] = name_file
+    temp_error_df[
+        'Описание ошибки'] = 'На листе 2. Нозологии в колонке 2 (Уникальный номер выпускника) найдены дубликат' + ' ' + temp_df['2']
+    return temp_error_df
+
+
 
 
 
@@ -2212,6 +2261,18 @@ def check_error_nose_september_2025(main_df:pd.DataFrame,nose_df:pd.DataFrame,na
     # проверяем количество выпускников с нозологиями или целевиков не должно превышать общее количество выпускников
     quantity_leaver_error_df = check_leaver_in_main_df(main_df.copy(),nose_df.copy(),name_file)
     error_df = pd.concat([error_df, quantity_leaver_error_df], axis=0, ignore_index=True)
+
+    # проверяем отсутствие идентификатора
+    id_error_df = check_id(nose_df.copy(),name_file)
+    error_df = pd.concat([error_df, id_error_df], axis=0, ignore_index=True)
+
+    # проверяем дубликаты ID
+    dupl_error_df = check_dupl(nose_df.copy(),'2',name_file)
+    error_df = pd.concat([error_df, dupl_error_df], axis=0, ignore_index=True)
+
+
+
+
 
 
 
