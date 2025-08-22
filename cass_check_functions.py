@@ -1888,7 +1888,7 @@ def check_third_error_may_2025(df:pd.DataFrame, name_file):
     """
 
     # Проводим проверку
-    df['Результат'] = df['Результат'] = (df['4'] >= df['4.1']) & (df['4'] >= df['4.2']) & (df['4'] >= df['4.3'])
+    df['Результат'] = (df['4'] >= df['4.1']) & (df['4'] >= df['4.2']) & (df['4'] >= df['4.3'])
     # заменяем булевые значения на понятные
     df['Результат'] = df['Результат'].apply(lambda x: 'Правильно' if x else 'Неправильно')
     # получаем датафрейм с ошибками и извлекаем индекс
@@ -2017,6 +2017,165 @@ def check_kpp(row:pd.Series):
                 return 'Неправильно'
         else:
             return 'Неправильно'
+
+
+
+
+
+def check_first_error_september_2025(df:pd.DataFrame, name_file):
+    """
+    Функция для проверки 2 = сумма 3+4+ остальные колонки
+    """
+    lst_sum = ['3', '4', '5', '6', '7', '8', '9', '10', '11', '12',
+                           '13', '14', '15', '16', '17']
+
+    # получаем сумму колонок 3,4:17
+    df['Сумма'] = df[lst_sum].sum(axis=1)
+    # Проводим проверку
+    df['Результат'] = df['2'] == df['Сумма']
+    # заменяем булевые значения на понятные
+    df['Результат'] = df['Результат'].apply(lambda x: 'Правильно' if x else 'Неправильно')
+    # получаем датафрейм с ошибками и извлекаем индекс
+    df = df[df['Результат'] == 'Неправильно'].reset_index()
+    # создаем датафрейм дял добавления в ошибки
+    temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
+    # обрабатываем индексы строк с ошибками чтобы строки совпадали с файлом excel
+    raw_lst_index = df['index'].tolist()  # делаем список
+    finish_lst_index = list(map(lambda x: x + 5, raw_lst_index))
+    finish_lst_index = list(map(lambda x: f'Строка {str(x)}', finish_lst_index))
+    temp_error_df['Строка или колонка с ошибкой'] = finish_lst_index
+    temp_error_df['Название файла'] = name_file
+    temp_error_df['Описание ошибки'] = 'Не выполняется условие:на листе 1. Форма сбора Колонка 2 = сумма колонок (3,4,5 по 17)'
+    return temp_error_df
+
+
+def check_second_error_september_2025(df:pd.DataFrame, name_file):
+    """
+    Функция для проверки 3 >= каждой из 3.1 3.2 3.3
+    """
+
+    # Проводим проверку
+    df['Результат'] = (df['3'] >= df['3.1']) & (df['3'] >= df['3.2']) & (df['3'] >= df['3.3'])
+    # заменяем булевые значения на понятные
+    df['Результат'] = df['Результат'].apply(lambda x: 'Правильно' if x else 'Неправильно')
+    # получаем датафрейм с ошибками и извлекаем индекс
+    df = df[df['Результат'] == 'Неправильно'].reset_index()
+    # создаем датафрейм дял добавления в ошибки
+    temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
+    # обрабатываем индексы строк с ошибками чтобы строки совпадали с файлом excel
+    raw_lst_index = df['index'].tolist()  # делаем список
+    finish_lst_index = list(map(lambda x: x + 5, raw_lst_index))
+    finish_lst_index = list(map(lambda x: f'Строка {str(x)}', finish_lst_index))
+    temp_error_df['Строка или колонка с ошибкой'] = finish_lst_index
+    temp_error_df['Название файла'] = name_file
+    temp_error_df['Описание ошибки'] = 'Не выполняется условие: на листе 1. Форма сбора Колонка 3 >= значений в колонках  (3.1, 3.2, 3.3)'
+    return temp_error_df
+
+
+def check_third_error_september_2025(df:pd.DataFrame, name_file):
+    """
+    Функция для проверки 4 >= каждой из колонок 4.1 4.2 4.3
+    """
+
+    # Проводим проверку
+    df['Результат'] = (df['4'] >= df['4.1']) & (df['4'] >= df['4.2']) & (df['4'] >= df['4.3'])
+    # заменяем булевые значения на понятные
+    df['Результат'] = df['Результат'].apply(lambda x: 'Правильно' if x else 'Неправильно')
+    # получаем датафрейм с ошибками и извлекаем индекс
+    df = df[df['Результат'] == 'Неправильно'].reset_index()
+    # создаем датафрейм дял добавления в ошибки
+    temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
+    # обрабатываем индексы строк с ошибками чтобы строки совпадали с файлом excel
+    raw_lst_index = df['index'].tolist()  # делаем список
+    finish_lst_index = list(map(lambda x: x + 5, raw_lst_index))
+    finish_lst_index = list(map(lambda x: f'Строка {str(x)}', finish_lst_index))
+    temp_error_df['Строка или колонка с ошибкой'] = finish_lst_index
+    temp_error_df['Название файла'] = name_file
+    temp_error_df['Описание ошибки'] = 'Не выполняется условие: на листе 1. Форма сбора Колонка 4 >= значений в колонках(4.1, 4.2, 4.3)'
+    return temp_error_df
+
+
+
+
+
+
+
+
+
+
+def check_error_main_september_2025(df:pd.DataFrame,name_file:str):
+    """
+    Точка входа для проверки ошибок на основном листе
+    """
+
+    # создаем датафрейм для регистрации ошибок
+    error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
+    df = df.loc[:, '2':'17']
+    df = df.applymap(check_data)
+
+    # Проверяем 2 = сумма 3+4+ остальные колонки
+    first_error_df = check_first_error_september_2025(df.copy(), name_file)
+    error_df = pd.concat([error_df, first_error_df], axis=0, ignore_index=True)
+
+    # Проверяем 3 больше или равно  сумма 3.1 3.2 3.3
+    second_error_df = check_second_error_september_2025(df.copy(), name_file)
+    error_df = pd.concat([error_df, second_error_df], axis=0, ignore_index=True)
+
+    # Проверяем 4 больше или равно  сумма 4.1 4.2 4.3
+    third_error_df = check_third_error_september_2025(df.copy(), name_file)
+    error_df = pd.concat([error_df, third_error_df], axis=0, ignore_index=True)
+
+    return error_df
+
+
+
+def check_contains_in_main_df(lst_spec:list,df:pd.DataFrame,name_file:str):
+    """
+    Функция для проверки наличия указанной специальности на основном листе
+    """
+    df['Результат'] = df[df['1'].isin(lst_spec)]
+    # заменяем булевые значения на понятные
+    df['Результат'] = df['Результат'].apply(lambda x: 'Правильно' if x else 'Неправильно')
+    # получаем датафрейм с ошибками и извлекаем индекс
+    df = df[df['Результат'] == 'Неправильно'].reset_index()
+    # создаем датафрейм дял добавления в ошибки
+    temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
+    # обрабатываем индексы строк с ошибками чтобы строки совпадали с файлом excel
+    raw_lst_index = df['index'].tolist()  # делаем список
+    finish_lst_index = list(map(lambda x: x + 2, raw_lst_index))
+    finish_lst_index = list(map(lambda x: f'Строка {str(x)}', finish_lst_index))
+    temp_error_df['Строка или колонка с ошибкой'] = finish_lst_index
+    temp_error_df['Название файла'] = name_file
+    temp_error_df['Описание ошибки'] = 'Не выполняется условие: указанная на листе 2. Нозологии специальность отсутствует на листе 1. Форма сбора'
+    return temp_error_df
+
+
+
+
+
+
+
+
+
+def check_error_nose_september_2025(main_df:pd.DataFrame,nose_df:pd.DataFrame,name_file:str):
+    """
+    Точка входа для проверки ошибок на листе нозологий
+    """
+
+    # создаем датафрейм для регистрации ошибок
+    error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
+
+    lst_spec = main_df['1'].unique() # список уникальных специальностей
+
+    # проверяем наличие специальности
+    contains_error_df = check_contains_in_main_df(lst_spec,nose_df.copy(),name_file)
+
+
+
+
+
+
+
 
 
 

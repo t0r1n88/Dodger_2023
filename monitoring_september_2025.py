@@ -6,6 +6,10 @@
 """
 Скрипт для обработки данных Формы 2 нозология (15 строк) мониторинга занятости выпускников
 """
+
+from cass_check_functions import check_error_main_september_2025, check_error_nose_september_2025
+
+
 import numpy as np
 # проверка основного листа
 import pandas as pd
@@ -178,6 +182,11 @@ def prepare_september_2025(path_folder_data:str,path_to_end_folder):
             target_df = target_df[target_df['1'].notna()]  # убираем возможные наны из за лишних строк
             target_df = target_df[target_df['1'].str.strip() != '']  # убираем строки где только пробелы
 
+            df = df[~df['1'].str.contains('Выпадающий список')] # убираем возможную неудаленную строку с примерами
+            nose_df = nose_df[~nose_df['1'].str.contains('Выпадающий список')] # убираем возможную неудаленную строку с примерами
+            target_df = target_df[~target_df['1'].str.contains('Выпадающий список')] # убираем возможную неудаленную строку с примерами
+
+
             # Проверяем на заполнение лист с общими данными
             if len(df) == 0:
                 temp_error_df = pd.DataFrame(data=[[f'{name_file}', f'Отсутствуют коды специальностей в колонке 1',
@@ -187,10 +196,20 @@ def prepare_september_2025(path_folder_data:str,path_to_end_folder):
                 error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
                 continue
 
+
             # отсекаем возможный первый столбец с данными ПОО,начинаем датафрейм с колонки 1 и отсекаем колонки с проверками
             df = df.loc[:, '1':'18']
             nose_df = nose_df.loc[:, '1':'7']
             target_df = target_df.loc[:, '1':'10']
+
+            # проверяем на арифметические ошибки основной лист
+            file_error_df = check_error_main_september_2025(df.copy(), name_file)
+
+            # проверяем на ошибки лист нозологий
+            file_error_nose_df = check_error_nose_september_2025(df.copy(),nose_df.copy(), name_file)
+
+            file_error_nose_df.to_excel(f'{path_to_end_folder}/erro.xlsx')
+
 
 
 
