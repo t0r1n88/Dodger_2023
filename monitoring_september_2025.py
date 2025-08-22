@@ -7,7 +7,7 @@
 Скрипт для обработки данных Формы 2 нозология (15 строк) мониторинга занятости выпускников
 """
 
-from cass_check_functions import check_error_main_september_2025, check_error_nose_september_2025
+from cass_check_functions import check_error_main_september_2025, check_error_nose_september_2025, check_error_target_september_2025
 
 
 import numpy as np
@@ -208,7 +208,12 @@ def prepare_september_2025(path_folder_data:str,path_to_end_folder):
             # проверяем на ошибки лист нозологий
             file_error_nose_df = check_error_nose_september_2025(df.copy(),nose_df.copy(), name_file)
 
-            file_error_nose_df.to_excel(f'{path_to_end_folder}/erro.xlsx')
+            # проверяем на ошибки лист целевиков
+            file_error_target_df = check_error_target_september_2025(df.copy(),target_df.copy(), name_file)
+
+
+
+            file_error_target_df.to_excel(f'{path_to_end_folder}/erro.xlsx')
 
 
 

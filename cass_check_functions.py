@@ -2137,7 +2137,7 @@ def check_error_main_september_2025(df:pd.DataFrame,name_file:str):
 
 
 
-def check_contains_in_main_df(lst_spec:list,df:pd.DataFrame,name_file:str):
+def check_contains_in_main_df(lst_spec:list,df:pd.DataFrame,name_file:str,name_sheet:str):
     """
     Функция для проверки наличия указанной специальности на основном листе
     """
@@ -2154,11 +2154,11 @@ def check_contains_in_main_df(lst_spec:list,df:pd.DataFrame,name_file:str):
     finish_lst_index = list(map(lambda x: f'Строка {str(x)}', finish_lst_index))
     temp_error_df['Строка или колонка с ошибкой'] = finish_lst_index
     temp_error_df['Название файла'] = name_file
-    temp_error_df['Описание ошибки'] = 'Не выполняется условие: указанная на листе 2. Нозологии специальность отсутствует на листе 1. Форма сбора'
+    temp_error_df['Описание ошибки'] = f'Не выполняется условие: указанная на листе {name_sheet} специальность отсутствует на листе 1. Форма сбора'
     return temp_error_df
 
 
-def check_leaver_in_main_df(main_df:pd.DataFrame,df:pd.DataFrame,name_file:str):
+def check_leaver_in_main_df(main_df:pd.DataFrame,df:pd.DataFrame,name_file:str,name_sheet:str):
     """
     Функция для проверки количество выпускников , значение на главное листе должно быть равно или больше чем сумма на листе
     """
@@ -2178,10 +2178,10 @@ def check_leaver_in_main_df(main_df:pd.DataFrame,df:pd.DataFrame,name_file:str):
     # обрабатываем индексы строк с ошибками чтобы строки совпадали с файлом excel
     temp_error_df['Строка или колонка с ошибкой'] = lst_error
     temp_error_df['Название файла'] = name_file
-    temp_error_df['Описание ошибки'] = f'Количество студентов на листе 2.Нозологии с указанными специальностями больше чем общее количество студентов этих специальностей'
+    temp_error_df['Описание ошибки'] = f'Количество студентов на листе {name_sheet} с указанными специальностями больше чем общее количество студентов этих специальностей'
     return temp_error_df
 
-def check_id(df:pd.DataFrame,name_file:str):
+def check_id(df:pd.DataFrame,name_file:str,name_sheet:str):
     """
     Функция для проверки заполненности ID в колонке 2
     """
@@ -2198,12 +2198,12 @@ def check_id(df:pd.DataFrame,name_file:str):
     temp_error_df['Строка или колонка с ошибкой'] = finish_lst_index
     temp_error_df['Название файла'] = name_file
     temp_error_df[
-        'Описание ошибки'] = 'На листе 2. Нозологии не заполнена колонка уникальный номер выпускника'
+        'Описание ошибки'] = f'На листе {name_sheet} не заполнена колонка уникальный номер выпускника'
     return temp_error_df
 
 
 
-def check_dupl(df:pd.DataFrame,name_column_dupl:str,name_file:str):
+def check_dupl(df:pd.DataFrame,name_column_dupl:str,name_file:str,name_sheet:str):
     """
     Функция для проверки дубликатов ID в колонке 2
     """
@@ -2218,7 +2218,7 @@ def check_dupl(df:pd.DataFrame,name_column_dupl:str,name_file:str):
     temp_error_df['Строка или колонка с ошибкой'] = temp_df['№ строки дубликата ']
     temp_error_df['Название файла'] = name_file
     temp_error_df[
-        'Описание ошибки'] = 'На листе 2. Нозологии в колонке 2 (Уникальный номер выпускника) найдены дубликат' + ' ' + temp_df['2']
+        'Описание ошибки'] = f'На листе {name_sheet} в колонке 2 (Уникальный номер выпускника) найдены дубликат' + ' ' + temp_df['2']
     return temp_error_df
 
 
@@ -2255,19 +2255,49 @@ def check_error_nose_september_2025(main_df:pd.DataFrame,nose_df:pd.DataFrame,na
     lst_spec = main_df['1'].unique() # список уникальных специальностей
 
     # проверяем наличие специальности
-    contains_error_df = check_contains_in_main_df(lst_spec,nose_df.copy(),name_file)
+    contains_error_df = check_contains_in_main_df(lst_spec,nose_df.copy(),name_file,'2. Нозологии')
     error_df = pd.concat([error_df, contains_error_df], axis=0, ignore_index=True)
 
     # проверяем количество выпускников с нозологиями или целевиков не должно превышать общее количество выпускников
-    quantity_leaver_error_df = check_leaver_in_main_df(main_df.copy(),nose_df.copy(),name_file)
+    quantity_leaver_error_df = check_leaver_in_main_df(main_df.copy(),nose_df.copy(),name_file,'2. Нозологии')
     error_df = pd.concat([error_df, quantity_leaver_error_df], axis=0, ignore_index=True)
 
     # проверяем отсутствие идентификатора
-    id_error_df = check_id(nose_df.copy(),name_file)
+    id_error_df = check_id(nose_df.copy(),name_file,'2. Нозологии')
     error_df = pd.concat([error_df, id_error_df], axis=0, ignore_index=True)
 
     # проверяем дубликаты ID
-    dupl_error_df = check_dupl(nose_df.copy(),'2',name_file)
+    dupl_error_df = check_dupl(nose_df.copy(),'2',name_file,'2. Нозологии')
+    error_df = pd.concat([error_df, dupl_error_df], axis=0, ignore_index=True)
+
+    return error_df
+
+
+
+def check_error_target_september_2025(main_df:pd.DataFrame,target_df:pd.DataFrame,name_file:str):
+    """
+    Точка входа для проверки ошибок на листе целевиков
+    """
+
+    # создаем датафрейм для регистрации ошибок
+    error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
+
+    lst_spec = main_df['1'].unique() # список уникальных специальностей
+
+    # проверяем наличие специальности
+    contains_error_df = check_contains_in_main_df(lst_spec,target_df.copy(),name_file,'3. Целевики')
+    error_df = pd.concat([error_df, contains_error_df], axis=0, ignore_index=True)
+
+    # проверяем количество выпускников с нозологиями или целевиков не должно превышать общее количество выпускников
+    quantity_leaver_error_df = check_leaver_in_main_df(main_df.copy(),target_df.copy(),name_file,'3. Целевики')
+    error_df = pd.concat([error_df, quantity_leaver_error_df], axis=0, ignore_index=True)
+
+    # проверяем отсутствие идентификатора
+    id_error_df = check_id(target_df.copy(),name_file,'3. Целевики')
+    error_df = pd.concat([error_df, id_error_df], axis=0, ignore_index=True)
+
+    # проверяем дубликаты ID
+    dupl_error_df = check_dupl(target_df.copy(),'2',name_file,'3. Целевики')
     error_df = pd.concat([error_df, dupl_error_df], axis=0, ignore_index=True)
 
 
@@ -2276,11 +2306,11 @@ def check_error_nose_september_2025(main_df:pd.DataFrame,nose_df:pd.DataFrame,na
 
 
 
-
-
-
-
     return error_df
+
+
+
+
 
 
 
