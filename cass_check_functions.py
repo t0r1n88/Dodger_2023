@@ -2133,7 +2133,7 @@ def check_contains_in_main_df(lst_spec:list,df:pd.DataFrame,name_file:str):
     """
     Функция для проверки наличия указанной специальности на основном листе
     """
-    df['Результат'] = df[df['1'].isin(lst_spec)]
+    df['Результат'] = df['1'].apply(lambda x: x in lst_spec)
     # заменяем булевые значения на понятные
     df['Результат'] = df['Результат'].apply(lambda x: 'Правильно' if x else 'Неправильно')
     # получаем датафрейм с ошибками и извлекаем индекс
@@ -2142,12 +2142,50 @@ def check_contains_in_main_df(lst_spec:list,df:pd.DataFrame,name_file:str):
     temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
     # обрабатываем индексы строк с ошибками чтобы строки совпадали с файлом excel
     raw_lst_index = df['index'].tolist()  # делаем список
-    finish_lst_index = list(map(lambda x: x + 2, raw_lst_index))
+    finish_lst_index = list(map(lambda x: x + 3, raw_lst_index))
     finish_lst_index = list(map(lambda x: f'Строка {str(x)}', finish_lst_index))
     temp_error_df['Строка или колонка с ошибкой'] = finish_lst_index
     temp_error_df['Название файла'] = name_file
     temp_error_df['Описание ошибки'] = 'Не выполняется условие: указанная на листе 2. Нозологии специальность отсутствует на листе 1. Форма сбора'
     return temp_error_df
+
+
+def check_leaver_in_main_df(main_df:pd.DataFrame,df:pd.DataFrame,name_file:str):
+    """
+    Функция для проверки количество выпускников , значение на главное листе должно быть равно или больше чем сумма на листе
+    """
+    main_df = main_df[['1','2']]
+    df = df.groupby(by='1').agg({'2':'count'}).reset_index() # группируем
+    df.columns = ['Специальность','Проверяемый лист']
+    main_df = pd.merge(main_df,df,how='inner',left_on='1',right_on='Специальность') # соединяем
+    main_df['2'] = main_df['2'].apply(convert_to_int)
+    main_df['Результат'] = main_df['2'] >= main_df['Проверяемый лист']
+
+    main_df['Результат'] = main_df['Результат'].apply(lambda x: 'Правильно' if x else 'Неправильно')
+
+    main_df = main_df[main_df['Результат'] == 'Неправильно']
+    lst_error = main_df['1'].tolist()
+
+    temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
+    # обрабатываем индексы строк с ошибками чтобы строки совпадали с файлом excel
+    temp_error_df['Строка или колонка с ошибкой'] = lst_error
+    temp_error_df['Название файла'] = name_file
+    temp_error_df['Описание ошибки'] = f'Количество студентов на листе 2.Нозологии с указанными специальностями больше чем общее количество студентов этих специальностей'
+    return temp_error_df
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2169,6 +2207,19 @@ def check_error_nose_september_2025(main_df:pd.DataFrame,nose_df:pd.DataFrame,na
 
     # проверяем наличие специальности
     contains_error_df = check_contains_in_main_df(lst_spec,nose_df.copy(),name_file)
+    error_df = pd.concat([error_df, contains_error_df], axis=0, ignore_index=True)
+
+    # проверяем количество выпускников с нозологиями или целевиков не должно превышать общее количество выпускников
+    quantity_leaver_error_df = check_leaver_in_main_df(main_df.copy(),nose_df.copy(),name_file)
+    error_df = pd.concat([error_df, quantity_leaver_error_df], axis=0, ignore_index=True)
+
+
+
+
+
+
+
+    return error_df
 
 
 
