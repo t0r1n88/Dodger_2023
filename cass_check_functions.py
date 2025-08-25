@@ -1477,6 +1477,32 @@ def create_check_tables_target_may_2025(df: pd.DataFrame):
 
 
 
+def create_check_tables_nose_target_sept_2025(df: pd.DataFrame):
+    """
+    Функция для создания файла с данными по каждой специальности
+    """
+    lst_unique_code = sorted(df['1'].unique()) # список уникальных
+
+    # Создаем файл
+    wb = openpyxl.Workbook()
+    # Создаем листы
+    for idx, code_spec in enumerate(lst_unique_code):
+        if code_spec != 'nan':
+            wb.create_sheet(title=code_spec, index=idx)
+
+    for code in lst_unique_code:
+        temp_df = df[df['1'] == code]
+        temp_df.drop(columns=['1'],inplace=True)
+        for r in dataframe_to_rows(temp_df, index=False, header=True):
+            wb[code].append(r)
+        wb[code].column_dimensions['A'].width = 40
+        wb[code].column_dimensions['B'].width = 20
+
+
+    return wb
+
+
+
 
 
 
@@ -1620,6 +1646,9 @@ def extract_code_nose(value):
         return result.groups()[0]
     else:
         return 'error'
+
+
+
 
 
 def create_check_tables(high_level_dct: dict):

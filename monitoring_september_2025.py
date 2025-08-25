@@ -8,7 +8,7 @@
 """
 
 from cass_check_functions import (check_error_main_september_2025, check_error_nose_september_2025, check_error_target_september_2025,
-                                  extract_code_nose,check_data,create_check_tables_september_2025,create_check_tables_target_may_2025)
+                                  extract_code_nose,check_data,create_check_tables_september_2025,create_check_tables_nose_target_sept_2025)
 
 
 
@@ -417,7 +417,7 @@ def prepare_september_2025(path_folder_data:str,path_to_end_folder):
         Обработка листа с нозологиями
         """
         if len(main_nose_df) != 0:
-            wb_check_nose_tables = create_check_tables_target_may_2025(
+            wb_check_nose_tables = create_check_tables_nose_target_sept_2025(
                 main_nose_df.copy())  # проверяем данные по каждой специальности
             if 'Sheet' in wb_check_nose_tables.sheetnames:
                 del wb_check_nose_tables['Sheet']
@@ -431,7 +431,7 @@ def prepare_september_2025(path_folder_data:str,path_to_end_folder):
         Обработка листа с целевиками
         """
         if len(main_target_df) != 0:
-            wb_check_target_tables = create_check_tables_target_may_2025(
+            wb_check_target_tables = create_check_tables_nose_target_sept_2025(
                 main_target_df.copy())  # проверяем данные по каждой специальности
             if 'Sheet' in wb_check_target_tables.sheetnames:
                 del wb_check_target_tables['Sheet']
