@@ -7,6 +7,7 @@ from form_two_fifteen_row_nose import prepare_form_two_employment  # импор�
 from form_three_expected_release import prepare_form_three_employment # импортируем функцию для обработки Формы 3 Ожидаемый выпуск
 #from monitoring_graduate_employment import prepare_graduate_employment
 from monitoring_may_2025 import prepare_may_2025 # мониториг май 2025
+from monitoring_september_2025 import prepare_september_2025 # мониторинг сентябрь 2025
 from ck_employment import prepare_ck_employment  # импортируем функцию для обработки данных для отчета центров карьеры
 from opk_employment import prepare_opk_employment  # импортируем функцию для обработки данных по ОПК
 from create_svod_trudvsem import processing_data_trudvsem # импортируем функцию для обработки данных с трудвсем
@@ -108,6 +109,25 @@ def select_end_folder_mon_grad():
     """
     global path_to_end_folder_mon_grad
     path_to_end_folder_mon_grad = filedialog.askdirectory()
+
+
+
+def select_folder_data_mon_grad_sept():
+    """
+    Функция для выбора папки c данными мониторинга выпускников для СССР
+    :return:
+    """
+    global path_folder_data_mon_grad_sept
+    path_folder_data_mon_grad_sept = filedialog.askdirectory()
+
+
+def select_end_folder_mon_grad_sept():
+    """
+    Функция для выбора конечной папки куда будут складываться итоговые файлы мониторинга выпускников для СССР
+    :return:
+    """
+    global path_to_end_folder_mon_grad_sept
+    path_to_end_folder_mon_grad_sept = filedialog.askdirectory()
 
 
 
@@ -291,6 +311,20 @@ def processing_mon_may_2025():
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
                              f'Выберите файлы с данными и папку куда будет генерироваться файл')
 
+
+def processing_mon_sept_2025():
+    """
+    Функция для обработки данных мониторинга занятости выпускников 2024 для сайта СССР
+    :return:
+    """
+    try:
+        prepare_september_2025(path_folder_data_mon_grad_sept, path_to_end_folder_mon_grad_sept)
+
+    except NameError:
+        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
+                             f'Выберите файлы с данными и папку куда будет генерироваться файл')
+
+
 """
 Создание свода Работа в России
 """
@@ -411,11 +445,11 @@ def set_window_size(window):
 
     # Устанавливаем размер окна в 80% от ширины и высоты экрана
     if screen_width >= 3840:
-        width = int(screen_width * 0.2)
+        width = int(screen_width * 0.3)
     elif screen_width >= 2560:
-        width = int(screen_width * 0.31)
-    elif screen_width >= 1920:
         width = int(screen_width * 0.41)
+    elif screen_width >= 1920:
+        width = int(screen_width * 0.60)
     elif screen_width >= 1600:
         width = int(screen_width * 0.5)
     elif screen_width >= 1280:
@@ -473,7 +507,7 @@ def show_textmenu(event):
 
 if __name__ == '__main__':
     window = Tk()
-    window.title('Кассандра Подсчет данных по трудоустройству выпускников ver 6.5')
+    window.title('Кассандра Подсчет данных по трудоустройству выпускников ver 6.6')
     # Устанавливаем размер и положение окна
     set_window_size(window)
     window.resizable(True, True)
@@ -694,6 +728,61 @@ if __name__ == '__main__':
                                                       command=processing_mon_may_2025
                                                       )
     btn_proccessing_data_employment_grad_mon.pack(padx=10, pady=10)
+
+    """
+        Создаем вкладку для обработки мониторинга занятости выпускников для сайта СССР сентябрь 2025
+        """
+
+    tab_employment_grad_mon_sept = ttk.Frame(tab_control)
+    tab_control.add(tab_employment_grad_mon_sept, text='Мониторинг занятости\nвыпускников Сентябрь 2025')
+
+    employment_grad_mon_sept_frame_description = LabelFrame(tab_employment_grad_mon_sept)
+    employment_grad_mon_sept_frame_description.pack()
+
+    lbl_hello_employment_grad_mon_sept = Label(employment_grad_mon_sept_frame_description,
+                                               text='Центр опережающей профессиональной подготовки Республики Бурятия\n'
+                                                    'Мониторинг занятости выпускников на СЕНТЯБРЬ 2025 для сервиса\n'
+                                                    '«Система сбора и синхронизации ресурсов» (https://data.firpo.ru).',
+                                               width=60)
+    lbl_hello_employment_grad_mon_sept.pack(side=LEFT, anchor=N, ipadx=25, ipady=10)
+
+    # Картинка
+    path_to_img_employment_grad_mon_sept = resource_path('logo.png')
+    img_employment_grad_mon_sept = PhotoImage(file=path_to_img_employment_grad_mon_sept)
+    Label(employment_grad_mon_sept_frame_description,
+          image=img_employment_grad_mon_sept, padx=10, pady=10
+          ).pack(side=LEFT, anchor=E, ipadx=5, ipady=5)
+
+    # Создаем область для того чтобы поместить туда подготовительные кнопки(выбрать файл,выбрать папку и т.п.)
+    frame_data_employment_grad_mon_sept = LabelFrame(tab_employment_grad_mon_sept, text='Подготовка')
+    frame_data_employment_grad_mon_sept.pack(padx=10, pady=10)
+
+    btn_choose_data_employment_grad_mon_sept = Button(frame_data_employment_grad_mon_sept,
+                                                      text='1) Выберите папку с данными',
+                                                      font=('Arial Bold', 20),
+                                                      command=select_folder_data_mon_grad_sept
+                                                      )
+    btn_choose_data_employment_grad_mon_sept.pack(padx=10, pady=10)
+
+    # Создаем кнопку для выбора папки куда будут генерироваться файлы
+
+    btn_choose_end_folder_employment_grad_mon_sept = Button(frame_data_employment_grad_mon_sept,
+                                                            text='2) Выберите конечную папку',
+                                                            font=('Arial Bold', 20),
+                                                            command=select_end_folder_mon_grad_sept
+                                                            )
+    btn_choose_end_folder_employment_grad_mon_sept.pack(padx=10, pady=10)
+    #
+    # Создаем кнопку обработки данных
+
+    btn_proccessing_data_employment_grad_mon_sept = Button(tab_employment_grad_mon_sept, text='3) Обработать данные',
+                                                           font=('Arial Bold', 20),
+                                                           command=processing_mon_sept_2025
+                                                           )
+    btn_proccessing_data_employment_grad_mon_sept.pack(padx=10, pady=10)
+
+
+
 
 
 
