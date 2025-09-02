@@ -128,14 +128,18 @@ def prepare_september_2025(path_folder_data:str,path_to_end_folder):
                 check_cols = {'1', '2', '3', '3.1', '3.2', '3.3',
                               '4', '4.1', '4.2', '4.3', '5', '6', '7', '8', '9', '10', '11', '12',
                               '13', '14', '15', '16', '17','18'}
-                diff_cols = check_cols.difference(list(df.columns))
-                if len(diff_cols) != 0:
-                    temp_error_df = pd.DataFrame(data=[[f'{name_file}', f'{diff_cols}',
-                                                        'На листе 1. Форма сбора не найдены указанные колонки. Проверьте соответствие файла шаблону с сайта, строка с номерами колонок должна быть на четвертой строке ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!! ']],
-                                                 columns=['Название файла', 'Строка или колонка с ошибкой',
-                                                          'Описание ошибки'])
-                    error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
-                    continue
+                first_diff_cols = check_cols.difference(list(df.columns))
+                if len(first_diff_cols) != 0:
+                    # пытаемся считать с меньшим количеством строк, поскольку в шаблоне сайта меньше строк занимает заголовок
+                    df = pd.read_excel(f'{path_folder_data}/{file}', sheet_name='1. Форма сбора', skiprows=2, dtype=str)
+                    second_diff_cols = check_cols.difference(list(df.columns))
+                    if len(second_diff_cols) != 0:
+                        temp_error_df = pd.DataFrame(data=[[f'{name_file}', f'{second_diff_cols}',
+                                                            'На листе 1. Форма сбора не найдены указанные колонки. Проверьте соответствие файла шаблону с сайта, строка с номерами колонок должна быть на четвертой строке(если вы используете форму из письма) или на третьей строке если вы используете форму с сайта СССР ДАННЫЕ ФАЙЛА НЕ ОБРАБОТАНЫ !!! ']],
+                                                     columns=['Название файла', 'Строка или колонка с ошибкой',
+                                                              'Описание ошибки'])
+                        error_df = pd.concat([error_df, temp_error_df], axis=0, ignore_index=True)
+                        continue
 
                 # Считываем данные листа Нозологии
                 try:
@@ -212,10 +216,11 @@ def prepare_september_2025(path_folder_data:str,path_to_end_folder):
                 # проверяем на арифметические ошибки основной лист
                 file_error_df = check_error_main_september_2025(df.copy(), name_file)
 
-                # проверяем на ошибки лист нозологий
-                file_error_nose_df = check_error_nose_september_2025(df.copy(),nose_df.copy(), name_file)
 
-                # проверяем на ошибки лист целевиков
+                # # проверяем на ошибки лист нозологий
+                file_error_nose_df = check_error_nose_september_2025(df.copy(),nose_df.copy(), name_file)
+                #
+                # # проверяем на ошибки лист целевиков
                 file_error_target_df = check_error_target_september_2025(df.copy(),target_df.copy(), name_file)
 
                 # Добавляем в датафрейм для проверки на дубликаты

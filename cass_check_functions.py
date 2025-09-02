@@ -2281,6 +2281,8 @@ def check_dupl(df:pd.DataFrame,name_column_dupl:str,name_file:str,name_sheet:str
     """
     temp_error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
 
+    df[name_column_dupl] = df[name_column_dupl].fillna('Не заполнен уникальный номер выпускника')
+
 
     temp_df = df[df[name_column_dupl].duplicated(keep=False)]  # получаем дубликаты
     if len(temp_df) == 0:
@@ -2291,6 +2293,8 @@ def check_dupl(df:pd.DataFrame,name_column_dupl:str,name_file:str,name_sheet:str
     temp_error_df['Название файла'] = name_file
     temp_error_df[
         'Описание ошибки'] = f'На листе {name_sheet} в колонке 2 (Уникальный номер выпускника) найдены дубликат' + ' ' + temp_df['2']
+
+    temp_error_df = temp_error_df.sort_values(by='Описание ошибки', key=lambda x: x.str.split().str[-1])
     return temp_error_df
 
 
@@ -2469,12 +2473,12 @@ def check_error_nose_september_2025(main_df:pd.DataFrame,nose_df:pd.DataFrame,na
     # проверяем количество выпускников с нозологиями или целевиков не должно превышать общее количество выпускников
     quantity_leaver_error_df = check_leaver_in_main_df(main_df.copy(),nose_df.copy(),name_file,'2. Нозологии')
     error_df = pd.concat([error_df, quantity_leaver_error_df], axis=0, ignore_index=True)
-
-    # проверяем отсутствие идентификатора
+    #
+    # # проверяем отсутствие идентификатора
     id_error_df = check_id(nose_df.copy(),name_file,'2. Нозологии')
     error_df = pd.concat([error_df, id_error_df], axis=0, ignore_index=True)
-
-    # проверяем дубликаты ID
+    #
+    # # проверяем дубликаты ID
     dupl_error_df = check_dupl(nose_df.copy(),'2',name_file,'2. Нозологии')
     error_df = pd.concat([error_df, dupl_error_df], axis=0, ignore_index=True)
 
