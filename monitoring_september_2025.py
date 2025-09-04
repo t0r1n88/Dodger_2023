@@ -192,10 +192,20 @@ def prepare_september_2025(path_folder_data:str,path_to_end_folder):
                 nose_df = nose_df[nose_df['1'].str.strip() != '']  # убираем строки где только пробелы
                 target_df = target_df[target_df['1'].notna()]  # убираем возможные наны из за лишних строк
                 target_df = target_df[target_df['1'].str.strip() != '']  # убираем строки где только пробелы
+                target_df['5'] = target_df['5'].fillna('Нет ИНН')
+                target_df['5'] = target_df['5'].apply(str.strip)
 
                 df = df[~df['1'].str.contains('Выпадающий список')] # убираем возможную неудаленную строку с примерами
+                df = df[~df['2'].str.contains('Сумма')] # убираем возможную неудаленную строку с примерами
                 nose_df = nose_df[~nose_df['1'].str.contains('Выпадающий список')] # убираем возможную неудаленную строку с примерами
+                nose_df['2'] = nose_df['2'].fillna('Не заполнено')
+                nose_df = nose_df[~nose_df['2'].str.contains('Текстовое поле')] # убираем возможную неудаленную строку с примерами
+                nose_df = nose_df[~nose_df['2'].str.contains('Не заполнено')] # убираем возможную неудаленную строку с примерами
+
                 target_df = target_df[~target_df['1'].str.contains('Выпадающий список')] # убираем возможную неудаленную строку с примерами
+                target_df['2'] = target_df['2'].fillna('Не заполнено')
+                target_df = target_df[~target_df['2'].str.contains('Текстовое поле')] # убираем возможную неудаленную строку с примерами
+                target_df = target_df[~target_df['2'].str.contains('Не заполнено')] # убираем возможную неудаленную строку с примерами
 
 
                 # Проверяем на заполнение лист с общими данными
