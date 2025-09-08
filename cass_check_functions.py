@@ -2465,6 +2465,8 @@ def check_error_nose_september_2025(main_df:pd.DataFrame,nose_df:pd.DataFrame,na
     error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
 
     lst_spec = main_df['1'].unique() # список уникальных специальностей
+    if len(nose_df) == 0:
+        return error_df
 
     # проверяем наличие специальности
     contains_error_df = check_contains_in_main_df(lst_spec,nose_df.copy(),name_file,'2. Нозологии')
@@ -2495,6 +2497,8 @@ def check_error_target_september_2025(main_df:pd.DataFrame,target_df:pd.DataFram
     error_df = pd.DataFrame(columns=['Название файла', 'Строка или колонка с ошибкой', 'Описание ошибки', ])
 
     lst_spec = main_df['1'].unique() # список уникальных специальностей
+    if len(target_df) == 0:
+        return error_df
 
     # проверяем наличие специальности
     contains_error_df = check_contains_in_main_df(lst_spec,target_df.copy(),name_file,'3. Целевики')
