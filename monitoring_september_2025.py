@@ -196,6 +196,8 @@ def prepare_september_2025(path_folder_data:str,path_to_end_folder):
                 target_df['5'] = target_df['5'].apply(str.strip)
 
                 df = df[~df['1'].str.contains('Выпадающий список')] # убираем возможную неудаленную строку с примерами
+                df['2'] = df['2'].fillna('Не заполнено')
+                df = df[~df['2'].str.contains('Не заполнено')] # убираем возможную неудаленную строку с примерами
                 df = df[~df['2'].str.contains('Сумма')] # убираем возможную неудаленную строку с примерами
 
                 nose_df = nose_df[~nose_df['1'].str.contains('Выпадающий список')] # убираем возможную неудаленную строку с примерами
