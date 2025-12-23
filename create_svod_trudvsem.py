@@ -938,7 +938,7 @@ def processing_data_trudvsem(file_data:str,file_org,end_folder:str,region:str,pa
                     company_program_mobile_df.to_excel(writer, sheet_name='Трудовая мобильность', index=False)
                     company_migrant_mobile_df.to_excel(writer, sheet_name='Для иностранцев', index=False)
 
-            with pd.ExcelWriter(f'{end_folder}/Вакансии по региону от {current_time}.xlsx') as writer:
+            with pd.ExcelWriter(f'{end_folder}/Вакансии по региону от {current_date}.xlsx') as writer:
                 prepared_df.to_excel(writer, sheet_name='Только подтвержденные вакансии', index=False)
                 quote_df.to_excel(writer, sheet_name='Квотируемые', index=False)
                 soc_df.to_excel(writer, sheet_name='Для соц категорий', index=False)
@@ -978,7 +978,7 @@ def processing_data_trudvsem(file_data:str,file_org,end_folder:str,region:str,pa
                     company_program_mobile_df.to_excel(writer, sheet_name='Трудовая мобильность', index=False)
                     company_migrant_mobile_df.to_excel(writer, sheet_name='Для иностранцев', index=False)
 
-            with pd.ExcelWriter(f'{end_folder}/Вакансии по региону от {current_time}.xlsx') as writer:
+            with pd.ExcelWriter(f'{end_folder}/Вакансии по региону от {current_date}.xlsx') as writer:
                 prepared_df.to_excel(writer, sheet_name='Только подтвержденные вакансии', index=False)
                 quote_df.to_excel(writer, sheet_name='Квотируемые', index=False)
                 soc_df.to_excel(writer, sheet_name='Для соц категорий', index=False)
@@ -991,13 +991,13 @@ def processing_data_trudvsem(file_data:str,file_org,end_folder:str,region:str,pa
         """
             Свод по региону
             """
-        create_svod_for_df(prepared_df,svod_region_folder,'Свод по региону',current_time)
-        create_svod_for_df(quote_df,svod_region_folder,'Квотируемые',current_time)
-        create_svod_for_df(soc_df,svod_region_folder,'Соцкатегории',current_time)
+        create_svod_for_df(prepared_df,svod_region_folder,'Свод по региону',current_date)
+        create_svod_for_df(quote_df,svod_region_folder,'Квотируемые',current_date)
+        create_svod_for_df(soc_df,svod_region_folder,'Соцкатегории',current_date)
 
-        create_svod_for_df(accommodation_df,svod_region_folder,'С предоставлением жилья',current_time)
-        create_svod_for_df(program_mobile_df,svod_region_folder,'Трудовая мобильность',current_time)
-        create_svod_for_df(migrant_mobile_df,svod_region_folder,'Иностранцы',current_time)
+        create_svod_for_df(accommodation_df,svod_region_folder,'С предоставлением жилья',current_date)
+        create_svod_for_df(program_mobile_df,svod_region_folder,'Трудовая мобильность',current_date)
+        create_svod_for_df(migrant_mobile_df,svod_region_folder,'Иностранцы',current_date)
 
 
 
@@ -1236,7 +1236,7 @@ def processing_data_trudvsem(file_data:str,file_org,end_folder:str,region:str,pa
                 svod_org_exp_org_df.columns = ['Количество вакансий']
                 svod_org_exp_org_df = svod_org_exp_org_df.reset_index()
 
-            with pd.ExcelWriter(f'{svod_org_folder}/Свод по выбранным работодателям от {current_time}.xlsx') as writer:
+            with pd.ExcelWriter(f'{svod_org_folder}/Свод по выбранным работодателям от {current_date}.xlsx') as writer:
                 svod_vac_reg_org_df.to_excel(writer, sheet_name='Вакансии по отраслям', index=False)
                 svod_vac_mun_org_df.to_excel(writer, sheet_name='Вакансии по муниципалитетам', index=False)
                 svod_vac_org_org_df.to_excel(writer, sheet_name='Вакансии по работодателям', index=False)
