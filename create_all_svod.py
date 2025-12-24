@@ -140,7 +140,25 @@ def processing_time_series(data_folder:str,end_folder:str):
     else:
         required_columns = {'Вакансии по отраслям':['Сфера деятельности','Количество вакансий'],
                             'Вакансии по муниципалитетам':['Муниципалитет','Количество вакансий'],
-                            'Зарплата по отраслям':['Сфера деятельности','Средняя ариф. минимальная зп','Медианная минимальная зп']}
+                            'Вакансии по работодателям':['Краткое название работодателя','Количество вакансий'],
+                            'Зарплата по отраслям':['Сфера деятельности','Средняя ариф. минимальная зп','Медианная минимальная зп'],
+                            'Зарплата по работодателям':['Краткое название работодателя','Средняя ариф. минимальная зп','Медианная минимальная зп']}
+
+
+        special_treatment = {'Зарплата по отраслям':['Средняя ариф. минимальная зп','Медианная минимальная зп'],
+                             'Зарплата по работодателям':['Средняя ариф. минимальная зп','Медианная минимальная зп']} # листы которые нужно обработать по особому
+
+
+
+        dupl_special_treatment = {'Зарплата по работодателям':{'Средняя ариф. минимальная зп':'Средняя ариф. минимальная зп Раб','Медианная минимальная зп':'Медианная минимальная зп Раб'}}
+
+
+        dct_rename = {'Вакансии по отраслям':'Вакансии по отраслям',
+                      'Вакансии по муниципалитетам':'Вакансии по муниципалитетам',
+                      'Вакансии по работодателям':'Вакансии по работодателям',
+                       'Средняя ариф. минимальная зп':'Средняя ЗП Отр','Медианная минимальная зп':'Медианная ЗП Отр',
+                      'Средняя ариф. минимальная зп Раб': 'Средняя ЗП Раб', 'Медианная минимальная зп Раб': 'Медианная ЗП Раб'
+                      } # словарь для переименования
         dct_index_svod = {key:set() for key in required_columns.keys()} # словарь для хранения всех значений сводов которые могут встретиться в файлах
         set_error_name_file = set() # множество для хранения названий файлов с ошибками
 
@@ -151,7 +169,6 @@ def processing_time_series(data_folder:str,end_folder:str):
 
         for name_sheet,set_index in dct_index_svod.items():
             dct_base_df[name_sheet] = pd.DataFrame(index=sorted([value for value in set_index if value != 'Итого']))
-
 
         for dirpath, dirnames, filenames in os.walk(data_folder):
             for file in filenames:
@@ -166,32 +183,42 @@ def processing_time_series(data_folder:str,end_folder:str):
                             # ха повторяющийся код ну и ладно
                             result_date = re.search(r'\d{2}_\d{2}_\d{4}', name_file)
                             result_date = result_date.group().replace('_','.')
+
                             for sheet, lst_cols in required_columns.items():
                                 temp_req_df = pd.read_excel(f'{dirpath}/{file}', sheet_name=sheet)
                                 temp_req_df.set_index(temp_req_df.columns[0],inplace=True)
-                                if temp_req_df.shape[1] == 1:
+                                if sheet not in special_treatment:
                                     temp_req_df.columns = [result_date]
                                     base_df = dct_base_df[sheet] # получаем базовый датафрейм
                                     base_df= base_df.join(temp_req_df)
                                     base_df.fillna(0,inplace=True)
                                     dct_base_df[sheet] = base_df
+                                else:
+                                    # Создаем отдельные датафреймы
+                                    for name_column in special_treatment[sheet]:
+                                        # перебираем список и проверяем есть уже такой базовый датафрейм, если нет то создаем
+                                        if name_column not in dct_base_df:
+                                            temp_treatement_df = temp_req_df[[name_column]].copy()
+                                            temp_treatement_df.columns = [result_date]
+                                            if sheet not in dupl_special_treatment:
+                                                dct_base_df[name_column] = temp_treatement_df
+                                            else:
+                                                print('fdf')
+                                                dct_base_df[f'{name_column} {dupl_special_treatment[sheet]}'] = temp_treatement_df
+                                        else:
+                                            base_treatment_df = dct_base_df[name_column]  # получаем базовый датафрейм
+                                            temp_treatement_df = temp_req_df[[name_column]].copy()
+                                            temp_treatement_df.columns = [result_date]
+                                            base_treatment_df = base_treatment_df.join(temp_treatement_df)
+                                            base_treatment_df.fillna(0, inplace=True)
+                                            if sheet not in dupl_special_treatment:
+                                                dct_base_df[name_column] = base_treatment_df
+                                            else:
+                                                print('fdf')
 
+                                                dct_base_df[f'{name_column} {dupl_special_treatment[sheet]}'] = base_treatment_df
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                    except:
+                    except ZeroDivisionError:
                         temp_error_df = pd.DataFrame(
                             data=[[f'{name_file}',
                                    f'Не удалось обработать файл. Возможно файл поврежден'
@@ -202,10 +229,11 @@ def processing_time_series(data_folder:str,end_folder:str):
                                              ignore_index=True)
                         continue
 
+
         # Сохраняем в горизонтальном виде
         with pd.ExcelWriter(f'{end_folder}/ Горизонтальный вид.xlsx',engine='openpyxl') as writer:
             for sheet_name, df in dct_base_df.items():
-                if sheet_name == 'Зарплата по отраслям':
+                if sheet_name in special_treatment:
                     continue
                 # Преобразуем и сортируем колонки-даты
                 date_cols = []
@@ -226,7 +254,7 @@ def processing_time_series(data_folder:str,end_folder:str):
                 for date_obj, old_name in date_cols:
                     df = df.rename(columns={old_name: date_obj})
                 df.columns = df.columns.strftime('%d.%m.%Y')
-                df.to_excel(writer,sheet_name=sheet_name,index=True)
+                df.to_excel(writer,sheet_name=dct_rename[sheet_name],index=True)
 
 
 
