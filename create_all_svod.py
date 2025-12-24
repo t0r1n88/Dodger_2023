@@ -225,7 +225,6 @@ def processing_time_series(data_folder:str,end_folder:str):
                 # Преобразуем названия колонок-дат
                 for date_obj, old_name in date_cols:
                     df = df.rename(columns={old_name: date_obj})
-                print(sheet_name)
                 df.columns = df.columns.strftime('%d.%m.%Y')
                 df.to_excel(writer,sheet_name=sheet_name,index=True)
 
