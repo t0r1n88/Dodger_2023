@@ -29,7 +29,7 @@ class NotReqColumns(Exception):
 
 
 
-def preparing_data(data_folder:str,required_columns:dict,dct_index_svod:dict,error_df:pd.DataFrame):
+def preparing_data(data_folder:str,required_columns:dict,dct_index_svod:dict,error_df:pd.DataFrame,set_error_name_file:set):
     """
     Функция для проверки исходных файлов на базовые ошибки и создания списков встречающихся индексов (первой колонки)
     """
@@ -55,6 +55,7 @@ def preparing_data(data_folder:str,required_columns:dict,dct_index_svod:dict,err
                                      'Описание ошибки'])
                         error_df = pd.concat([error_df, temp_error_df], axis=0,
                                              ignore_index=True)
+                        set_error_name_file.add(name_file)
                         continue
                     # открываем файл для проверки наличия листов и колонок
                     temp_wb = openpyxl.load_workbook(f'{dirpath}/{file}', read_only=True)
@@ -69,6 +70,7 @@ def preparing_data(data_folder:str,required_columns:dict,dct_index_svod:dict,err
                                      'Описание ошибки'])
                         error_df = pd.concat([error_df, temp_error_df], axis=0,
                                              ignore_index=True)
+                        set_error_name_file.add(name_file)
                         continue
 
                     # Собираем возможные индексы которые могут встретиться
@@ -84,6 +86,7 @@ def preparing_data(data_folder:str,required_columns:dict,dct_index_svod:dict,err
                                          'Описание ошибки'])
                             error_df = pd.concat([error_df, temp_error_df], axis=0,
                                                  ignore_index=True)
+                            set_error_name_file.add(name_file)
                             continue
 
                         # Открываем файл для обработки
@@ -98,7 +101,9 @@ def preparing_data(data_folder:str,required_columns:dict,dct_index_svod:dict,err
                                  'Описание ошибки'])
                     error_df = pd.concat([error_df, temp_error_df], axis=0,
                                          ignore_index=True)
+                    set_error_name_file.add(name_file)
                     continue
+    return dct_index_svod,error_df,set_error_name_file
 
 
 
@@ -137,7 +142,17 @@ def processing_time_series(data_folder:str,end_folder:str):
                             'Вакансии по муниципалитетам':['Муниципалитет','Количество вакансий'],
                             'Зарплата по отраслям':['Сфера деятельности','Средняя ариф. минимальная зп','Медианная минимальная зп']}
         dct_index_svod = {key:set() for key in required_columns.keys()} # словарь для хранения всех значений сводов которые могут встретиться в файлах
-        preparing_data(data_folder,required_columns,dct_index_svod,error_df) #
+        set_error_name_file = set() # множество для хранения названий файлов с ошибками
+
+        dct_index_svod,error_df,set_error_name_file = preparing_data(data_folder,required_columns,dct_index_svod,error_df,set_error_name_file) # Проверяем на ошибки
+
+        # Создаем словарь с базовыми датафреймами
+        dct_base_df = dict()
+
+        for name_sheet,set_index in dct_index_svod.items():
+            dct_base_df[name_sheet] = pd.DataFrame(index=sorted([value for value in set_index if value != 'Итого']))
+
+
         for dirpath, dirnames, filenames in os.walk(data_folder):
             for file in filenames:
                 if not file.startswith('~$') and (file.endswith('.xlsx') or file.endswith('.xlsm')):
@@ -146,7 +161,20 @@ def processing_time_series(data_folder:str,end_folder:str):
                             name_file = file.split('.xlsx')[0].strip()
                         else:
                             name_file = file.split('.xlsm')[0].strip()
-                        print(name_file)  # обрабатываемый файл
+                        if name_file not in set_error_name_file:
+                            print(name_file)  # обрабатываемый файл
+                            # ха повторяющийся код ну и ладно
+                            result_date = re.search(r'\d{2}_\d{2}_\d{4}', name_file)
+                            result_date = result_date.group().replace('_','.')
+                            for sheet, lst_cols in required_columns.items():
+                                temp_req_df = pd.read_excel(f'{dirpath}/{file}', sheet_name=sheet)
+                                temp_req_df.set_index(temp_req_df.columns[0],inplace=True)
+                                if temp_req_df.shape[1] == 1:
+                                    temp_req_df.columns = [result_date]
+                                    base_df = dct_base_df[sheet] # получаем базовый датафрейм
+                                    base_df= base_df.join(temp_req_df)
+                                    base_df.fillna(0,inplace=True)
+                                    dct_base_df[sheet] = base_df
 
 
 
@@ -156,6 +184,50 @@ def processing_time_series(data_folder:str,end_folder:str):
 
 
 
+
+
+
+
+
+
+
+                    except:
+                        temp_error_df = pd.DataFrame(
+                            data=[[f'{name_file}',
+                                   f'Не удалось обработать файл. Возможно файл поврежден'
+                                   ]],
+                            columns=['Название файла',
+                                     'Описание ошибки'])
+                        error_df = pd.concat([error_df, temp_error_df], axis=0,
+                                             ignore_index=True)
+                        continue
+
+        # Сохраняем в горизонтальном виде
+        with pd.ExcelWriter(f'{end_folder}/ Горизонтальный вид.xlsx',engine='openpyxl') as writer:
+            for sheet_name, df in dct_base_df.items():
+                if sheet_name == 'Зарплата по отраслям':
+                    continue
+                # Преобразуем и сортируем колонки-даты
+                date_cols = []
+
+                for col in df.columns:
+                    date_obj = pd.to_datetime(col, format='%d.%m.%Y')
+                    date_cols.append((date_obj, col))
+
+                # Сортируем даты
+                date_cols.sort(key=lambda x: x[0])
+                # Создаем новые названия колонок
+                new_columns =[date for _, date in date_cols]
+
+                # Переупорядочиваем DataFrame
+                df = df[new_columns]
+
+                # Преобразуем названия колонок-дат
+                for date_obj, old_name in date_cols:
+                    df = df.rename(columns={old_name: date_obj})
+                print(sheet_name)
+                df.columns = df.columns.strftime('%d.%m.%Y')
+                df.to_excel(writer,sheet_name=sheet_name,index=True)
 
 
 
