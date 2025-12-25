@@ -159,7 +159,7 @@ def processing_time_series(data_folder:str,end_folder:str):
                             'Квоты по работодателям':['Краткое название работодателя','Количество вакансий'],
                             'Требуемый опыт по отраслям':['Сфера деятельности','Требуемый опыт работы в годах','Количество вакансий'],}
 
-        drop_columns = {'Квоты по отраслям':['Квотируемое место','dsfs'],'Квоты по работодателям':['Квотируемое место']} # для простых листов где надо удалить лишние колонки
+        drop_columns = {'Квоты по отраслям':['Квотируемое место'],'Квоты по работодателям':['Квотируемое место']} # для простых листов где надо удалить лишние колонки
 
 
         # словарь для листов где нужно обрабатывать группировать не первую колонку колонку
@@ -204,7 +204,8 @@ def processing_time_series(data_folder:str,end_folder:str):
                       'Тип занятости':'Тип занятости Вак',
                       'Квоты по отраслям':'Квоты по отраслям',
                       'Квоты по работодателям':'Квоты по работодателям',
-                      'Требуемый опыт работы в годах':'Опыт Вак'
+                      'Требуемый опыт работы в годах':'Опыт Вак',
+                      'Всего вакансий':'Всего вакансий'
 
                       } # словарь для переименования
         dct_index_svod = {key:set() for key in required_columns.keys()} # словарь для хранения всех значений сводов которые могут встретиться в файлах
@@ -217,6 +218,9 @@ def processing_time_series(data_folder:str,end_folder:str):
 
         for name_sheet,set_index in dct_index_svod.items():
             dct_base_df[name_sheet] = pd.DataFrame(index=sorted([value for value in set_index if value != 'Итого']))
+
+        # добавляем ключ для подсчета общего количества вакансий
+        dct_base_df['Всего вакансий'] = pd.DataFrame(index=['Вакансий по региону'])
         for dirpath, dirnames, filenames in os.walk(data_folder):
             for file in filenames:
                 if not file.startswith('~$') and (file.endswith('.xlsx') or file.endswith('.xlsm')):
@@ -246,6 +250,15 @@ def processing_time_series(data_folder:str,end_folder:str):
                                     base_df= base_df.join(temp_req_df)
                                     base_df.fillna(0,inplace=True)
                                     dct_base_df[sheet] = base_df
+                                    if sheet == 'Вакансии по отраслям':
+                                        prom_df = temp_req_df[temp_req_df.index != 'Итого']
+                                        itog_vac = prom_df[result_date].sum()
+                                        temp_itog_df = pd.DataFrame(columns=[result_date],data=[itog_vac],index=['Вакансий по региону'])
+                                        itog_base_df = dct_base_df['Всего вакансий']
+                                        itog_base_df = itog_base_df.join(temp_itog_df)
+                                        itog_base_df.fillna(0, inplace=True)
+                                        dct_base_df['Всего вакансий'] = itog_base_df
+
                                 else:
                                     if sheet not in second_cols_sheets:
                                         # Создаем отдельные датафреймы
@@ -337,7 +350,7 @@ def processing_time_series(data_folder:str,end_folder:str):
 
 
 
-                    except ZeroDivisionError:
+                    except:
                         temp_error_df = pd.DataFrame(
                             data=[[f'{name_file}',
                                    f'Не удалось обработать файл. Возможно файл поврежден'
@@ -349,6 +362,15 @@ def processing_time_series(data_folder:str,end_folder:str):
                         continue
 
         # Сохраняем в горизонтальном виде
+        # переносим лист Всего вакансий в начало
+        new_order = ['Всего вакансий','Вакансии по отраслям','Вакансии по муниципалитетам',
+                     'Вакансии по работодателям','Средняя ариф. минимальная зп','Медианная минимальная зп',
+                     'Средняя ариф. минимальная зп Раб','Медианная минимальная зп Раб','Образование',
+                     'График работы','Тип занятости','Требуемый опыт работы в годах',
+                     'Квоты по отраслям','Квоты по работодателям','Зарплата по отраслям',
+                     'Зарплата по работодателям','Образование по отраслям','График работы по отраслям',
+                     'Тип занятости по отраслям','Требуемый опыт по отраслям']
+        dct_base_df = {key: dct_base_df[key] for key in new_order}
         with pd.ExcelWriter(f'{end_folder}/Горизонтальный вид {current_time}.xlsx',engine='openpyxl') as writer:
             for sheet_name, df in dct_base_df.items():
                 if sheet_name in special_treatment:
