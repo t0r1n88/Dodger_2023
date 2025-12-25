@@ -23,6 +23,7 @@ def collecting_svod_region(data_folder:str,end_folder:str):
             result = re.search(r'\d{2}.\d{2}.\d{4}',str(dir_date))
             if result:
                 date_for_file = result.group()
+                date_for_file = date_for_file.replace('.','_')
                 print(date_for_file)
             else:
                 continue

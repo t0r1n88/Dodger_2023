@@ -126,7 +126,7 @@ def preparing_data(data_folder:str,required_columns:dict,dct_index_svod:dict,err
 
 
 
-def processing_time_series(data_folder:str,end_folder:str):
+def processing_time_series(data_folder,end_folder):
     """
     Функция для формирования временных рядов
     """
@@ -212,7 +212,6 @@ def processing_time_series(data_folder:str,end_folder:str):
         set_error_name_file = set() # множество для хранения названий файлов с ошибками
 
         dct_index_svod,error_df,set_error_name_file = preparing_data(data_folder,required_columns,dct_index_svod,error_df,set_error_name_file,second_cols_sheets,dct_value_rename) # Проверяем на ошибки
-
         # Создаем словарь с базовыми датафреймами
         dct_base_df = dict()
 
