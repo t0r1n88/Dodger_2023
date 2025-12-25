@@ -152,6 +152,10 @@ def processing_time_series(data_folder:str,end_folder:str):
 
         dupl_special_treatment = {'Зарплата по работодателям':{'Средняя ариф. минимальная зп':'Средняя ариф. минимальная зп Раб','Медианная минимальная зп':'Медианная минимальная зп Раб'}}
 
+        # Словарь для листов из двух колонок где первая это индекс по которым нужно провести группировку
+        dct_one_group_sheet = {'Зарплата по работодателям':{'Средняя ариф. минимальная зп':'mean','Медианная минимальная зп':'median'
+                                                            }}
+        # Словарь для листов где нужно провести
 
         dct_rename = {'Вакансии по отраслям':'Вакансии по отраслям',
                       'Вакансии по муниципалитетам':'Вакансии по муниципалитетам',
@@ -200,24 +204,56 @@ def processing_time_series(data_folder:str,end_folder:str):
                                             # перебираем список и проверяем есть уже такой базовый датафрейм, если нет то создаем
                                             if name_column not in dct_base_df:
                                                 temp_treatement_df = temp_req_df[[name_column]].copy()
-                                                temp_treatement_df.columns = [result_date]
+                                                if sheet not in dct_one_group_sheet:
+                                                    temp_treatement_df.columns = [result_date]
+                                                else:
+                                                    # группируем
+                                                    temp_treatement_df = temp_treatement_df.groupby(level=0).agg(dct_one_group_sheet[sheet][name_column])
+                                                    temp_treatement_df.columns = [result_date]
+                                                    if dct_one_group_sheet[sheet][name_column] in ('mean', 'median'):
+                                                        # округляем если функция средняя или медиана
+                                                        temp_treatement_df[result_date] = temp_treatement_df[result_date].apply(lambda x: round(x, 0))
                                                 dct_base_df[name_column] = temp_treatement_df
                                             else:
                                                 base_treatment_df = dct_base_df[name_column]  # получаем базовый датафрейм
                                                 temp_treatement_df = temp_req_df[[name_column]].copy()
-                                                temp_treatement_df.columns = [result_date]
+                                                if sheet not in dct_one_group_sheet:
+                                                    temp_treatement_df.columns = [result_date]
+                                                else:
+                                                    # группируем
+                                                    temp_treatement_df = temp_treatement_df.groupby(level=0).agg(dct_one_group_sheet[sheet][name_column])
+                                                    temp_treatement_df.columns = [result_date]
+                                                    if dct_one_group_sheet[sheet][name_column] in ('mean', 'median'):
+                                                        # округляем если функция средняя или медиана
+                                                        temp_treatement_df[result_date] = temp_treatement_df[result_date].apply(lambda x: round(x, 0))
                                                 base_treatment_df = base_treatment_df.join(temp_treatement_df)
                                                 base_treatment_df.fillna(0, inplace=True)
                                                 dct_base_df[name_column] = base_treatment_df
                                         else:
                                             if dupl_special_treatment[sheet][name_column] not in dct_base_df:
                                                 temp_treatement_df = temp_req_df[[name_column]].copy()
-                                                temp_treatement_df.columns = [result_date]
+                                                if sheet not in dct_one_group_sheet:
+                                                    temp_treatement_df.columns = [result_date]
+                                                else:
+                                                    # группируем
+                                                    temp_treatement_df = temp_treatement_df.groupby(level=0).agg(dct_one_group_sheet[sheet][name_column])
+                                                    temp_treatement_df.columns = [result_date]
+                                                    if dct_one_group_sheet[sheet][name_column] in ('mean','median'):
+                                                        # округляем если функция средняя или медиана
+                                                        temp_treatement_df[result_date] = temp_treatement_df[result_date].apply(lambda x:round(x,0))
                                                 dct_base_df[dupl_special_treatment[sheet][name_column]] = temp_treatement_df
                                             else:
                                                 base_treatment_df = dct_base_df[dupl_special_treatment[sheet][name_column]]  # получаем базовый датафрейм
                                                 temp_treatement_df = temp_req_df[[name_column]].copy()
-                                                temp_treatement_df.columns = [result_date]
+                                                if sheet not in dct_one_group_sheet:
+                                                    temp_treatement_df.columns = [result_date]
+                                                else:
+                                                    # группируем
+                                                    temp_treatement_df = temp_treatement_df.groupby(level=0).agg(dct_one_group_sheet[sheet][name_column])
+                                                    temp_treatement_df.columns = [result_date]
+                                                    if dct_one_group_sheet[sheet][name_column] in ('mean','median'):
+                                                        # округляем если функция средняя или медиана
+                                                        temp_treatement_df[result_date] = temp_treatement_df[result_date].apply(lambda x:round(x,0))
                                                 base_treatment_df = base_treatment_df.join(temp_treatement_df)
                                                 base_treatment_df.fillna(0, inplace=True)
                                                 dct_base_df[dupl_special_treatment[sheet][name_column]] = base_treatment_df
