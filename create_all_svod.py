@@ -196,29 +196,34 @@ def processing_time_series(data_folder:str,end_folder:str):
                                 else:
                                     # Создаем отдельные датафреймы
                                     for name_column in special_treatment[sheet]:
-                                        # перебираем список и проверяем есть уже такой базовый датафрейм, если нет то создаем
-                                        if name_column not in dct_base_df:
-                                            temp_treatement_df = temp_req_df[[name_column]].copy()
-                                            temp_treatement_df.columns = [result_date]
-                                            if sheet not in dupl_special_treatment:
+                                        if sheet not in dupl_special_treatment:
+                                            # перебираем список и проверяем есть уже такой базовый датафрейм, если нет то создаем
+                                            if name_column not in dct_base_df:
+                                                temp_treatement_df = temp_req_df[[name_column]].copy()
+                                                temp_treatement_df.columns = [result_date]
                                                 dct_base_df[name_column] = temp_treatement_df
                                             else:
-                                                print('fdf')
-                                                dct_base_df[f'{name_column} {dupl_special_treatment[sheet]}'] = temp_treatement_df
-                                        else:
-                                            base_treatment_df = dct_base_df[name_column]  # получаем базовый датафрейм
-                                            temp_treatement_df = temp_req_df[[name_column]].copy()
-                                            temp_treatement_df.columns = [result_date]
-                                            base_treatment_df = base_treatment_df.join(temp_treatement_df)
-                                            base_treatment_df.fillna(0, inplace=True)
-                                            if sheet not in dupl_special_treatment:
+                                                base_treatment_df = dct_base_df[name_column]  # получаем базовый датафрейм
+                                                temp_treatement_df = temp_req_df[[name_column]].copy()
+                                                temp_treatement_df.columns = [result_date]
+                                                base_treatment_df = base_treatment_df.join(temp_treatement_df)
+                                                base_treatment_df.fillna(0, inplace=True)
                                                 dct_base_df[name_column] = base_treatment_df
+                                        else:
+                                            if dupl_special_treatment[sheet][name_column] not in dct_base_df:
+                                                temp_treatement_df = temp_req_df[[name_column]].copy()
+                                                temp_treatement_df.columns = [result_date]
+                                                dct_base_df[dupl_special_treatment[sheet][name_column]] = temp_treatement_df
                                             else:
-                                                print('fdf')
+                                                base_treatment_df = dct_base_df[dupl_special_treatment[sheet][name_column]]  # получаем базовый датафрейм
+                                                temp_treatement_df = temp_req_df[[name_column]].copy()
+                                                temp_treatement_df.columns = [result_date]
+                                                base_treatment_df = base_treatment_df.join(temp_treatement_df)
+                                                base_treatment_df.fillna(0, inplace=True)
+                                                dct_base_df[dupl_special_treatment[sheet][name_column]] = base_treatment_df
 
-                                                dct_base_df[f'{name_column} {dupl_special_treatment[sheet]}'] = base_treatment_df
 
-                    except ZeroDivisionError:
+                    except:
                         temp_error_df = pd.DataFrame(
                             data=[[f'{name_file}',
                                    f'Не удалось обработать файл. Возможно файл поврежден'
@@ -231,7 +236,7 @@ def processing_time_series(data_folder:str,end_folder:str):
 
 
         # Сохраняем в горизонтальном виде
-        with pd.ExcelWriter(f'{end_folder}/ Горизонтальный вид.xlsx',engine='openpyxl') as writer:
+        with pd.ExcelWriter(f'{end_folder}/Горизонтальный вид {current_time}.xlsx',engine='openpyxl') as writer:
             for sheet_name, df in dct_base_df.items():
                 if sheet_name in special_treatment:
                     continue
