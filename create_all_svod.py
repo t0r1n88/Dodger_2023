@@ -484,6 +484,35 @@ def processing_time_series(data_folder,end_folder):
                 df.to_excel(writer,sheet_name=dct_rename[sheet_name],index=True)
 
 
+        # Вертикальный вид
+        with pd.ExcelWriter(f'{end_folder}/Вертикальный вид {current_time}.xlsx',engine='openpyxl') as writer:
+            for sheet_name, df in dct_base_df.items():
+                if sheet_name in special_treatment:
+                    continue
+                # Преобразуем и сортируем колонки-даты
+                date_cols = []
+
+                for col in df.columns:
+                    date_obj = pd.to_datetime(col, format='%d.%m.%Y')
+                    date_cols.append((date_obj, col))
+
+                # Сортируем даты
+                date_cols.sort(key=lambda x: x[0])
+                # Создаем новые названия колонок
+                new_columns =[date for _, date in date_cols]
+
+                # Переупорядочиваем DataFrame
+                df = df[new_columns]
+
+                # Преобразуем названия колонок-дат
+                for date_obj, old_name in date_cols:
+                    df = df.rename(columns={old_name: date_obj})
+                if len(df) != 0:
+                    df.columns = df.columns.strftime('%d.%m.%Y')
+                    df = df.transpose()
+                df.to_excel(writer,sheet_name=dct_rename[sheet_name],index=True)
+
+
 
         error_df.to_excel(f'{end_folder}/Ошибки_{current_time}.xlsx',index=False)
 
