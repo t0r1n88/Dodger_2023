@@ -85,7 +85,6 @@ def preparing_data(data_folder:str,required_columns:dict,dct_index_svod:dict,err
                             temp_req_df['Полное название работодателя'] = temp_req_df['Полное название работодателя'].apply(
                                 lambda x: x.upper() if isinstance(x, str) else x).replace(dct_abbr, regex=True)
                             temp_req_df = temp_req_df.rename(columns={'Полное название работодателя':'Краткое название работодателя'})
-
                         if len(temp_req_df) == 0:
                             continue
                         diff_cols = set(lst_cols).difference(set(temp_req_df.columns))
@@ -100,8 +99,14 @@ def preparing_data(data_folder:str,required_columns:dict,dct_index_svod:dict,err
                                                  ignore_index=True)
                             continue
 
+
                         # Открываем файл для обработки
                         df = pd.read_excel(f'{dirpath}/{file}', sheet_name=sheet)  # открываем файл
+                        if 'Краткое название работодателя' in df.columns:
+                            df['Краткое название работодателя'] = df[
+                                'Краткое название работодателя'].apply(
+                                lambda x: x.upper() if isinstance(x, str) else x).replace(dct_abbr, regex=True)
+
                         if sheet not in dct_second_cols:
                             dct_index_svod[sheet].update(df[df.columns[0]].unique())
                         else:
@@ -337,6 +342,10 @@ def processing_time_series(data_folder,end_folder):
                             diff_cols = set(required_columns[sheet]).difference(set(temp_req_df.columns))
                             if len(diff_cols) !=0 :
                                 continue
+
+                            if 'Краткое название работодателя' in temp_req_df.columns:
+                                temp_req_df['Краткое название работодателя'] = temp_req_df['Краткое название работодателя'].apply(
+                                    lambda x: x.upper() if isinstance(x, str) else x).replace(dct_abbr, regex=True)
                             temp_req_df.set_index(temp_req_df.columns[0],inplace=True)
                             if sheet not in special_treatment:
                                 if sheet not in drop_columns:
@@ -509,7 +518,8 @@ def processing_time_series(data_folder,end_folder):
                     df = df.rename(columns={old_name: date_obj})
                 if len(df) != 0:
                     df.columns = df.columns.strftime('%d.%m.%Y')
-                    df = df.transpose()
+                    if len(df) < 10000: # транспонируем только если не больше уровня
+                        df = df.transpose()
                 df.to_excel(writer,sheet_name=dct_rename[sheet_name],index=True)
 
 
