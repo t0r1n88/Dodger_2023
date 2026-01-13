@@ -396,6 +396,10 @@ def processing_time_series(data_folder,end_folder):
                                     dash_temp_df = dash_temp_df[dash_temp_df['Сфера деятельности'] != 'Итого']
                                     itog_dash_vac = dash_temp_df['Количество вакансий'].sum()
                                     temp_dash_itog_df = pd.DataFrame(columns=['Количество вакансий','Дата'],data=[[itog_dash_vac,result_date]])
+                                    itog_dash_base_df = dct_dash_df['Всего вакансий']
+                                    itog_dash_base_df = pd.concat([itog_dash_base_df, temp_dash_itog_df])
+                                    itog_dash_base_df.fillna(0,inplace=True)
+                                    dct_dash_df['Всего вакансий'] = itog_dash_base_df
                             else:
                                 if sheet not in second_cols_sheets:
                                     # Создаем отдельные датафреймы
