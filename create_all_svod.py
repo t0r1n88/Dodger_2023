@@ -304,6 +304,8 @@ def processing_time_series(data_folder,end_folder):
         dct_index_svod,error_df,set_error_name_file = preparing_data(data_folder,required_columns,dct_index_svod,error_df,set_error_name_file,second_cols_sheets,dct_value_rename,dct_abbr) # Проверяем на ошибки
         # Создаем словарь с базовыми датафреймами
         dct_base_df = dict()
+        # Создаем словарь для хранения датафреймов для сводов
+        dct_dash_df = dict()
 
         for name_sheet,set_index in dct_index_svod.items():
             dct_base_df[name_sheet] = pd.DataFrame(index=sorted([value for value in set_index if value != 'Итого']))
@@ -521,6 +523,8 @@ def processing_time_series(data_folder,end_folder):
                     if len(df) < 10000: # транспонируем только если не больше уровня
                         df = df.transpose()
                 df.to_excel(writer,sheet_name=dct_rename[sheet_name],index=True)
+
+        # Формат для дашборда
 
 
 
