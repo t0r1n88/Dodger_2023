@@ -305,21 +305,25 @@ def processing_time_series(data_folder,end_folder):
         # Создаем словарь с базовыми датафреймами
         dct_base_df = dict()
         # Создаем словарь для хранения датафреймов для сводов
-        dct_dash_df = dict()
+        dct_dash_df = {'Всего вакансий':pd.DataFrame(columns=['Количество вакансий','Дата']),
+                       'Вакансии по отраслям':pd.DataFrame(columns=['Сфера деятельности','Количество вакансий','Дата']),
+                       'Вакансии по муниципалитетам':pd.DataFrame(columns=['Муниципалитет','Количество вакансий','Дата']),
+                       'Вакансии по работодателям':pd.DataFrame(columns=['Краткое название работодателя','Количество вакансий','Дата']),
+                       'Зарплата по отраслям':pd.DataFrame(columns=['Сфера деятельности','Средняя ариф. минимальная зп','Медианная минимальная зп','Дата']),
+                       'Зарплата по работодателям':pd.DataFrame(columns=['Краткое название работодателя','Средняя ариф. минимальная зп','Медианная минимальная зп','Дата']),
+                       'Образование по отраслям':pd.DataFrame(columns=['Образование','Количество вакансий','Дата']),
+                       'График работы по отраслям':pd.DataFrame(columns=['График работы','Количество вакансий','Дата']),
+                       'Тип занятости по отраслям':pd.DataFrame(columns=['Тип занятости','Количество вакансий','Дата']),
+                       'Квоты по отраслям':pd.DataFrame(columns=['Сфера деятельности','Количество вакансий','Дата']),
+                       'Квоты по работодателям':pd.DataFrame(columns=['Краткое название работодателя','Количество вакансий','Дата']),
+                       'Требуемый опыт по отраслям':pd.DataFrame(columns=['Требуемый опыт работы в годах','Количество вакансий','Дата']),}
 
         # Создаем ключи
         for name_sheet,set_index in dct_index_svod.items():
             dct_base_df[name_sheet] = pd.DataFrame(index=sorted([value for value in set_index if value != 'Итого']))
 
-        for name_sheet,set_index in dct_index_svod.items():
-            dct_dash_df[name_sheet] = pd.DataFrame(index=sorted([value for value in set_index if value != 'Итого']))
-
-        print(dct_dash_df['Вакансии по отраслям'])
-        raise ZeroDivisionError
-
         # добавляем ключ для подсчета общего количества вакансий
         dct_base_df['Всего вакансий'] = pd.DataFrame(index=['Вакансий по региону'])
-        dct_dash_df['Всего вакансий'] = pd.DataFrame(index=['Вакансий по региону'])
         for dirpath, dirnames, filenames in os.walk(data_folder):
             for file in filenames:
                 if not file.startswith('~$') and (file.endswith('.xlsx') or file.endswith('.xlsm')):
@@ -356,7 +360,9 @@ def processing_time_series(data_folder,end_folder):
                             if 'Краткое название работодателя' in temp_req_df.columns:
                                 temp_req_df['Краткое название работодателя'] = temp_req_df['Краткое название работодателя'].apply(
                                     lambda x: x.upper() if isinstance(x, str) else x).replace(dct_abbr, regex=True)
+                            dash_temp_df = temp_req_df.copy() # создаем копию
                             temp_req_df.set_index(temp_req_df.columns[0],inplace=True)
+
                             if sheet not in special_treatment:
                                 if sheet not in drop_columns:
                                     temp_req_df.columns = [result_date]
@@ -369,7 +375,15 @@ def processing_time_series(data_folder,end_folder):
                                 base_df= base_df.join(temp_req_df)
                                 base_df.fillna(0,inplace=True)
                                 dct_base_df[sheet] = base_df
+
+                                # Создаем для дашборда
+                                dash_base_df = dct_dash_df[sheet]
+                                dash_temp_df['Дата'] = result_date
+                                dash_base_df = pd.concat([dash_base_df,dash_temp_df])
+                                dash_base_df.fillna(0,inplace=True)
+                                dct_dash_df[sheet] = dash_base_df
                                 if sheet == 'Вакансии по отраслям':
+                                    # заполняем лист Всего вакансий
                                     prom_df = temp_req_df[temp_req_df.index != 'Итого']
                                     itog_vac = prom_df[result_date].sum()
                                     temp_itog_df = pd.DataFrame(columns=[result_date],data=[itog_vac],index=['Вакансий по региону'])
@@ -378,6 +392,10 @@ def processing_time_series(data_folder,end_folder):
                                     itog_base_df.fillna(0, inplace=True)
                                     dct_base_df['Всего вакансий'] = itog_base_df
 
+                                    # заполняем для дашборда
+                                    dash_temp_df = dash_temp_df[dash_temp_df['Сфера деятельности'] != 'Итого']
+                                    itog_dash_vac = dash_temp_df['Количество вакансий'].sum()
+                                    temp_dash_itog_df = pd.DataFrame(columns=['Количество вакансий','Дата'],data=[[itog_dash_vac,result_date]])
                             else:
                                 if sheet not in second_cols_sheets:
                                     # Создаем отдельные датафреймы
