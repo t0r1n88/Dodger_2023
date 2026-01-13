@@ -307,11 +307,19 @@ def processing_time_series(data_folder,end_folder):
         # Создаем словарь для хранения датафреймов для сводов
         dct_dash_df = dict()
 
+        # Создаем ключи
         for name_sheet,set_index in dct_index_svod.items():
             dct_base_df[name_sheet] = pd.DataFrame(index=sorted([value for value in set_index if value != 'Итого']))
 
+        for name_sheet,set_index in dct_index_svod.items():
+            dct_dash_df[name_sheet] = pd.DataFrame(index=sorted([value for value in set_index if value != 'Итого']))
+
+        print(dct_dash_df['Вакансии по отраслям'])
+        raise ZeroDivisionError
+
         # добавляем ключ для подсчета общего количества вакансий
         dct_base_df['Всего вакансий'] = pd.DataFrame(index=['Вакансий по региону'])
+        dct_dash_df['Всего вакансий'] = pd.DataFrame(index=['Вакансий по региону'])
         for dirpath, dirnames, filenames in os.walk(data_folder):
             for file in filenames:
                 if not file.startswith('~$') and (file.endswith('.xlsx') or file.endswith('.xlsm')):
