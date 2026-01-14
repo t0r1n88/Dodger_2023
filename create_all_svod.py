@@ -159,23 +159,26 @@ def create_dash_df(dct_dash_df:dict,dash_temp_df:pd.DataFrame,sheet:str,result_d
             itog_dash_base_df.fillna(0, inplace=True)
             dct_dash_df['Всего вакансий'] = itog_dash_base_df
     else:
-        print(sheet)
-        if sheet != 'Зарплата по работодателям': # заменяем устаревшие названия
+        if sheet == 'Зарплата по работодателям': # заменяем устаревшие названия
+            dash_temp_df = dash_temp_df.groupby('Краткое название работодателя').agg({'Средняя ариф. минимальная зп':'mean','Медианная минимальная зп':'median'})
+            dash_temp_df['Средняя ариф. минимальная зп'] = dash_temp_df['Средняя ариф. минимальная зп'].apply(lambda x: round(x, 0))
+            dash_temp_df['Медианная минимальная зп'] = dash_temp_df['Медианная минимальная зп'].apply(lambda x: round(x, 0))
+            dash_temp_df = dash_temp_df.reset_index()
+            dash_temp_df = dash_temp_df.assign(Дата=result_date)
+            # добавляем в базовый датафрейм
+            base_dash_df = dct_dash_df[sheet]
+            base_dash_df = pd.concat([base_dash_df,dash_temp_df])
+            base_dash_df.fillna(0,inplace=True)
+            dct_dash_df[sheet] = base_dash_df
+        else:
             dash_temp_df[dash_special_treatment[sheet][0]] = dash_temp_df[dash_special_treatment[sheet][0]].replace(dct_value_rename[sheet])
-
-        temp_treatement_df = temp_treatement_df.groupby(level=0).agg(
-            dct_one_group_sheet[sheet][name_column])
-        temp_treatement_df.columns = [result_date]
-        if dct_one_group_sheet[sheet][name_column] in ('mean', 'median'):
-            # округляем если функция средняя или медиана
-            temp_treatement_df[result_date] = temp_treatement_df[
-                result_date].apply(lambda x: round(x, 0))
-
-
-        raise ZeroDivisionError
-
-
-
+            dash_temp_df = dash_temp_df.groupby(dash_special_treatment[sheet][0]).agg({dash_special_treatment[sheet][1]:'sum'})
+            dash_temp_df = dash_temp_df.reset_index()
+            dash_temp_df = dash_temp_df.assign(Дата=result_date)
+            base_dash_df = dct_dash_df[sheet]
+            base_dash_df = pd.concat([base_dash_df,dash_temp_df])
+            base_dash_df.fillna(0,inplace=True)
+            dct_dash_df[sheet] = base_dash_df
 
 
 
@@ -341,6 +344,12 @@ def processing_time_series(data_folder,end_folder):
                       'Вакансии по работодателям':'Вакансии по работодателям',
                        'Средняя ариф. минимальная зп':'Средняя ЗП Отр','Медианная минимальная зп':'Медианная ЗП Отр',
                       'Средняя ариф. минимальная зп Раб': 'Средняя ЗП Раб', 'Медианная минимальная зп Раб': 'Медианная ЗП Раб',
+                      'Зарплата по отраслям': 'Зарплата по отраслям',
+                      'Зарплата по работодателям': 'Зарплата по работодателям',
+                      'Образование по отраслям': 'Образование Вак',
+                      'График работы по отраслям': 'График работы Вак',
+                      'Тип занятости по отраслям': 'Тип занятости Вак',
+                      'Требуемый опыт по отраслям': 'Опыт Вак',
                       'Образование':'Образование Вак',
                       'График работы':'График работы Вак',
                       'Тип занятости':'Тип занятости Вак',
@@ -600,9 +609,6 @@ def processing_time_series(data_folder,end_folder):
 
         with pd.ExcelWriter(f'{end_folder}/Для сводов {current_time}.xlsx',engine='openpyxl') as writer:
             for sheet_name, df in dct_dash_df.items():
-                if sheet_name in special_treatment:
-                    continue
-
                 df.to_excel(writer, sheet_name=dct_rename[sheet_name], index=False)
 
 
