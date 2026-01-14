@@ -133,6 +133,51 @@ def preparing_data(data_folder:str,required_columns:dict,dct_index_svod:dict,err
 
 
 
+def create_dash_df(dct_dash_df:dict,dash_temp_df:pd.DataFrame,sheet:str,result_date:str,dash_special_treatment:dict,dct_value_rename:dict):
+    """
+    Функция для заполнения словаря для развернутых датафреймов предназначенных для построения графиков по датам
+    """
+    # Создаем для дашборда
+    if sheet not in dash_special_treatment: # Если обычный лист не требующий группировки
+        dash_base_df = dct_dash_df[sheet]
+        dash_temp_df = dash_temp_df[dash_temp_df[dash_temp_df.columns[0]] != 'Итого']
+
+        if 'Квотируемое место' in dash_temp_df.columns:
+            dash_temp_df.drop(columns=['Квотируемое место'],inplace=True) # удаляем колонку для квот. Зачем вообще я ее делал?
+
+        dash_temp_df = dash_temp_df.assign(Дата=result_date)
+        dash_base_df = pd.concat([dash_base_df, dash_temp_df])
+        dash_base_df.fillna(0, inplace=True)
+        dct_dash_df[sheet] = dash_base_df
+        if sheet == 'Вакансии по отраслям':
+            # Создаем лист с подсчетом по общему количеству вакансий
+            dash_temp_df = dash_temp_df[dash_temp_df['Сфера деятельности'] != 'Итого']
+            itog_dash_vac = dash_temp_df['Количество вакансий'].sum()
+            temp_dash_itog_df = pd.DataFrame(columns=['Количество вакансий', 'Дата'], data=[[itog_dash_vac, result_date]])
+            itog_dash_base_df = dct_dash_df['Всего вакансий']
+            itog_dash_base_df = pd.concat([itog_dash_base_df, temp_dash_itog_df])
+            itog_dash_base_df.fillna(0, inplace=True)
+            dct_dash_df['Всего вакансий'] = itog_dash_base_df
+    else:
+        print(sheet)
+        if sheet != 'Зарплата по работодателям': # заменяем устаревшие названия
+            dash_temp_df[dash_special_treatment[sheet][0]] = dash_temp_df[dash_special_treatment[sheet][0]].replace(dct_value_rename[sheet])
+
+        temp_treatement_df = temp_treatement_df.groupby(level=0).agg(
+            dct_one_group_sheet[sheet][name_column])
+        temp_treatement_df.columns = [result_date]
+        if dct_one_group_sheet[sheet][name_column] in ('mean', 'median'):
+            # округляем если функция средняя или медиана
+            temp_treatement_df[result_date] = temp_treatement_df[
+                result_date].apply(lambda x: round(x, 0))
+
+
+        raise ZeroDivisionError
+
+
+
+
+
 
 
 
@@ -256,11 +301,18 @@ def processing_time_series(data_folder,end_folder):
         second_cols_sheets = {'Образование по отраслям':['Образование','Количество вакансий'],
                               'График работы по отраслям':['График работы','Количество вакансий'],
                               'Тип занятости по отраслям':['Тип занятости','Количество вакансий'],
-                              'Требуемый опыт по отраслям':['Требуемый опыт работы в годах','Количество вакансий'],}
+                              'Требуемый опыт по отраслям':['Требуемый опыт работы в годах','Количество вакансий']}
 
 
         special_treatment = {'Зарплата по отраслям':['Средняя ариф. минимальная зп','Медианная минимальная зп'],
                              'Зарплата по работодателям':['Средняя ариф. минимальная зп','Медианная минимальная зп'],
+                             'Образование по отраслям':['Образование','Количество вакансий'],
+                             'График работы по отраслям':['График работы','Количество вакансий'],
+                             'Тип занятости по отраслям':['Тип занятости','Количество вакансий'],
+                             'Требуемый опыт по отраслям': ['Требуемый опыт работы в годах', 'Количество вакансий']
+                             } # листы которые нужно обработать по особому
+
+        dash_special_treatment = {'Зарплата по работодателям':['Краткое название работодателя','Средняя ариф. минимальная зп','Медианная минимальная зп'],
                              'Образование по отраслям':['Образование','Количество вакансий'],
                              'График работы по отраслям':['График работы','Количество вакансий'],
                              'Тип занятости по отраслям':['Тип занятости','Количество вакансий'],
@@ -361,6 +413,8 @@ def processing_time_series(data_folder,end_folder):
                                 temp_req_df['Краткое название работодателя'] = temp_req_df['Краткое название работодателя'].apply(
                                     lambda x: x.upper() if isinstance(x, str) else x).replace(dct_abbr, regex=True)
                             dash_temp_df = temp_req_df.copy() # создаем копию
+
+                            create_dash_df(dct_dash_df,dash_temp_df,sheet,result_date,dash_special_treatment,dct_value_rename)
                             temp_req_df.set_index(temp_req_df.columns[0],inplace=True)
 
                             if sheet not in special_treatment:
@@ -376,12 +430,7 @@ def processing_time_series(data_folder,end_folder):
                                 base_df.fillna(0,inplace=True)
                                 dct_base_df[sheet] = base_df
 
-                                # Создаем для дашборда
-                                dash_base_df = dct_dash_df[sheet]
-                                dash_temp_df['Дата'] = result_date
-                                dash_base_df = pd.concat([dash_base_df,dash_temp_df])
-                                dash_base_df.fillna(0,inplace=True)
-                                dct_dash_df[sheet] = dash_base_df
+
                                 if sheet == 'Вакансии по отраслям':
                                     # заполняем лист Всего вакансий
                                     prom_df = temp_req_df[temp_req_df.index != 'Итого']
@@ -392,14 +441,7 @@ def processing_time_series(data_folder,end_folder):
                                     itog_base_df.fillna(0, inplace=True)
                                     dct_base_df['Всего вакансий'] = itog_base_df
 
-                                    # заполняем для дашборда
-                                    dash_temp_df = dash_temp_df[dash_temp_df['Сфера деятельности'] != 'Итого']
-                                    itog_dash_vac = dash_temp_df['Количество вакансий'].sum()
-                                    temp_dash_itog_df = pd.DataFrame(columns=['Количество вакансий','Дата'],data=[[itog_dash_vac,result_date]])
-                                    itog_dash_base_df = dct_dash_df['Всего вакансий']
-                                    itog_dash_base_df = pd.concat([itog_dash_base_df, temp_dash_itog_df])
-                                    itog_dash_base_df.fillna(0,inplace=True)
-                                    dct_dash_df['Всего вакансий'] = itog_dash_base_df
+
                             else:
                                 if sheet not in second_cols_sheets:
                                     # Создаем отдельные датафреймы
@@ -555,6 +597,14 @@ def processing_time_series(data_folder,end_folder):
                 df.to_excel(writer,sheet_name=dct_rename[sheet_name],index=True)
 
         # Формат для дашборда
+
+        with pd.ExcelWriter(f'{end_folder}/Для сводов {current_time}.xlsx',engine='openpyxl') as writer:
+            for sheet_name, df in dct_dash_df.items():
+                if sheet_name in special_treatment:
+                    continue
+
+                df.to_excel(writer, sheet_name=dct_rename[sheet_name], index=False)
+
 
 
 
