@@ -145,7 +145,7 @@ def create_dash_df(dct_dash_df:dict,dash_temp_df:pd.DataFrame,sheet:str,result_d
         if 'Квотируемое место' in dash_temp_df.columns:
             dash_temp_df.drop(columns=['Квотируемое место'],inplace=True) # удаляем колонку для квот. Зачем вообще я ее делал?
 
-        dash_temp_df = dash_temp_df.assign(Дата=result_date)
+        dash_temp_df = dash_temp_df.assign(Данные_на=result_date)
         dash_base_df = pd.concat([dash_base_df, dash_temp_df])
         dash_base_df.fillna(0, inplace=True)
         dct_dash_df[sheet] = dash_base_df
@@ -153,7 +153,7 @@ def create_dash_df(dct_dash_df:dict,dash_temp_df:pd.DataFrame,sheet:str,result_d
             # Создаем лист с подсчетом по общему количеству вакансий
             dash_temp_df = dash_temp_df[dash_temp_df['Сфера деятельности'] != 'Итого']
             itog_dash_vac = dash_temp_df['Количество вакансий'].sum()
-            temp_dash_itog_df = pd.DataFrame(columns=['Количество вакансий', 'Дата'], data=[[itog_dash_vac, result_date]])
+            temp_dash_itog_df = pd.DataFrame(columns=['Количество вакансий', 'Данные_на'], data=[[itog_dash_vac, result_date]])
             itog_dash_base_df = dct_dash_df['Всего вакансий']
             itog_dash_base_df = pd.concat([itog_dash_base_df, temp_dash_itog_df])
             itog_dash_base_df.fillna(0, inplace=True)
@@ -164,7 +164,7 @@ def create_dash_df(dct_dash_df:dict,dash_temp_df:pd.DataFrame,sheet:str,result_d
             dash_temp_df['Средняя ариф. минимальная зп'] = dash_temp_df['Средняя ариф. минимальная зп'].apply(lambda x: round(x, 0))
             dash_temp_df['Медианная минимальная зп'] = dash_temp_df['Медианная минимальная зп'].apply(lambda x: round(x, 0))
             dash_temp_df = dash_temp_df.reset_index()
-            dash_temp_df = dash_temp_df.assign(Дата=result_date)
+            dash_temp_df = dash_temp_df.assign(Данные_на=result_date)
             # добавляем в базовый датафрейм
             base_dash_df = dct_dash_df[sheet]
             base_dash_df = pd.concat([base_dash_df,dash_temp_df])
@@ -174,7 +174,7 @@ def create_dash_df(dct_dash_df:dict,dash_temp_df:pd.DataFrame,sheet:str,result_d
             dash_temp_df[dash_special_treatment[sheet][0]] = dash_temp_df[dash_special_treatment[sheet][0]].replace(dct_value_rename[sheet])
             dash_temp_df = dash_temp_df.groupby(dash_special_treatment[sheet][0]).agg({dash_special_treatment[sheet][1]:'sum'})
             dash_temp_df = dash_temp_df.reset_index()
-            dash_temp_df = dash_temp_df.assign(Дата=result_date)
+            dash_temp_df = dash_temp_df.assign(Данные_на=result_date)
             base_dash_df = dct_dash_df[sheet]
             base_dash_df = pd.concat([base_dash_df,dash_temp_df])
             base_dash_df.fillna(0,inplace=True)
@@ -366,18 +366,18 @@ def processing_time_series(data_folder,end_folder):
         # Создаем словарь с базовыми датафреймами
         dct_base_df = dict()
         # Создаем словарь для хранения датафреймов для сводов
-        dct_dash_df = {'Всего вакансий':pd.DataFrame(columns=['Количество вакансий','Дата']),
-                       'Вакансии по отраслям':pd.DataFrame(columns=['Сфера деятельности','Количество вакансий','Дата']),
-                       'Вакансии по муниципалитетам':pd.DataFrame(columns=['Муниципалитет','Количество вакансий','Дата']),
-                       'Вакансии по работодателям':pd.DataFrame(columns=['Краткое название работодателя','Количество вакансий','Дата']),
-                       'Зарплата по отраслям':pd.DataFrame(columns=['Сфера деятельности','Средняя ариф. минимальная зп','Медианная минимальная зп','Дата']),
-                       'Зарплата по работодателям':pd.DataFrame(columns=['Краткое название работодателя','Средняя ариф. минимальная зп','Медианная минимальная зп','Дата']),
-                       'Образование по отраслям':pd.DataFrame(columns=['Образование','Количество вакансий','Дата']),
-                       'График работы по отраслям':pd.DataFrame(columns=['График работы','Количество вакансий','Дата']),
-                       'Тип занятости по отраслям':pd.DataFrame(columns=['Тип занятости','Количество вакансий','Дата']),
-                       'Квоты по отраслям':pd.DataFrame(columns=['Сфера деятельности','Количество вакансий','Дата']),
-                       'Квоты по работодателям':pd.DataFrame(columns=['Краткое название работодателя','Количество вакансий','Дата']),
-                       'Требуемый опыт по отраслям':pd.DataFrame(columns=['Требуемый опыт работы в годах','Количество вакансий','Дата']),}
+        dct_dash_df = {'Всего вакансий':pd.DataFrame(columns=['Количество вакансий','Данные_на']),
+                       'Вакансии по отраслям':pd.DataFrame(columns=['Сфера деятельности','Количество вакансий','Данные_на']),
+                       'Вакансии по муниципалитетам':pd.DataFrame(columns=['Муниципалитет','Количество вакансий','Данные_на']),
+                       'Вакансии по работодателям':pd.DataFrame(columns=['Краткое название работодателя','Количество вакансий','Данные_на']),
+                       'Зарплата по отраслям':pd.DataFrame(columns=['Сфера деятельности','Средняя ариф. минимальная зп','Медианная минимальная зп','Данные_на']),
+                       'Зарплата по работодателям':pd.DataFrame(columns=['Краткое название работодателя','Средняя ариф. минимальная зп','Медианная минимальная зп','Данные_на']),
+                       'Образование по отраслям':pd.DataFrame(columns=['Образование','Количество вакансий','Данные_на']),
+                       'График работы по отраслям':pd.DataFrame(columns=['График работы','Количество вакансий','Данные_на']),
+                       'Тип занятости по отраслям':pd.DataFrame(columns=['Тип занятости','Количество вакансий','Данные_на']),
+                       'Квоты по отраслям':pd.DataFrame(columns=['Сфера деятельности','Количество вакансий','Данные_на']),
+                       'Квоты по работодателям':pd.DataFrame(columns=['Краткое название работодателя','Количество вакансий','Данные_на']),
+                       'Требуемый опыт по отраслям':pd.DataFrame(columns=['Требуемый опыт работы в годах','Количество вакансий','Данные_на']),}
 
         # Создаем ключи
         for name_sheet,set_index in dct_index_svod.items():
