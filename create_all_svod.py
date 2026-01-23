@@ -612,7 +612,14 @@ def processing_time_series(data_folder,end_folder):
 
         with pd.ExcelWriter(f'{end_folder}/Для сводов {current_time}.xlsx',engine='openpyxl') as writer:
             for sheet_name, df in dct_dash_df.items():
+
                 df.to_excel(writer, sheet_name=dct_rename[sheet_name], index=False)
+        # Сохраняем по отдельности
+        if not os.path.exists(f'{end_folder}/Отдельные своды'):
+            os.makedirs(f'{end_folder}/Отдельные своды')
+
+        for sheet_name, df in dct_dash_df.items():
+            df.to_excel(f'{end_folder}/Отдельные своды/{sheet_name}.xlsx',index=False)
 
 
 
@@ -637,7 +644,7 @@ def processing_time_series(data_folder,end_folder):
 
 if __name__ == '__main__':
     main_data_folder = 'data/Своды'
-    main_data_folder = 'data/СВОД Бурятия'
+    # main_data_folder = 'data/СВОД Бурятия'
     main_end_folder = 'data/РЕЗУЛЬТАТ'
     start_time = time.time()
     processing_time_series(main_data_folder,main_end_folder)
