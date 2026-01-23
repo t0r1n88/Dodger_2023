@@ -141,6 +141,7 @@ def create_dash_df(dct_dash_df:dict,dash_temp_df:pd.DataFrame,sheet:str,result_d
     if sheet not in dash_special_treatment: # Если обычный лист не требующий группировки
         dash_base_df = dct_dash_df[sheet]
         dash_temp_df = dash_temp_df[dash_temp_df[dash_temp_df.columns[0]] != 'Итого']
+        dash_temp_df = dash_temp_df[dash_temp_df[dash_temp_df.columns[0]] != 'ИТОГО']
 
         if 'Квотируемое место' in dash_temp_df.columns:
             dash_temp_df.drop(columns=['Квотируемое место'],inplace=True) # удаляем колонку для квот. Зачем вообще я ее делал?
@@ -266,6 +267,8 @@ def processing_time_series(data_folder,end_folder):
                 'ДЕТСКИЙ ОЗДОРОВИТЕЛЬНО-ОБРАЗОВАТЕЛЬНЫЙ ЦЕНТР':'ДООЦ',
                 'ЦЕНТР ЗАНЯТОСТИ НАСЕЛЕНИЯ':'ЦЗН',
                 'ГОСУДАРСТВЕННОЕ БЮДЖЕТНОЕ ОЗДОРОВИТЕЛЬНОЕ ОБЩЕОБРАЗОВАТЕЛЬНОЕ УЧРЕЖДЕНИЕ':'ГБООУ',
+                'МУНИЦИПАЛЬНАЯ БЮДЖЕТНАЯ ДОШКОЛЬНАЯ ОБРАЗОВАТЕЛЬНАЯ ОРГАНИЗАЦИЯ':'МБДОУ',
+                'ОБЩЕСТВО С ОГРАНИЧЕННОЙ ОТВЕСТВЕННОСТЬЮ':'ООО',
                 }
 
     t = time.localtime()  # получаем текущее время и дату
@@ -634,8 +637,13 @@ def processing_time_series(data_folder,end_folder):
 
 if __name__ == '__main__':
     main_data_folder = 'data/Своды'
+    main_data_folder = 'data/СВОД Бурятия'
     main_end_folder = 'data/РЕЗУЛЬТАТ'
+    start_time = time.time()
     processing_time_series(main_data_folder,main_end_folder)
+    end_time = time.time()
+    execution_time = end_time - start_time
+    print(f"Время выполнения: {execution_time} секунд")
     print('Lindy Booth')
 
 
