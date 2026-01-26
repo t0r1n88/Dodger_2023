@@ -191,7 +191,7 @@ def create_dash_df(dct_dash_df:dict,dash_temp_df:pd.DataFrame,sheet:str,result_d
 
 
 
-def processing_time_series(data_folder,end_folder):
+def processing_time_series(data_folder,end_folder,param_filter:str):
     """
     Функция для формирования временных рядов
     """
@@ -278,6 +278,29 @@ def processing_time_series(data_folder,end_folder):
     error_df = pd.DataFrame(
         columns=['Название файла', 'Описание ошибки'])  # датафрейм для ошибок
 
+    dct_filter_vac = dict() # словарь для хранения подготовленных списков с вакансиями которые нужно искать
+
+    # Проверяем заполнение файла со списком вакансий динамику по которым нужно получить
+    if param_filter != '' and param_filter != 'Не выбрано':
+        df_param_filter = pd.read_excel(param_filter,dtype=str,usecols='A')
+        df_param_filter = df_param_filter.replace(r'^\s*$', pd.NA, regex=True).dropna(how='all')
+        # Создаем словарь по строкам с указанием вакансий которые есть в этой строке
+        for idx,row in enumerate(df_param_filter.iterrows(),1):
+            lst_temp = row[1].tolist()
+            lst_temp = lst_temp[0].split(',')
+            lst_temp = [value.strip().lower() for value in lst_temp if value]
+            dct_filter_vac[idx] = lst_temp
+
+        print(dct_filter_vac)
+
+
+
+        # отбрасываем пустые и заполненные только пробелами
+
+
+        raise ZeroDivisionError
+
+
     lst_files = []  # список для файлов
     for dirpath, dirnames, filenames in os.walk(data_folder):
         lst_files.extend(filenames)
@@ -289,7 +312,8 @@ def processing_time_series(data_folder,end_folder):
         raise NotFile
     else:
         required_columns = {'Вакансии по отраслям':['Сфера деятельности','Количество вакансий'],
-                            'Вакансии по муниципалитетам':['Муниципалитет','Количество вакансий'],
+                            'Вакансии по муниципалитетам':['Муниципалитет','Вакансия','Количество рабочих мест','ID вакансии','Ссылка на вакансию'],
+                            'Вакансии для динамики':['Краткое название работодателя','Количество вакансий'],
                             'Вакансии по работодателям':['Краткое название работодателя','Количество вакансий'],
                             'Зарплата по отраслям':['Сфера деятельности','Средняя ариф. минимальная зп','Медианная минимальная зп'],
                             'Зарплата по работодателям':['Краткое название работодателя','Средняя ариф. минимальная зп','Медианная минимальная зп'],
@@ -345,6 +369,7 @@ def processing_time_series(data_folder,end_folder):
         dct_rename = {'Вакансии по отраслям':'Вакансии по отраслям',
                       'Вакансии по муниципалитетам':'Вакансии по муниципалитетам',
                       'Вакансии по работодателям':'Вакансии по работодателям',
+                      'Вакансии для динамики':'Динамика по вакансиям',
                        'Средняя ариф. минимальная зп':'Средняя ЗП Отр','Медианная минимальная зп':'Медианная ЗП Отр',
                       'Средняя ариф. минимальная зп Раб': 'Средняя ЗП Раб', 'Медианная минимальная зп Раб': 'Медианная ЗП Раб',
                       'Зарплата по отраслям': 'Зарплата по отраслям',
@@ -372,6 +397,7 @@ def processing_time_series(data_folder,end_folder):
         dct_dash_df = {'Всего вакансий':pd.DataFrame(columns=['Количество вакансий','Данные_на']),
                        'Вакансии по отраслям':pd.DataFrame(columns=['Сфера деятельности','Количество вакансий','Данные_на']),
                        'Вакансии по муниципалитетам':pd.DataFrame(columns=['Муниципалитет','Количество вакансий','Данные_на']),
+                       'Вакансии для динамики':pd.DataFrame(columns=['Вакансии','Количество вакансий','Данные_на']),
                        'Вакансии по работодателям':pd.DataFrame(columns=['Краткое название работодателя','Количество вакансий','Данные_на']),
                        'Зарплата по отраслям':pd.DataFrame(columns=['Сфера деятельности','Средняя ариф. минимальная зп','Медианная минимальная зп','Данные_на']),
                        'Зарплата по работодателям':pd.DataFrame(columns=['Краткое название работодателя','Средняя ариф. минимальная зп','Медианная минимальная зп','Данные_на']),
@@ -646,8 +672,9 @@ if __name__ == '__main__':
     main_data_folder = 'data/Своды'
     # main_data_folder = 'data/СВОД Бурятия'
     main_end_folder = 'data/РЕЗУЛЬТАТ'
+    main_filter_file = 'data/Свод для динамики вакансий.xlsx'
     start_time = time.time()
-    processing_time_series(main_data_folder,main_end_folder)
+    processing_time_series(main_data_folder,main_end_folder,main_filter_file)
     end_time = time.time()
     execution_time = end_time - start_time
     print(f"Время выполнения: {execution_time} секунд")
