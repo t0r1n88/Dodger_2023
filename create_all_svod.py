@@ -133,7 +133,7 @@ def preparing_data(data_folder:str,required_columns:dict,dct_index_svod:dict,err
 
 
 
-def create_dash_df(dct_dash_df:dict,dash_temp_df:pd.DataFrame,sheet:str,result_date:str,dash_special_treatment:dict,dct_value_rename:dict):
+def create_dash_df(dct_dash_df:dict,dash_temp_df:pd.DataFrame,sheet:str,result_date:str,dash_special_treatment:dict,dct_value_rename:dict,dct_filter:dict,dct_exclude_filter:dict):
     """
     Функция для заполнения словаря для развернутых датафреймов предназначенных для построения графиков по датам
     """
@@ -146,19 +146,38 @@ def create_dash_df(dct_dash_df:dict,dash_temp_df:pd.DataFrame,sheet:str,result_d
         if 'Квотируемое место' in dash_temp_df.columns:
             dash_temp_df.drop(columns=['Квотируемое место'],inplace=True) # удаляем колонку для квот. Зачем вообще я ее делал?
 
-        dash_temp_df = dash_temp_df.assign(Данные_на=result_date)
-        dash_base_df = pd.concat([dash_base_df, dash_temp_df])
-        dash_base_df.fillna(0, inplace=True)
-        dct_dash_df[sheet] = dash_base_df
-        if sheet == 'Вакансии по отраслям':
-            # Создаем лист с подсчетом по общему количеству вакансий
-            dash_temp_df = dash_temp_df[dash_temp_df['Сфера деятельности'] != 'Итого']
-            itog_dash_vac = dash_temp_df['Количество вакансий'].sum()
-            temp_dash_itog_df = pd.DataFrame(columns=['Количество вакансий', 'Данные_на'], data=[[itog_dash_vac, result_date]])
-            itog_dash_base_df = dct_dash_df['Всего вакансий']
-            itog_dash_base_df = pd.concat([itog_dash_base_df, temp_dash_itog_df])
-            itog_dash_base_df.fillna(0, inplace=True)
-            dct_dash_df['Всего вакансий'] = itog_dash_base_df
+        if sheet != 'Вакансии для динамики':
+            dash_temp_df = dash_temp_df.assign(Данные_на=result_date)
+            dash_base_df = pd.concat([dash_base_df, dash_temp_df])
+            dash_base_df.fillna(0, inplace=True)
+            dct_dash_df[sheet] = dash_base_df
+            if sheet == 'Вакансии по отраслям':
+                # Создаем лист с подсчетом по общему количеству вакансий
+                dash_temp_df = dash_temp_df[dash_temp_df['Сфера деятельности'] != 'Итого']
+                itog_dash_vac = dash_temp_df['Количество вакансий'].sum()
+                temp_dash_itog_df = pd.DataFrame(columns=['Количество вакансий', 'Данные_на'], data=[[itog_dash_vac, result_date]])
+                itog_dash_base_df = dct_dash_df['Всего вакансий']
+                itog_dash_base_df = pd.concat([itog_dash_base_df, temp_dash_itog_df])
+                itog_dash_base_df.fillna(0, inplace=True)
+                dct_dash_df['Всего вакансий'] = itog_dash_base_df
+        else:
+            for key,lst_vac in dct_filter.items():
+                dash_temp_df['Вакансия'] = dash_temp_df['Вакансия'].fillna('Не заполнено')
+                temp_filter_df = dash_temp_df[dash_temp_df['Вакансия'].str.contains('|'.join(lst_vac),case=False,regex=True)] # отбираем если содержит в себе список значений
+                # Проводим дополнительную фильтрацию
+                if len(dct_exclude_filter[key]) != 0:
+                    temp_filter_df = temp_filter_df[~temp_filter_df['Вакансия'].str.contains('|'.join(dct_exclude_filter[key]),case=False,regex=True)]
+
+
+
+                temp_filter_df.to_excel('data/dfgd.xlsx')
+                raise ZeroDivisionError
+                row_temp_filter_df = pd.DataFrame(columns=['Вакансия','Количество вакансий','Данные_на'],
+                                                  data=[[','.join(lst_vac),sum(temp_filter_df['Количество рабочих мест']),result_date]])
+                dash_base_df = pd.concat([dash_base_df, row_temp_filter_df])
+                dash_base_df.fillna(0, inplace=True)
+                dct_dash_df[sheet] = dash_base_df
+
     else:
         if sheet == 'Зарплата по работодателям': # заменяем устаревшие названия
             dash_temp_df = dash_temp_df.groupby('Краткое название работодателя').agg({'Средняя ариф. минимальная зп':'mean','Медианная минимальная зп':'median'})
@@ -279,27 +298,31 @@ def processing_time_series(data_folder,end_folder,param_filter:str):
         columns=['Название файла', 'Описание ошибки'])  # датафрейм для ошибок
 
     dct_filter_vac = dict() # словарь для хранения подготовленных списков с вакансиями которые нужно искать
+    dct_exclude_filter_vac = dict() # словарь для хранения списков со значениями которые нужно отбросить в уже отфильтрованных данных
 
     # Проверяем заполнение файла со списком вакансий динамику по которым нужно получить
     if param_filter != '' and param_filter != 'Не выбрано':
-        df_param_filter = pd.read_excel(param_filter,dtype=str,usecols='A')
-        df_param_filter = df_param_filter.replace(r'^\s*$', pd.NA, regex=True).dropna(how='all')
+        df_param_filter = pd.read_excel(param_filter,dtype=str,usecols='A:B')
+        df_param_filter = df_param_filter.replace(r'^\s*$', pd.NA, regex=True).dropna(subset=df_param_filter.columns[0])
         # Создаем словарь по строкам с указанием вакансий которые есть в этой строке
-        for idx,row in enumerate(df_param_filter.iterrows(),1):
-            lst_temp = row[1].tolist()
-            lst_temp = lst_temp[0].split(',')
+        for idx,row in enumerate(df_param_filter.itertuples(),1):
+            # создаем списки вакансий которые будут искаться
+            lst_temp = row[1].split(',')
             lst_temp = [value.strip().lower() for value in lst_temp if value]
             dct_filter_vac[idx] = lst_temp
+            # создаем списки для дополнительной фильтрации
+            if isinstance(row[2],str):
+                lst_dop_temp = row[2].split(',')
+                lst_dop_temp = [value.strip().lower() for value in lst_dop_temp if value]
+                dct_exclude_filter_vac[idx] = lst_dop_temp
+            else:
+                dct_exclude_filter_vac[idx] = []
+
+
+
 
         print(dct_filter_vac)
-
-
-
-        # отбрасываем пустые и заполненные только пробелами
-
-
-        raise ZeroDivisionError
-
+        print(dct_exclude_filter_vac)
 
     lst_files = []  # список для файлов
     for dirpath, dirnames, filenames in os.walk(data_folder):
@@ -312,8 +335,8 @@ def processing_time_series(data_folder,end_folder,param_filter:str):
         raise NotFile
     else:
         required_columns = {'Вакансии по отраслям':['Сфера деятельности','Количество вакансий'],
-                            'Вакансии по муниципалитетам':['Муниципалитет','Вакансия','Количество рабочих мест','ID вакансии','Ссылка на вакансию'],
-                            'Вакансии для динамики':['Краткое название работодателя','Количество вакансий'],
+                            'Вакансии по муниципалитетам':['Муниципалитет','Количество вакансий'],
+                            'Вакансии для динамики':['Краткое название работодателя','Вакансия','Количество рабочих мест','ID вакансии','Ссылка на вакансию'],
                             'Вакансии по работодателям':['Краткое название работодателя','Количество вакансий'],
                             'Зарплата по отраслям':['Сфера деятельности','Средняя ариф. минимальная зп','Медианная минимальная зп'],
                             'Зарплата по работодателям':['Краткое название работодателя','Средняя ариф. минимальная зп','Медианная минимальная зп'],
@@ -397,7 +420,7 @@ def processing_time_series(data_folder,end_folder,param_filter:str):
         dct_dash_df = {'Всего вакансий':pd.DataFrame(columns=['Количество вакансий','Данные_на']),
                        'Вакансии по отраслям':pd.DataFrame(columns=['Сфера деятельности','Количество вакансий','Данные_на']),
                        'Вакансии по муниципалитетам':pd.DataFrame(columns=['Муниципалитет','Количество вакансий','Данные_на']),
-                       'Вакансии для динамики':pd.DataFrame(columns=['Вакансии','Количество вакансий','Данные_на']),
+                       'Вакансии для динамики':pd.DataFrame(columns=['Вакансия','Количество вакансий','Данные_на']),
                        'Вакансии по работодателям':pd.DataFrame(columns=['Краткое название работодателя','Количество вакансий','Данные_на']),
                        'Зарплата по отраслям':pd.DataFrame(columns=['Сфера деятельности','Средняя ариф. минимальная зп','Медианная минимальная зп','Данные_на']),
                        'Зарплата по работодателям':pd.DataFrame(columns=['Краткое название работодателя','Средняя ариф. минимальная зп','Медианная минимальная зп','Данные_на']),
@@ -414,6 +437,9 @@ def processing_time_series(data_folder,end_folder,param_filter:str):
 
         # добавляем ключ для подсчета общего количества вакансий
         dct_base_df['Всего вакансий'] = pd.DataFrame(index=['Вакансий по региону'])
+        # добавляем ключ для подсчета вакансий
+        if len(dct_filter_vac) != 0:
+            dct_base_df['Динамика вакансий'] = pd.DataFrame(index=[','.join(value) for value in dct_filter_vac.values()])
         for dirpath, dirnames, filenames in os.walk(data_folder):
             for file in filenames:
                 if not file.startswith('~$') and (file.endswith('.xlsx') or file.endswith('.xlsm')):
@@ -450,12 +476,15 @@ def processing_time_series(data_folder,end_folder,param_filter:str):
                             if 'Краткое название работодателя' in temp_req_df.columns:
                                 temp_req_df['Краткое название работодателя'] = temp_req_df['Краткое название работодателя'].apply(
                                     lambda x: x.upper() if isinstance(x, str) else x).replace(dct_abbr, regex=True)
+                            # Заполняем словарь для дашборда
                             dash_temp_df = temp_req_df.copy() # создаем копию
+                            create_dash_df(dct_dash_df,dash_temp_df,sheet,result_date,dash_special_treatment,dct_value_rename,dct_filter_vac,dct_exclude_filter_vac)
 
-                            create_dash_df(dct_dash_df,dash_temp_df,sheet,result_date,dash_special_treatment,dct_value_rename)
                             temp_req_df.set_index(temp_req_df.columns[0],inplace=True)
 
                             if sheet not in special_treatment:
+                                if sheet == 'Вакансии для динамики':
+                                    continue
                                 if sheet not in drop_columns:
                                     temp_req_df.columns = [result_date]
                                 else:
@@ -645,7 +674,7 @@ def processing_time_series(data_folder,end_folder,param_filter:str):
             os.makedirs(f'{end_folder}/Отдельные своды')
 
         for sheet_name, df in dct_dash_df.items():
-            df.to_excel(f'{end_folder}/Отдельные своды/{sheet_name}.xlsx',index=False)
+            df.to_excel(f'{end_folder}/Отдельные своды/{dct_rename[sheet_name]}.xlsx',index=False)
 
 
 
