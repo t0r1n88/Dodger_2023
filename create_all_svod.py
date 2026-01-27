@@ -490,29 +490,29 @@ def processing_time_series(data_folder,end_folder,param_filter:str):
                             create_dash_df(dct_dash_df,dash_temp_df,sheet,result_date,dash_special_treatment,dct_value_rename,dct_filter_vac,dct_exclude_filter_vac)
 
                             # Делаем первую колонку индексом
-                            if sheet != 'Вакансии для динамики':
-                                temp_req_df.set_index(temp_req_df.columns[0],inplace=True)
-                            else:
+                            # if sheet != 'Вакансии для динамики':
+                            #     temp_req_df.set_index(temp_req_df.columns[0],inplace=True)
+                            # else:
                                 # Если нужно делать динамику
-                                if param_filter != '' and param_filter != 'Не выбрано':
-                                    # для динамики вакансий сначала формируем датафрейм
-                                    for key, lst_vac in dct_filter_vac.items():
-                                        dyn_temp_df['Вакансия'] = dyn_temp_df['Вакансия'].fillna('Не заполнено')
-                                        temp_filter_df = dyn_temp_df[
-                                            dyn_temp_df['Вакансия'].str.contains('|'.join(lst_vac), case=False,
-                                                                                  regex=True)]  # отбираем если содержит в себе список значений
-                                        # Проводим дополнительную фильтрацию
-                                        if len(dct_exclude_filter_vac[key]) != 0:
-                                            temp_filter_df = temp_filter_df[
-                                                ~temp_filter_df['Вакансия'].str.contains('|'.join(dct_exclude_filter_vac[key]),
-                                                                                         case=False, regex=True)]
-
-                                        row_temp_filter_df = pd.DataFrame(
-                                            columns=['Вакансия', 'Количество вакансий', 'Данные_на'],
-                                            data=[[','.join(lst_vac), sum(temp_filter_df['Количество рабочих мест']),
-                                                   result_date]])
-                                        dash_base_df = pd.concat([dash_base_df, row_temp_filter_df])
-                                        dash_base_df.fillna(0, inplace=True)
+                                # if param_filter != '' and param_filter != 'Не выбрано':
+                                #     # для динамики вакансий сначала формируем датафрейм
+                                #     for key, lst_vac in dct_filter_vac.items():
+                                #         dyn_temp_df['Вакансия'] = dyn_temp_df['Вакансия'].fillna('Не заполнено')
+                                #         temp_filter_df = dyn_temp_df[
+                                #             dyn_temp_df['Вакансия'].str.contains('|'.join(lst_vac), case=False,
+                                #                                                   regex=True)]  # отбираем если содержит в себе список значений
+                                #         # Проводим дополнительную фильтрацию
+                                #         if len(dct_exclude_filter_vac[key]) != 0:
+                                #             temp_filter_df = temp_filter_df[
+                                #                 ~temp_filter_df['Вакансия'].str.contains('|'.join(dct_exclude_filter_vac[key]),
+                                #                                                          case=False, regex=True)]
+                                #
+                                #         row_temp_filter_df = pd.DataFrame(
+                                #             columns=['Вакансия', 'Количество вакансий', 'Данные_на'],
+                                #             data=[[','.join(lst_vac), sum(temp_filter_df['Количество рабочих мест']),
+                                #                    result_date]])
+                                #         dash_base_df = pd.concat([dash_base_df, row_temp_filter_df])
+                                #         dash_base_df.fillna(0, inplace=True)
 
                                     # temp_req_df.to_excel('data/gdgf.xlsx',index=True)
                                     # raise ZeroDivisionError
