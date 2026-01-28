@@ -5,8 +5,10 @@ import re
 
 import openpyxl
 import pandas as pd
+import numpy as np
 import os
 import time
+import gc
 
 
 class NotFile(Exception):
@@ -26,6 +28,14 @@ class NotReqColumns(Exception):
     Обработка случаев когда нет обязательных колонок
     """
     pass
+
+
+def parse_date_str(date_str):
+    try:
+        day, month, year = map(int, date_str.split('.'))
+        return year * 10000 + month * 100 + day  # Сортируемое число
+    except:
+        return 99999999  # Для некорректных дат
 
 
 
@@ -325,11 +335,6 @@ def processing_time_series(data_folder,end_folder,param_filter:str):
                 dct_exclude_filter_vac[idx] = []
 
 
-
-
-        print(dct_filter_vac)
-        print(dct_exclude_filter_vac)
-
     lst_files = []  # список для файлов
     for dirpath, dirnames, filenames in os.walk(data_folder):
         lst_files.extend(filenames)
@@ -344,8 +349,6 @@ def processing_time_series(data_folder,end_folder,param_filter:str):
                             'Вакансии по муниципалитетам':['Муниципалитет','Количество вакансий'],
                             'Вакансии для динамики':['Краткое название работодателя','Вакансия','Количество рабочих мест','ID вакансии','Ссылка на вакансию'],
                             'Вакансии по работодателям':['Краткое название работодателя','Количество вакансий'],
-                            'Зарплата по отраслям':['Сфера деятельности','Средняя ариф. минимальная зп','Медианная минимальная зп'],
-                            'Зарплата по работодателям':['Краткое название работодателя','Средняя ариф. минимальная зп','Медианная минимальная зп'],
                             'Образование по отраслям':['Сфера деятельности','Образование','Количество вакансий'],
                             'График работы по отраслям':['Сфера деятельности','График работы','Количество вакансий'],
                             'Тип занятости по отраслям':['Сфера деятельности','Тип занятости','Количество вакансий'],
@@ -363,15 +366,14 @@ def processing_time_series(data_folder,end_folder,param_filter:str):
                               'Требуемый опыт по отраслям':['Требуемый опыт работы в годах','Количество вакансий']}
 
 
-        special_treatment = {'Зарплата по отраслям':['Средняя ариф. минимальная зп','Медианная минимальная зп'],
-                             'Зарплата по работодателям':['Средняя ариф. минимальная зп','Медианная минимальная зп'],
+        special_treatment = {
                              'Образование по отраслям':['Образование','Количество вакансий'],
                              'График работы по отраслям':['График работы','Количество вакансий'],
                              'Тип занятости по отраслям':['Тип занятости','Количество вакансий'],
                              'Требуемый опыт по отраслям': ['Требуемый опыт работы в годах', 'Количество вакансий']
                              } # листы которые нужно обработать по особому
 
-        dash_special_treatment = {'Зарплата по работодателям':['Краткое название работодателя','Средняя ариф. минимальная зп','Медианная минимальная зп'],
+        dash_special_treatment = {
                              'Образование по отраслям':['Образование','Количество вакансий'],
                              'График работы по отраслям':['График работы','Количество вакансий'],
                              'Тип занятости по отраслям':['Тип занятости','Количество вакансий'],
@@ -380,11 +382,13 @@ def processing_time_series(data_folder,end_folder,param_filter:str):
 
 
 
-        dupl_special_treatment = {'Зарплата по работодателям':{'Средняя ариф. минимальная зп':'Средняя ариф. минимальная зп Раб','Медианная минимальная зп':'Медианная минимальная зп Раб'}}
+        # dupl_special_treatment = {'Зарплата по работодателям':{'Средняя ариф. минимальная зп':'Средняя ариф. минимальная зп Раб','Медианная минимальная зп':'Медианная минимальная зп Раб'}}
+        dupl_special_treatment = {}
 
         # Словарь для листов из двух колонок где первая это индекс по которым нужно провести группировку
-        dct_one_group_sheet = {'Зарплата по работодателям':{'Средняя ариф. минимальная зп':'mean','Медианная минимальная зп':'median'
-                                                            }}
+        # dct_one_group_sheet = {'Зарплата по работодателям':{'Средняя ариф. минимальная зп':'mean','Медианная минимальная зп':'median'
+        #                                                     }}
+        dct_one_group_sheet = {}
         # словарь для замены устаревших категорий
         dct_value_rename = {'Образование по отраслям':{'Высшее':'Высшее образование','Высшее-бакалавриат':'Высшее образование — бакалавриат',
                                                        'Высшее-подготовка кадров высшей квалификации':'Высшее образование — подготовка кадров высшей квалификации',
@@ -399,10 +403,6 @@ def processing_time_series(data_folder,end_folder,param_filter:str):
                       'Вакансии по муниципалитетам':'Вакансии по муниципалитетам',
                       'Вакансии по работодателям':'Вакансии по работодателям',
                       'Вакансии для динамики':'Динамика по вакансиям',
-                       'Средняя ариф. минимальная зп':'Средняя ЗП Отр','Медианная минимальная зп':'Медианная ЗП Отр',
-                      'Средняя ариф. минимальная зп Раб': 'Средняя ЗП Раб', 'Медианная минимальная зп Раб': 'Медианная ЗП Раб',
-                      'Зарплата по отраслям': 'Зарплата по отраслям',
-                      'Зарплата по работодателям': 'Зарплата по работодателям',
                       'Образование по отраслям': 'Образование Вак',
                       'График работы по отраслям': 'График работы Вак',
                       'Тип занятости по отраслям': 'Тип занятости Вак',
@@ -428,8 +428,6 @@ def processing_time_series(data_folder,end_folder,param_filter:str):
                        'Вакансии по муниципалитетам':pd.DataFrame(columns=['Муниципалитет','Количество вакансий','Данные_на']),
                        'Вакансии для динамики':pd.DataFrame(columns=['Вакансия','Количество вакансий','Данные_на']),
                        'Вакансии по работодателям':pd.DataFrame(columns=['Краткое название работодателя','Количество вакансий','Данные_на']),
-                       'Зарплата по отраслям':pd.DataFrame(columns=['Сфера деятельности','Средняя ариф. минимальная зп','Медианная минимальная зп','Данные_на']),
-                       'Зарплата по работодателям':pd.DataFrame(columns=['Краткое название работодателя','Средняя ариф. минимальная зп','Медианная минимальная зп','Данные_на']),
                        'Образование по отраслям':pd.DataFrame(columns=['Образование','Количество вакансий','Данные_на']),
                        'График работы по отраслям':pd.DataFrame(columns=['График работы','Количество вакансий','Данные_на']),
                        'Тип занятости по отраслям':pd.DataFrame(columns=['Тип занятости','Количество вакансий','Данные_на']),
@@ -637,14 +635,13 @@ def processing_time_series(data_folder,end_folder,param_filter:str):
         # Сохраняем в горизонтальном виде
         # переносим лист Всего вакансий в начало
         new_order = ['Всего вакансий','Вакансии по отраслям','Вакансии по муниципалитетам',
-                     'Вакансии по работодателям','Средняя ариф. минимальная зп','Медианная минимальная зп',
-                     'Средняя ариф. минимальная зп Раб','Медианная минимальная зп Раб','Образование',
+                     'Вакансии по работодателям','Образование',
                      'График работы','Тип занятости','Требуемый опыт работы в годах',
-                     'Квоты по отраслям','Квоты по работодателям','Зарплата по отраслям',
-                     'Зарплата по работодателям','Образование по отраслям','График работы по отраслям',
+                     'Квоты по отраслям','Квоты по работодателям',
+                     'Образование по отраслям','График работы по отраслям',
                      'Тип занятости по отраслям','Требуемый опыт по отраслям']
         dct_base_df = {key: dct_base_df[key] for key in new_order}
-        with pd.ExcelWriter(f'{end_folder}/Горизонтальный вид {current_time}.xlsx',engine='openpyxl') as writer:
+        with pd.ExcelWriter(f'{end_folder}/Горизонтальный вид {current_time}.xlsx',engine='xlsxwriter',engine_kwargs={'options': {'constant_memory': True}}) as writer:
             for sheet_name, df in dct_base_df.items():
                 if sheet_name in special_treatment:
                     continue
@@ -669,13 +666,14 @@ def processing_time_series(data_folder,end_folder,param_filter:str):
                 if len(df) != 0:
                     df.columns = df.columns.strftime('%d.%m.%Y')
                 df.to_excel(writer,sheet_name=dct_rename[sheet_name],index=True)
-
+                gc.collect()
 
         # Вертикальный вид
-        with pd.ExcelWriter(f'{end_folder}/Вертикальный вид {current_time}.xlsx',engine='openpyxl') as writer:
+        with pd.ExcelWriter(f'{end_folder}/Вертикальный вид {current_time}.xlsx',engine='xlsxwriter',engine_kwargs={'options': {'constant_memory': True}}) as writer:
             for sheet_name, df in dct_base_df.items():
                 if sheet_name in special_treatment:
                     continue
+
                 # Преобразуем и сортируем колонки-даты
                 date_cols = []
 
@@ -699,10 +697,11 @@ def processing_time_series(data_folder,end_folder,param_filter:str):
                     if len(df) < 10000: # транспонируем только если не больше уровня
                         df = df.transpose()
                 df.to_excel(writer,sheet_name=dct_rename[sheet_name],index=True)
+                gc.collect()
 
+        del dct_base_df
         # Формат для дашборда
-
-        with pd.ExcelWriter(f'{end_folder}/Для сводов {current_time}.xlsx',engine='openpyxl') as writer:
+        with pd.ExcelWriter(f'{end_folder}/Для сводов {current_time}.xlsx',engine='xlsxwriter',engine_kwargs={'options': {'constant_memory': True}}) as writer:
             for sheet_name, df in dct_dash_df.items():
 
                 df.to_excel(writer, sheet_name=dct_rename[sheet_name], index=False)
@@ -736,7 +735,7 @@ def processing_time_series(data_folder,end_folder,param_filter:str):
 
 if __name__ == '__main__':
     main_data_folder = 'data/Своды'
-    # main_data_folder = 'data/СВОД Бурятия'
+    main_data_folder = 'data/СВОД Бурятия'
     main_end_folder = 'data/РЕЗУЛЬТАТ'
     main_filter_file = 'data/Свод для динамики вакансий.xlsx'
     # main_filter_file = 'Не выбрано'
