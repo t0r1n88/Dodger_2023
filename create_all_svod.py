@@ -641,7 +641,8 @@ def processing_time_series(data_folder,end_folder,param_filter:str):
                      'Образование по отраслям','График работы по отраслям',
                      'Тип занятости по отраслям','Требуемый опыт по отраслям']
         dct_base_df = {key: dct_base_df[key] for key in new_order}
-        with pd.ExcelWriter(f'{end_folder}/Горизонтальный вид {current_time}.xlsx',engine='xlsxwriter',engine_kwargs={'options': {'constant_memory': True}}) as writer:
+        with pd.ExcelWriter(f'{end_folder}/Горизонтальный вид {current_time}.xlsx',engine='xlsxwriter') as writer:
+        # with pd.ExcelWriter(f'{end_folder}/Горизонтальный вид {current_time}.xlsx',engine='openpyxl') as writer:
             for sheet_name, df in dct_base_df.items():
                 if sheet_name in special_treatment:
                     continue
@@ -669,7 +670,7 @@ def processing_time_series(data_folder,end_folder,param_filter:str):
                 gc.collect()
 
         # Вертикальный вид
-        with pd.ExcelWriter(f'{end_folder}/Вертикальный вид {current_time}.xlsx',engine='xlsxwriter',engine_kwargs={'options': {'constant_memory': True}}) as writer:
+        with pd.ExcelWriter(f'{end_folder}/Вертикальный вид {current_time}.xlsx',engine='xlsxwriter') as writer:
             for sheet_name, df in dct_base_df.items():
                 if sheet_name in special_treatment:
                     continue
@@ -701,7 +702,7 @@ def processing_time_series(data_folder,end_folder,param_filter:str):
 
         del dct_base_df
         # Формат для дашборда
-        with pd.ExcelWriter(f'{end_folder}/Для сводов {current_time}.xlsx',engine='xlsxwriter',engine_kwargs={'options': {'constant_memory': True}}) as writer:
+        with pd.ExcelWriter(f'{end_folder}/Для сводов {current_time}.xlsx',engine='xlsxwriter') as writer:
             for sheet_name, df in dct_dash_df.items():
 
                 df.to_excel(writer, sheet_name=dct_rename[sheet_name], index=False)
@@ -735,7 +736,7 @@ def processing_time_series(data_folder,end_folder,param_filter:str):
 
 if __name__ == '__main__':
     main_data_folder = 'data/Своды'
-    main_data_folder = 'data/СВОД Бурятия'
+    # main_data_folder = 'data/СВОД Бурятия'
     main_end_folder = 'data/РЕЗУЛЬТАТ'
     main_filter_file = 'data/Свод для динамики вакансий.xlsx'
     # main_filter_file = 'Не выбрано'
