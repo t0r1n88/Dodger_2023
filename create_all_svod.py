@@ -490,8 +490,8 @@ def processing_time_series(data_folder,end_folder,param_filter:str):
                             create_dash_df(dct_dash_df,dash_temp_df,sheet,result_date,dash_special_treatment,dct_value_rename,dct_filter_vac,dct_exclude_filter_vac)
 
                             # Делаем первую колонку индексом
-                            # if sheet != 'Вакансии для динамики':
-                            #     temp_req_df.set_index(temp_req_df.columns[0],inplace=True)
+                            if sheet != 'Вакансии для динамики':
+                                temp_req_df.set_index(temp_req_df.columns[0],inplace=True)
                             # else:
                                 # Если нужно делать динамику
                                 # if param_filter != '' and param_filter != 'Не выбрано':
