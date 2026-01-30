@@ -425,6 +425,8 @@ def prepare_data_vacancy(df: pd.DataFrame, dct_name_columns: dict, lst_columns: 
 
     df = df[dct_name_columns.keys()] # отбираем только нужные колонки
     df.rename(columns=dct_name_columns, inplace=True,errors='ignore')
+
+
     # Обрабатываем обычные колонки
     df['Сфера деятельности'] = df['Сфера деятельности'].fillna('Не указана сфера деятельности')
     df['График работы'] = df['График работы'].fillna('Не указан')
@@ -494,6 +496,7 @@ def prepare_data_vacancy(df: pd.DataFrame, dct_name_columns: dict, lst_columns: 
     df['Email работодателя'] = df['Данные компании'].apply(lambda x: json.loads(x).get('email', 'Не указано'))
     df['Профиль работодателя'] = df['Данные компании'].apply(lambda x: json.loads(x).get('url', 'Не указано'))
     df['Сайт работодателя'] = df['Данные компании'].apply(lambda x: json.loads(x).get('site', 'Не указано'))
+    df['Сайт работодателя'] = df['Сайт работодателя'].apply(lambda x:re.sub(r'https?://|www\.', '', x))
     df['ID работодателя'] = df['Данные компании'].apply(lambda x: json.loads(x).get('companyCode', 'Не указано'))
 
 
@@ -842,7 +845,6 @@ def processing_data_trudvsem(file_data:str,file_org,end_folder:str,region:str,pa
             company_df = pd.DataFrame()
         else:
             company_df = pd.read_excel(file_org, dtype=str, usecols='A:B')  # получаем данные из файла с организациями
-
         company_df.dropna(inplace=True) # удаляем незаполненные строки
         # Список колонок итоговых таблиц с вакансиями
         lst_columns = ['Дата размещения вакансии','Дата изменения вакансии','Регион','Вакансия','Сфера деятельности','Количество рабочих мест',
@@ -1310,6 +1312,7 @@ def processing_data_trudvsem(file_data:str,file_org,end_folder:str,region:str,pa
 
 if __name__ == '__main__':
     main_file_data = 'data/vacancy.csv'
+    main_file_data = 'data/vacancy_2 (67).csv'
     main_org_file = 'data/Организации Бурятия.xlsx'
     main_org_file = 'Не выбрано'
     main_region = 'Республика Бурятия'

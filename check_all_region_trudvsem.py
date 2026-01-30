@@ -324,7 +324,9 @@ def prepare_data_vacancy(df: pd.DataFrame, dct_name_columns: dict, lst_columns: 
     df = df[dct_name_columns.keys()] # отбираем только нужные колонки
     df.rename(columns=dct_name_columns, inplace=True,errors='ignore')
     # Обрабатываем обычные колонки
-
+    df['Сфера деятельности'] = df['Сфера деятельности'].fillna('Не указана сфера деятельности')
+    df['График работы'] = df['График работы'].fillna('Не указан')
+    df['Тип занятости'] = df['Тип занятости'].fillna('Не указан')
     df['Бонусы'] = df['Бонусы'].apply(clear_bonus_tag_br)
     df['Требования'] = df['Требования'].apply(clear_tag)
     df['Муниципалитет'] = df['Адрес вакансии'].apply(extract_municipality)
@@ -390,6 +392,7 @@ def prepare_data_vacancy(df: pd.DataFrame, dct_name_columns: dict, lst_columns: 
     df['Email работодателя'] = df['Данные компании'].apply(lambda x: json.loads(x).get('email', 'Не указано'))
     df['Профиль работодателя'] = df['Данные компании'].apply(lambda x: json.loads(x).get('url', 'Не указано'))
     df['Сайт работодателя'] = df['Данные компании'].apply(lambda x: json.loads(x).get('site', 'Не указано'))
+    df['Сайт работодателя'] = df['Сайт работодателя'].apply(lambda x: re.sub(r'https?://|www\.', '', x))
     df['ID работодателя'] = df['Данные компании'].apply(lambda x: json.loads(x).get('companyCode', 'Не указано'))
 
 
