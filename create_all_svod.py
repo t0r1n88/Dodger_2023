@@ -143,7 +143,7 @@ def preparing_data(data_folder:str,required_columns:dict,dct_index_svod:dict,err
 
 
 
-def create_dash_df(dct_dash_df:dict,dash_temp_df:pd.DataFrame,sheet:str,result_date:str,dash_special_treatment:dict,dct_value_rename:dict,dct_filter:dict,dct_exclude_filter:dict):
+def create_dash_df(dct_dash_df:dict,dash_temp_df:pd.DataFrame,sheet:str,result_date:str,dash_special_treatment:dict,dct_value_rename:dict,dct_filter:dict,dct_exclude_filter:dict,dct_vac_df:dict):
     """
     Функция для заполнения словаря для развернутых датафреймов предназначенных для построения графиков по датам
     """
@@ -172,7 +172,7 @@ def create_dash_df(dct_dash_df:dict,dash_temp_df:pd.DataFrame,sheet:str,result_d
                 dct_dash_df['Всего вакансий'] = itog_dash_base_df
         else:
             if len(dct_filter) != 0:
-                dct_dash_df[sheet] = create_dyn_vac_df(dash_temp_df, dash_base_df, dct_filter, dct_exclude_filter, result_date)
+                dct_dash_df[sheet],dct_vac_df[sheet] = create_dyn_vac_df(dash_temp_df, dash_base_df, dct_filter, dct_exclude_filter, result_date,dct_vac_df[sheet])
 
 
     else:
@@ -198,10 +198,11 @@ def create_dash_df(dct_dash_df:dict,dash_temp_df:pd.DataFrame,sheet:str,result_d
             dct_dash_df[sheet] = base_dash_df
 
 
-def create_dyn_vac_df(dash_temp_df:pd.DataFrame,dash_base_df:pd.DataFrame,dct_filter:dict,dct_exclude_filter:dict,result_date):
+def create_dyn_vac_df(dash_temp_df:pd.DataFrame,dash_base_df:pd.DataFrame,dct_filter:dict,dct_exclude_filter:dict,result_date,df_vac:pd.DataFrame):
     """
     Функция для создания свода по динамике вакансий
     """
+
     for key, lst_vac in dct_filter.items():
         dash_temp_df['Вакансия'] = dash_temp_df['Вакансия'].fillna('Не заполнено')
         temp_filter_df = dash_temp_df[dash_temp_df['Вакансия'].str.contains('|'.join(lst_vac), case=False,
@@ -216,7 +217,15 @@ def create_dyn_vac_df(dash_temp_df:pd.DataFrame,dash_base_df:pd.DataFrame,dct_fi
                                                  result_date]])
         dash_base_df = pd.concat([dash_base_df, row_temp_filter_df])
         dash_base_df.fillna(0, inplace=True)
-    return dash_base_df
+    #
+    svod_dash_df = dash_base_df.copy() # делаем копию
+    svod_dash_df.set_index('Вакансия',inplace=True)
+    svod_dash_df.drop(columns=['Данные_на'],inplace=True)
+    svod_dash_df.columns = [result_date]
+    df_vac = df_vac.join(svod_dash_df)
+
+
+    return dash_base_df,df_vac
 
 
 
@@ -315,6 +324,7 @@ def processing_time_series(data_folder,end_folder,param_filter:str):
 
     dct_filter_vac = dict() # словарь для хранения подготовленных списков с вакансиями которые нужно искать
     dct_exclude_filter_vac = dict() # словарь для хранения списков со значениями которые нужно отбросить в уже отфильтрованных данных
+    lst_for_index_vac_df = [] # список для хранения наименований вакансий для последующего соединения
 
     # Проверяем заполнение файла со списком вакансий динамику по которым нужно получить
     if param_filter != '' and param_filter != 'Не выбрано':
@@ -326,6 +336,8 @@ def processing_time_series(data_folder,end_folder,param_filter:str):
             lst_temp = row[1].split(',')
             lst_temp = [value.strip().lower() for value in lst_temp if value]
             dct_filter_vac[idx] = lst_temp
+
+            lst_for_index_vac_df.append(','.join(lst_temp))
             # создаем списки для дополнительной фильтрации
             if isinstance(row[2],str):
                 lst_dop_temp = row[2].split(',')
@@ -333,7 +345,6 @@ def processing_time_series(data_folder,end_folder,param_filter:str):
                 dct_exclude_filter_vac[idx] = lst_dop_temp
             else:
                 dct_exclude_filter_vac[idx] = []
-
 
     lst_files = []  # список для файлов
     for dirpath, dirnames, filenames in os.walk(data_folder):
@@ -435,6 +446,11 @@ def processing_time_series(data_folder,end_folder,param_filter:str):
                        'Квоты по работодателям':pd.DataFrame(columns=['Краткое название работодателя','Количество вакансий','Данные_на']),
                        'Требуемый опыт по отраслям':pd.DataFrame(columns=['Требуемый опыт работы в годах','Количество вакансий','Данные_на']),}
 
+        # Датафрейм для сбора данных по выбранным вакансиям
+        dct_vac_df = {'Вакансии для динамики':pd.DataFrame(index=lst_for_index_vac_df)}
+
+
+
         # Создаем ключи
         for name_sheet,set_index in dct_index_svod.items():
             dct_base_df[name_sheet] = pd.DataFrame(index=sorted([value for value in set_index if value != 'Итого']))
@@ -482,10 +498,8 @@ def processing_time_series(data_folder,end_folder,param_filter:str):
                                     lambda x: x.upper() if isinstance(x, str) else x).replace(dct_abbr, regex=True)
                             # Заполняем словарь для дашборда
                             dash_temp_df = temp_req_df.copy() # создаем копию
-                            # датафрейм для динамики вакансий
-                            dyn_temp_df = temp_req_df.copy()
 
-                            create_dash_df(dct_dash_df,dash_temp_df,sheet,result_date,dash_special_treatment,dct_value_rename,dct_filter_vac,dct_exclude_filter_vac)
+                            create_dash_df(dct_dash_df,dash_temp_df,sheet,result_date,dash_special_treatment,dct_value_rename,dct_filter_vac,dct_exclude_filter_vac,dct_vac_df)
 
                             # Делаем первую колонку индексом
                             if sheet != 'Вакансии для динамики':
@@ -641,8 +655,9 @@ def processing_time_series(data_folder,end_folder,param_filter:str):
                      'Образование по отраслям','График работы по отраслям',
                      'Тип занятости по отраслям','Требуемый опыт по отраслям']
         dct_base_df = {key: dct_base_df[key] for key in new_order}
+        print(dct_vac_df)
+
         with pd.ExcelWriter(f'{end_folder}/Горизонтальный вид {current_time}.xlsx',engine='xlsxwriter') as writer:
-        # with pd.ExcelWriter(f'{end_folder}/Горизонтальный вид {current_time}.xlsx',engine='openpyxl') as writer:
             for sheet_name, df in dct_base_df.items():
                 if sheet_name in special_treatment:
                     continue
