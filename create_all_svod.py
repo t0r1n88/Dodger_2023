@@ -222,8 +222,10 @@ def create_dyn_vac_df(dash_temp_df:pd.DataFrame,dash_base_df:pd.DataFrame,dct_fi
     svod_dash_df.set_index('Вакансия',inplace=True)
     svod_dash_df.drop(columns=['Данные_на'],inplace=True)
     svod_dash_df.columns = [result_date]
-    df_vac = df_vac.join(svod_dash_df)
+    print(df_vac)
 
+    df_vac = df_vac.join(svod_dash_df)
+    print(df_vac)
 
     return dash_base_df,df_vac
 
@@ -329,22 +331,24 @@ def processing_time_series(data_folder,end_folder,param_filter:str):
     # Проверяем заполнение файла со списком вакансий динамику по которым нужно получить
     if param_filter != '' and param_filter != 'Не выбрано':
         df_param_filter = pd.read_excel(param_filter,dtype=str,usecols='A:B')
-        df_param_filter = df_param_filter.replace(r'^\s*$', pd.NA, regex=True).dropna(subset=df_param_filter.columns[0])
-        # Создаем словарь по строкам с указанием вакансий которые есть в этой строке
-        for idx,row in enumerate(df_param_filter.itertuples(),1):
-            # создаем списки вакансий которые будут искаться
-            lst_temp = row[1].split(',')
-            lst_temp = [value.strip().lower() for value in lst_temp if value]
-            dct_filter_vac[idx] = lst_temp
+        if len(df_param_filter) != 0:
+            df_param_filter = df_param_filter.replace(r'^\s*$', pd.NA, regex=True).dropna(subset=df_param_filter.columns[0])
+            # Создаем словарь по строкам с указанием вакансий которые есть в этой строке
+            for idx,row in enumerate(df_param_filter.itertuples(),1):
+                # создаем списки вакансий которые будут искаться
+                lst_temp = row[1].split(',')
+                lst_temp = [value.strip().lower() for value in lst_temp if value]
+                dct_filter_vac[idx] = lst_temp
 
-            lst_for_index_vac_df.append(','.join(lst_temp))
-            # создаем списки для дополнительной фильтрации
-            if isinstance(row[2],str):
-                lst_dop_temp = row[2].split(',')
-                lst_dop_temp = [value.strip().lower() for value in lst_dop_temp if value]
-                dct_exclude_filter_vac[idx] = lst_dop_temp
-            else:
-                dct_exclude_filter_vac[idx] = []
+                lst_for_index_vac_df.append(','.join(lst_temp))
+                # создаем списки для дополнительной фильтрации
+                if isinstance(row[2],str):
+                    lst_dop_temp = row[2].split(',')
+                    lst_dop_temp = [value.strip().lower() for value in lst_dop_temp if value]
+                    dct_exclude_filter_vac[idx] = lst_dop_temp
+                else:
+                    dct_exclude_filter_vac[idx] = []
+
 
     lst_files = []  # список для файлов
     for dirpath, dirnames, filenames in os.walk(data_folder):
@@ -411,6 +415,7 @@ def processing_time_series(data_folder,end_folder,param_filter:str):
                             'Требуемый опыт по отраслям':{0:0}
                             }
         dct_rename = {'Вакансии по отраслям':'Вакансии по отраслям',
+                      'Выбранные вакансии': 'Выбранные вакансии',
                       'Вакансии по муниципалитетам':'Вакансии по муниципалитетам',
                       'Вакансии по работодателям':'Вакансии по работодателям',
                       'Вакансии для динамики':'Динамика по вакансиям',
@@ -447,7 +452,7 @@ def processing_time_series(data_folder,end_folder,param_filter:str):
                        'Требуемый опыт по отраслям':pd.DataFrame(columns=['Требуемый опыт работы в годах','Количество вакансий','Данные_на']),}
 
         # Датафрейм для сбора данных по выбранным вакансиям
-        dct_vac_df = {'Вакансии для динамики':pd.DataFrame(index=lst_for_index_vac_df)}
+        dct_vac_df = {'Вакансии для динамики':pd.DataFrame(index=sorted([value for value in lst_for_index_vac_df]))}
 
 
 
@@ -458,8 +463,6 @@ def processing_time_series(data_folder,end_folder,param_filter:str):
         # добавляем ключ для подсчета общего количества вакансий
         dct_base_df['Всего вакансий'] = pd.DataFrame(index=['Вакансий по региону'])
         # добавляем ключ для подсчета вакансий
-        if len(dct_filter_vac) != 0:
-            dct_base_df['Динамика вакансий'] = pd.DataFrame(index=[','.join(value) for value in dct_filter_vac.values()])
         for dirpath, dirnames, filenames in os.walk(data_folder):
             for file in filenames:
                 if not file.startswith('~$') and (file.endswith('.xlsx') or file.endswith('.xlsm')):
@@ -502,32 +505,7 @@ def processing_time_series(data_folder,end_folder,param_filter:str):
                             create_dash_df(dct_dash_df,dash_temp_df,sheet,result_date,dash_special_treatment,dct_value_rename,dct_filter_vac,dct_exclude_filter_vac,dct_vac_df)
 
                             # Делаем первую колонку индексом
-                            if sheet != 'Вакансии для динамики':
-                                temp_req_df.set_index(temp_req_df.columns[0],inplace=True)
-                            # else:
-                                # Если нужно делать динамику
-                                # if param_filter != '' and param_filter != 'Не выбрано':
-                                #     # для динамики вакансий сначала формируем датафрейм
-                                #     for key, lst_vac in dct_filter_vac.items():
-                                #         dyn_temp_df['Вакансия'] = dyn_temp_df['Вакансия'].fillna('Не заполнено')
-                                #         temp_filter_df = dyn_temp_df[
-                                #             dyn_temp_df['Вакансия'].str.contains('|'.join(lst_vac), case=False,
-                                #                                                   regex=True)]  # отбираем если содержит в себе список значений
-                                #         # Проводим дополнительную фильтрацию
-                                #         if len(dct_exclude_filter_vac[key]) != 0:
-                                #             temp_filter_df = temp_filter_df[
-                                #                 ~temp_filter_df['Вакансия'].str.contains('|'.join(dct_exclude_filter_vac[key]),
-                                #                                                          case=False, regex=True)]
-                                #
-                                #         row_temp_filter_df = pd.DataFrame(
-                                #             columns=['Вакансия', 'Количество вакансий', 'Данные_на'],
-                                #             data=[[','.join(lst_vac), sum(temp_filter_df['Количество рабочих мест']),
-                                #                    result_date]])
-                                #         dash_base_df = pd.concat([dash_base_df, row_temp_filter_df])
-                                #         dash_base_df.fillna(0, inplace=True)
-
-                                    # temp_req_df.to_excel('data/gdgf.xlsx',index=True)
-                                    # raise ZeroDivisionError
+                            temp_req_df.set_index(temp_req_df.columns[0],inplace=True)
 
 
 
@@ -648,14 +626,15 @@ def processing_time_series(data_folder,end_folder,param_filter:str):
 
         # Сохраняем в горизонтальном виде
         # переносим лист Всего вакансий в начало
-        new_order = ['Всего вакансий','Вакансии по отраслям','Вакансии по муниципалитетам',
+        print(dct_vac_df['Вакансии для динамики'])
+        dct_base_df['Выбранные вакансии'] = dct_vac_df['Вакансии для динамики']
+        new_order = ['Всего вакансий','Выбранные вакансии','Вакансии по отраслям','Вакансии по муниципалитетам',
                      'Вакансии по работодателям','Образование',
                      'График работы','Тип занятости','Требуемый опыт работы в годах',
                      'Квоты по отраслям','Квоты по работодателям',
                      'Образование по отраслям','График работы по отраслям',
                      'Тип занятости по отраслям','Требуемый опыт по отраслям']
         dct_base_df = {key: dct_base_df[key] for key in new_order}
-        print(dct_vac_df)
 
         with pd.ExcelWriter(f'{end_folder}/Горизонтальный вид {current_time}.xlsx',engine='xlsxwriter') as writer:
             for sheet_name, df in dct_base_df.items():
