@@ -1394,9 +1394,11 @@ def processing_data_trudvsem(file_data:str,file_org,end_folder:str,region:str,pa
 if __name__ == '__main__':
     main_file_data = 'data/vacancy.csv'
     main_file_data = 'data/vacancy_2 (67).csv'
+    main_file_data = 'data/vacancy_8.csv'
     main_org_file = 'data/Организации Бурятия.xlsx'
     main_org_file = 'Не выбрано'
     main_region = 'Республика Бурятия'
+    main_region = 'Тюменская область'
     main_param_filter = 'data/Параметры отбора.xlsx'
     main_param_filter = 'Не выбрано'
     main_filter_vac_file = 'data/Свод для динамики вакансий.xlsx'
