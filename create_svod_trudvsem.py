@@ -858,6 +858,8 @@ def create_svod_for_df(prepared_df:pd.DataFrame,svod_region_folder:str,name_file
 
 
     if len(svod_vac_chosen_region_df) != 0:
+        if name_file == 'Свод по региону':
+            name_file = 'Полный список'
         with pd.ExcelWriter(f'{svod_region_folder}/Отслеживаемые вакансии_{name_file}.xlsx', engine='xlsxwriter') as writer:
             for sheet_name, df in dct_chosen_df.items():
                 if len(df) == 0:
