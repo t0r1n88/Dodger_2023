@@ -203,6 +203,8 @@ def create_dyn_vac_df(dash_temp_df:pd.DataFrame,dash_base_df:pd.DataFrame,dct_fi
     Функция для создания свода по динамике вакансий
     """
 
+    temp_df = pd.DataFrame(columns=['Вакансия', 'Количество вакансий', 'Данные_на'])
+
     for key, lst_vac in dct_filter.items():
         dash_temp_df['Вакансия'] = dash_temp_df['Вакансия'].fillna('Не заполнено')
         temp_filter_df = dash_temp_df[dash_temp_df['Вакансия'].str.contains('|'.join(lst_vac), case=False,
@@ -217,15 +219,14 @@ def create_dyn_vac_df(dash_temp_df:pd.DataFrame,dash_base_df:pd.DataFrame,dct_fi
                                                  result_date]])
         dash_base_df = pd.concat([dash_base_df, row_temp_filter_df])
         dash_base_df.fillna(0, inplace=True)
-    #
-    svod_dash_df = dash_base_df.copy() # делаем копию
-    svod_dash_df.set_index('Вакансия',inplace=True)
-    svod_dash_df.drop(columns=['Данные_на'],inplace=True)
-    svod_dash_df.columns = [result_date]
-    print(df_vac)
 
-    df_vac = df_vac.join(svod_dash_df)
-    print(df_vac)
+
+        temp_df = pd.concat([temp_df,row_temp_filter_df])
+    # Обрабатываем для добавления
+    temp_df.set_index('Вакансия',inplace=True)
+    temp_df.drop(columns=['Данные_на'], inplace=True)
+    temp_df.columns = [result_date]
+    df_vac = df_vac.join(temp_df)
 
     return dash_base_df,df_vac
 
@@ -626,7 +627,6 @@ def processing_time_series(data_folder,end_folder,param_filter:str):
 
         # Сохраняем в горизонтальном виде
         # переносим лист Всего вакансий в начало
-        print(dct_vac_df['Вакансии для динамики'])
         dct_base_df['Выбранные вакансии'] = dct_vac_df['Вакансии для динамики']
         new_order = ['Всего вакансий','Выбранные вакансии','Вакансии по отраслям','Вакансии по муниципалитетам',
                      'Вакансии по работодателям','Образование',
