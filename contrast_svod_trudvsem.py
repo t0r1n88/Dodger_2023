@@ -95,15 +95,6 @@ def prepare_diff_svod_trudvsem(first_file:str, second_file:str, end_folder:str,t
         t = time.localtime()  # получаем текущее время
         current_time = time.strftime('%H_%M_%S', t)
         current_date = time.strftime('%d_%m_%Y', t)
-        # Список обязательных листов которые должны быть в файле
-        lst_svod_sheets = ['Вакансии по отраслям','Вакансии по муниципалитетам','Муниципалитеты отрасли','Отрасли муниципалитеты', 'Вакансии по работодателям','Вакансии для динамики', 'Зарплата по отраслям',
-                           'Категории ЗП по отраслям',
-                           'Зарплата по работодателям','Категории ЗП по работодателям',
-                           'Образование по отраслям', 'Образование по работодателям', 'График работы по отраслям',
-                           'График работы по работодателям',
-                           'Тип занятости по отраслям', 'Тип занятости по работодателям', 'Квоты по отраслям',
-                           'Квоты по работодателям','Вакансии для соц.кат.',
-                           'Требуемый опыт по отраслям', 'Требуемый опыт по работодателям']
 
         lst_not_standard_sheets = ['Вакансии для динамики','Зарплата по отраслям',
                                    'Зарплата по работодателям']  # список листов требующих нестандартной обработки
@@ -118,14 +109,18 @@ def prepare_diff_svod_trudvsem(first_file:str, second_file:str, end_folder:str,t
         second_wb_sheets = second_wb.sheetnames
         second_wb.close()
 
-        # Проводим проверки на наличие нужных листов
-        diff_first_file_sheets = set(lst_svod_sheets).difference(set(first_wb_sheets))
-        if len(diff_first_file_sheets) != 0:
-            raise FirstNotSheets
+        # Находим общие листы
+        union_sheets = set(first_wb_sheets).intersection(set(second_wb_sheets))
+        lst_svod_sheets = sorted(list(union_sheets)) # делаем список и сортируем
+        # переставляем некоторые листы если есть
+        if 'Отслеживаемые вакансии' in lst_svod_sheets:
+            lst_svod_sheets.remove('Отслеживаемые вакансии')
+            lst_svod_sheets.insert(0,'Отслеживаемые вакансии')
+        if 'Вакансии для соц.кат.' in lst_svod_sheets:
+            lst_svod_sheets.remove('Вакансии для соц.кат.')
+            lst_svod_sheets.insert(len(lst_svod_sheets),'Вакансии для соц.кат.')
 
-        diff_second_file_sheets = set(lst_svod_sheets).difference(set(second_wb_sheets))
-        if len(diff_second_file_sheets) != 0:
-            raise SecondNotSheets
+
         if type_contrast == 'No':
             # Обрабатываем листы
             for name_sheet in lst_svod_sheets:
@@ -461,13 +456,6 @@ def prepare_diff_svod_trudvsem(first_file:str, second_file:str, end_folder:str,t
                                                           lst_not_standard_sheets)
             change_wb.save(f'{end_folder}/Изменения от {current_time}.xlsx')
 
-    except FirstNotSheets:
-        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
-                                 f'В первом файле не хватает листов {diff_first_file_sheets}')
-
-    except SecondNotSheets:
-        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
-                                 f'Во втором файле не хватает листов {diff_second_file_sheets}')
 
     except NotColumnVac:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
@@ -482,7 +470,7 @@ def prepare_diff_svod_trudvsem(first_file:str, second_file:str, end_folder:str,t
                                  f'Выберите файлы с данными и папку куда будет генерироваться файл')
     except KeyError as e:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
-                             f'Не найдено значение {e.args}')
+                             f'Не найдено значение {e.args} на листе {name_sheet}')
     except PermissionError as e:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
                              f'Закройте открытые файлы Excel {e.args}')
@@ -490,6 +478,7 @@ def prepare_diff_svod_trudvsem(first_file:str, second_file:str, end_folder:str,t
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
                              f'Укажите в качестве конечной папки, папку в корне диска с коротким названием. Проблема может быть\n '
                              f'в слишком длинном пути к создаваемому файлу')
+
     else:
         messagebox.showinfo('Кассандра Подсчет данных по трудоустройству выпускников',
                             'Данные успешно обработаны.Ошибок не обнаружено')
