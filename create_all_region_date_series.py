@@ -1,7 +1,7 @@
 """
 Скрипт для массового создания временных рядов по сводам данных по вакансиям
 """
-from create_all_svod import processing_time_series
+from create_time_series_svod import processing_time_series
 import os
 from pathlib import Path
 import shutil
