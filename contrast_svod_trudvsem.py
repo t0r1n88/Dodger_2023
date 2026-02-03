@@ -497,42 +497,16 @@ def prepare_diff_svod_trudvsem(first_file:str, second_file:str, end_folder:str,t
 
 if __name__ == '__main__':
     main_first_file = 'data/Аналитика по вакансиям региона/15_03_2024/Свод по региону Бурятия от 14 марта.xlsx'
-    main_first_file = 'data/Республика Бурятия/Аналитика по вакансиям региона/28_05_2024/Свод по региону от 11_42_58.xlsx'
+    main_first_file = 'data/Республика Бурятия/Аналитика по вакансиям региона/03_02_2026/Свод по региону от 03_02_2026.xlsx'
     main_second_file = 'data/Аналитика по вакансиям региона/16_03_2024/Свод по региону Бурятия от 16 марта.xlsx'
-    main_second_file = 'data/Республика Бурятия/Аналитика по вакансиям региона/28_05_2024/2 файл.xlsx'
+    main_second_file = 'data/Республика Бурятия/Аналитика по вакансиям региона/03_02_2026/второй файл.xlsx'
+    main_second_file = 'data/Республика Бурятия/Аналитика по вакансиям региона/03_02_2026/одинаковая структура второй файл.xlsx'
     main_end_folder = 'data'
-
+    start_time = time.time()
     prepare_diff_svod_trudvsem(main_first_file, main_second_file, main_end_folder,'No')
+    end_time = time.time()
+    execution_time = end_time - start_time
+    print(f"Время выполнения: {execution_time} секунд")
 
     print('Lindy Booth !!!')
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
