@@ -209,6 +209,14 @@ def select_file_params():
     # Получаем путь к файлу
     name_file_params = filedialog.askopenfilename(filetypes=(('Excel files', '*.xlsx'), ('all files', '*.*')))
 
+def select_file_params_chosen_vac():
+    """
+    Функция для выбора файла с параметрами обработки
+    """
+    global name_file_params_chosen_vac
+    # Получаем путь к файлу
+    name_file_params_chosen_vac = filedialog.askopenfilename(filetypes=(('Excel files', '*.xlsx'), ('all files', '*.*')))
+
 
 def select_end_folder_svod_trudvsem():
     """
@@ -336,7 +344,7 @@ def processing_svod_trudvsem():
     """
     try:
         name_region = str(entry_region.get()) # Получаем название региона
-        processing_data_trudvsem(file_csv_svod_trudvsem, file_org_svod_trudvsem,path_to_end_folder_svod_trudvsem,name_region,name_file_params)
+        processing_data_trudvsem(file_csv_svod_trudvsem, file_org_svod_trudvsem,path_to_end_folder_svod_trudvsem,name_region,name_file_params,name_file_params_chosen_vac)
 
     except NameError:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
@@ -507,7 +515,7 @@ def show_textmenu(event):
 
 if __name__ == '__main__':
     window = Tk()
-    window.title('Кассандра Подсчет данных по трудоустройству выпускников ver 6.62')
+    window.title('Кассандра Обработка данных Работа в России и мониторингов трудоустройства выпускников ver 7.0')
     # Устанавливаем размер и положение окна
     set_window_size(window)
     window.resizable(True, True)
@@ -531,6 +539,10 @@ if __name__ == '__main__':
 
     global file_org_svod_trudvsem
     file_org_svod_trudvsem = 'Не выбрано' # костыль
+
+    global name_file_params_chosen_vac
+    name_file_params_chosen_vac = 'Не выбрано' # костыль
+
 
 
     """
@@ -850,6 +862,14 @@ if __name__ == '__main__':
                                                  command=select_file_params
                                                  )
     btn_choose_params_svod_trudvsem.pack(padx=10, pady=10)
+
+
+    # Кнопка для выбора файла с вакансиями
+    btn_choose_params_chosen_vac_svod_trudvsem = Button(frame_data_svod_trudvsem, text='Необязательная опция\n Выберите файл с отслеживаемыми вакансиями',
+                                                 font=('Arial Bold', 10),
+                                                 command=select_file_params_chosen_vac
+                                                 )
+    btn_choose_params_chosen_vac_svod_trudvsem.pack(padx=10, pady=10)
 
 
 
