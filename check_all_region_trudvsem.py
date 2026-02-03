@@ -413,10 +413,75 @@ def prepare_data_vacancy(df: pd.DataFrame, dct_name_columns: dict, lst_columns: 
     return df
 
 
-def create_svod_for_df(prepared_df:pd.DataFrame,svod_region_folder:str,name_file:str,current_time):
+def create_chosen_vac_svod(df:pd.DataFrame,param_filter_chosen_vac:str):
+    """
+    Функция для подготовки файла с параметрами если он заполнен
+    """
+    df['Вакансия'] = df['Вакансия'].fillna('Не заполнено')
+    dct_filter_vac = dict() # словарь для хранения подготовленных списков с вакансиями которые нужно искать
+    dct_exclude_filter_vac = dict() # словарь для хранения списков со значениями которые нужно отбросить в уже отфильтрованных данных
+    lst_for_index_vac_df = [] # список для хранения наименований вакансий для последующего соединения
+
+
+    dct_df = dict() # Словарь для хранения датафреймов содержащих списки вакансий
+    # датафрейм для сбора сводных данных
+    temp_df = pd.DataFrame(columns=['Вакансия', 'Количество вакансий'])
+
+    # Проверяем заполнение файла со списком вакансий динамику по которым нужно получить
+    if param_filter_chosen_vac != '' and param_filter_chosen_vac != 'Не выбрано':
+        df_param_filter = pd.read_excel(param_filter_chosen_vac,dtype=str,usecols='A:B')
+        if len(df_param_filter) != 0:
+            df_param_filter = df_param_filter.replace(r'^\s*$', pd.NA, regex=True).dropna(subset=df_param_filter.columns[0])
+            # Создаем словарь по строкам с указанием вакансий которые есть в этой строке
+            for idx,row in enumerate(df_param_filter.itertuples(),1):
+                # создаем списки вакансий которые будут искаться
+                lst_temp = row[1].split(',')
+                lst_temp = [value.strip().lower() for value in lst_temp if value]
+                dct_filter_vac[idx] = lst_temp
+
+                lst_for_index_vac_df.append(','.join(lst_temp))
+                # создаем списки для дополнительной фильтрации
+                if isinstance(row[2],str):
+                    lst_dop_temp = row[2].split(',')
+                    lst_dop_temp = [value.strip().lower() for value in lst_dop_temp if value]
+                    dct_exclude_filter_vac[idx] = lst_dop_temp
+                else:
+                    dct_exclude_filter_vac[idx] = []
+
+            # Начинаем обработку датафрейма
+            for key,lst_vac in dct_filter_vac.items():
+                temp_filter_df = df[df['Вакансия'].str.contains('|'.join(lst_vac), case=False,
+                                                                                    regex=True)]  # отбираем если содержит в себе список значений
+                if len(temp_filter_df) == 0:
+                    continue
+
+                # Проводим дополнительную фильтрацию
+                if len(dct_exclude_filter_vac[key]) != 0:
+                    temp_filter_df = temp_filter_df[
+                        ~temp_filter_df['Вакансия'].str.contains('|'.join(dct_exclude_filter_vac[key]), case=False,
+                                                                 regex=True)]
+                dct_df[key] = temp_filter_df # сохраняем найденные значения
+
+                row_temp_filter_df = pd.DataFrame(columns=['Вакансия', 'Количество вакансий'],
+                                                  data=[[','.join(lst_vac), sum(temp_filter_df['Количество рабочих мест'])
+                                                         ]])
+                temp_df = pd.concat([temp_df, row_temp_filter_df])
+
+            # Обрабатываем для добавления
+            temp_df.set_index('Вакансия', inplace=True)
+            temp_df.fillna(0, inplace=True)
+            temp_df.loc['Итого'] = temp_df['Количество вакансий'].sum()
+    return temp_df,dct_df
+
+
+def create_svod_for_df(prepared_df:pd.DataFrame,svod_region_folder:str,name_file:str,current_time,param_filter_chosen_vac:str):
     """
     Функция для создания аналитики по одинаковым по структуре датафреймам данных из Работы в России
     """
+    svod_vac_chosen_region_df, dct_chosen_df = create_chosen_vac_svod(prepared_df, param_filter_chosen_vac)
+
+
+
     svod_vac_reg_region_df = pd.pivot_table(prepared_df,
                                             index=['Сфера деятельности'],
                                             values=['Количество рабочих мест'],
@@ -661,6 +726,8 @@ def create_svod_for_df(prepared_df:pd.DataFrame,svod_region_folder:str,name_file
         svod_org_exp_region_df = svod_org_exp_region_df.reset_index()
 
     with pd.ExcelWriter(f'{svod_region_folder}/{name_file} от {current_time}.xlsx') as writer:
+        if len(svod_vac_chosen_region_df) != 0:
+            svod_vac_chosen_region_df.to_excel(writer, sheet_name='Отслеживаемые вакансии', index=True)
         svod_vac_reg_region_df.to_excel(writer, sheet_name='Вакансии по отраслям', index=False)
         svod_vac_mun_region_df.to_excel(writer, sheet_name='Вакансии по муниципалитетам', index=False)
         svod_vac_org_region_df.to_excel(writer, sheet_name='Вакансии по работодателям', index=False)
@@ -684,16 +751,27 @@ def create_svod_for_df(prepared_df:pd.DataFrame,svod_region_folder:str,name_file
         svod_org_exp_region_df.to_excel(writer, sheet_name='Требуемый опыт по работодателям', index=False)
 
 
+    if len(svod_vac_chosen_region_df) != 0:
+        if name_file == 'Свод по региону':
+            name_file = 'Полный список'
+        with pd.ExcelWriter(f'{svod_region_folder}/Отслеживаемые вакансии_{name_file}.xlsx', engine='xlsxwriter') as writer:
+            for sheet_name, df in dct_chosen_df.items():
+                if len(df) == 0:
+                    continue
+                df.to_excel(writer, sheet_name=str(sheet_name), index=False)
 
 
 
-def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:str,df:pd.DataFrame):
+
+
+def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:str,df:pd.DataFrame,param_filter_chosen_vac:str):
     """
     Основная функция для обработки данных
     :param file_data: файл в формате csv с данными вакансий
     :param file_org: файл с данными организаций по которым нужно сделать отдельный свод
     :param region: регион вакансии которого нужно обработать
     :param end_folder: конечная папка
+    :param param_filter_chosen_vac: файл с отслеживаемыми вакансиями
     """
     # колонки которые нужно оставить и переименовать
     dct_name_columns = {'id':'ID вакансии','busyType': 'Тип занятости', 'contactPerson': 'Контактное лицо',
@@ -900,13 +978,13 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
         """
             Свод по региону
             """
-        create_svod_for_df(prepared_df,svod_region_folder,'Свод по региону',current_date)
-        create_svod_for_df(quote_df,svod_region_folder,'Квотируемые',current_date)
-        create_svod_for_df(soc_df,svod_region_folder,'Соцкатегории',current_date)
+        create_svod_for_df(prepared_df,svod_region_folder,'Свод по региону',current_date,param_filter_chosen_vac)
+        create_svod_for_df(quote_df,svod_region_folder,'Квотируемые',current_date,param_filter_chosen_vac)
+        create_svod_for_df(soc_df,svod_region_folder,'Соцкатегории',current_date,param_filter_chosen_vac)
 
-        create_svod_for_df(accommodation_df,svod_region_folder,'С предоставлением жилья',current_date)
-        create_svod_for_df(program_mobile_df,svod_region_folder,'Трудовая мобильность',current_date)
-        create_svod_for_df(migrant_mobile_df,svod_region_folder,'Иностранцы',current_date)
+        create_svod_for_df(accommodation_df,svod_region_folder,'С предоставлением жилья',current_date,param_filter_chosen_vac)
+        create_svod_for_df(program_mobile_df,svod_region_folder,'Трудовая мобильность',current_date,param_filter_chosen_vac)
+        create_svod_for_df(migrant_mobile_df,svod_region_folder,'Иностранцы',current_date,param_filter_chosen_vac)
 
 
 
@@ -1193,6 +1271,7 @@ if __name__ == '__main__':
 
     main_file_data = 'data/vacancy.csv'
     main_org_file = 'data/Пустой файл организаций.xlsx'
+    main_filter_vac_file = 'data/Свод для динамики вакансий.xlsx'
     df = pd.read_csv(main_file_data, encoding='UTF-8', sep='|', dtype=str, on_bad_lines='skip')
     temp_df = pd.read_excel('data/Список регионов.xlsx')
     lst_region = temp_df['Регион'].tolist()
@@ -1203,7 +1282,7 @@ if __name__ == '__main__':
             os.makedirs(main_end_folder)
         print(region)
         try:
-            processing_data_trudvsem(main_file_data, main_org_file, main_end_folder, region, df)
+            processing_data_trudvsem(main_file_data, main_org_file, main_end_folder, region, df,main_filter_vac_file)
         except NotRegion:
             continue
     end_time = time.time()

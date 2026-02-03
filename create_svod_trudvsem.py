@@ -574,6 +574,9 @@ def create_chosen_vac_svod(df:pd.DataFrame,param_filter_chosen_vac:str):
             # Обрабатываем для добавления
             temp_df.set_index('Вакансия', inplace=True)
             temp_df.fillna(0, inplace=True)
+
+            temp_df.loc['Итого'] = temp_df['Количество вакансий'].sum()
+
     return temp_df,dct_df
 
 
