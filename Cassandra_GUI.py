@@ -255,6 +255,52 @@ def select_end_folder_diff_svod_trudvsem():
 
 
 
+"""
+Функции для общей функции мониторинга
+"""
+
+def select_folder_data_monitoring():
+    """
+    Функция для выбора папки c данными мониторингов
+    :return:
+    """
+    global path_folder_data_monitoring
+    path_folder_data_monitoring = filedialog.askdirectory()
+
+
+def select_end_folder_monitoring():
+    """
+    Функция для выбора конечной папки куда будут складываться итоговые файлы мониторинга
+    :return:
+    """
+    global path_to_end_folder_monitoring
+    path_to_end_folder_monitoring = filedialog.askdirectory()
+
+
+def processing_monintoring():
+    """
+    Функция для обработки данных мониторингов. Основная функция
+    :return:
+    """
+    type_monitoring = group_rb_type_monitoring.get() # получаем тип мониторинга
+
+    try:
+        if type_monitoring == 0:
+            prepare_form_one_employment(path_folder_data_monitoring, path_to_end_folder_monitoring)
+        elif type_monitoring == 1:
+            prepare_form_two_employment(path_folder_data_monitoring, path_to_end_folder_monitoring)
+        elif type_monitoring == 2:
+            prepare_form_three_employment(path_folder_data_monitoring, path_to_end_folder_monitoring)
+        elif type_monitoring == 3:
+            prepare_may_2025(path_folder_data_monitoring, path_to_end_folder_monitoring)
+        elif type_monitoring == 4:
+            prepare_september_2025(path_folder_data_monitoring, path_to_end_folder_monitoring)
+
+    except NameError:
+        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
+                             f'Выберите файлы с данными и папку куда будет генерироваться файл')
+
+
 
 
 
@@ -274,6 +320,11 @@ def processing_base_employment():
     except NameError:
         messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
                              f'Выберите файлы с данными и папку куда будет генерироваться файл')
+
+
+
+
+
 
 
 """
@@ -457,7 +508,7 @@ def set_window_size(window):
     elif screen_width >= 2560:
         width = int(screen_width * 0.41)
     elif screen_width >= 1920:
-        width = int(screen_width * 0.60)
+        width = int(screen_width * 0.47)
     elif screen_width >= 1600:
         width = int(screen_width * 0.5)
     elif screen_width >= 1280:
@@ -545,255 +596,256 @@ if __name__ == '__main__':
 
 
 
-    """
-    Создаем вкладку для обработки формы 1 (пятистрочная)
-    """
-    tab_employment_five = ttk.Frame(tab_control)
-    tab_control.add(tab_employment_five, text='Форма 1\n (5 строк)')
 
-    employment_five_frame_description = LabelFrame(tab_employment_five)
-    employment_five_frame_description.pack()
-
-    lbl_hello_employment_five = Label(employment_five_frame_description,
-                                  text='Центр опережающей профессиональной подготовки Республики Бурятия\n'
-                           'Трудоустройство выпускников. Форма 1 пятистрочная', width=60)
-    lbl_hello_employment_five.pack(side=LEFT, anchor=N, ipadx=25, ipady=10)
-
-    # Картинка
-    path_to_img_employment_five = resource_path('logo.png')
-    img_employment_five = PhotoImage(file=path_to_img_employment_five)
-    Label(employment_five_frame_description,
-          image=img_employment_five, padx=10, pady=10
-          ).pack(side=LEFT, anchor=E, ipadx=5, ipady=5)
-
-    # Создаем область для того чтобы поместить туда подготовительные кнопки(выбрать файл,выбрать папку и т.п.)
-    frame_data_employment_five = LabelFrame(tab_employment_five, text='Подготовка')
-    frame_data_employment_five.pack(padx=10, pady=10)
-
-    btn_choose_data_employment_five = Button(frame_data_employment_five, text='1) Выберите папку с данными', font=('Arial Bold', 20),
-                             command=select_folder_data_base
-                             )
-    btn_choose_data_employment_five.pack(padx=10, pady=10)
-
-
-    # Создаем кнопку для выбора папки куда будут генерироваться файлы
-
-    btn_choose_end_folder_employment_five = Button(frame_data_employment_five, text='2) Выберите конечную папку', font=('Arial Bold', 20),
-                                   command=select_end_folder_base
-                                   )
-    btn_choose_end_folder_employment_five.pack(padx=10, pady=10)
+    # """
+    # Создаем вкладку для обработки формы 1 (пятистрочная)
+    # """
+    # tab_employment_five = ttk.Frame(tab_control)
+    # tab_control.add(tab_employment_five, text='Форма 1\n (5 строк)')
     #
-    # Создаем кнопку обработки данных
-
-    btn_proccessing_data_employment_five = Button(tab_employment_five, text='3) Обработать данные', font=('Arial Bold', 20),
-                                  command=processing_base_employment
-                                  )
-    btn_proccessing_data_employment_five.pack(padx=10, pady=10)
-
-
-    """
-    Вкладка для обработки формы 2 нозологии 15 строк
-    """
-    tab_employment_nose = ttk.Frame(tab_control)
-    tab_control.add(tab_employment_nose, text='Форма 2\n (нозологии)')
-
-    employment_nose_frame_description = LabelFrame(tab_employment_nose)
-    employment_nose_frame_description.pack()
-
-    lbl_hello_employment_nose = Label(employment_nose_frame_description,
-                                      text='Центр опережающей профессиональной подготовки Республики Бурятия\n'
-                                           'Трудоустройство выпускников. Форма 2 нозологии (15 строк)\n'
-                                           'Форма мониторинга январь 2025',
-                                      width=60)
-    lbl_hello_employment_nose.pack(side=LEFT, anchor=N, ipadx=25, ipady=10)
-
-    # Картинка
-    path_to_img_employment_nose = resource_path('logo.png')
-    img_employment_nose = PhotoImage(file=path_to_img_employment_nose)
-    Label(employment_nose_frame_description,
-          image=img_employment_nose, padx=10, pady=10
-          ).pack(side=LEFT, anchor=E, ipadx=5, ipady=5)
-
-    # Создаем область для того чтобы поместить туда подготовительные кнопки(выбрать файл,выбрать папку и т.п.)
-    frame_data_employment_nose = LabelFrame(tab_employment_nose, text='Подготовка')
-    frame_data_employment_nose.pack(padx=10, pady=10)
-
-    btn_choose_data_employment_nose = Button(frame_data_employment_nose, text='1) Выберите папку с данными',
-                                             font=('Arial Bold', 20),
-                                             command=select_folder_data_nose
-                                             )
-    btn_choose_data_employment_nose.pack(padx=10, pady=10)
-
-    # Создаем кнопку для выбора папки куда будут генерироваться файлы
-
-    btn_choose_end_folder_employment_nose = Button(frame_data_employment_nose, text='2) Выберите конечную папку',
-                                                   font=('Arial Bold', 20),
-                                                   command=select_end_folder_nose
-                                                   )
-    btn_choose_end_folder_employment_nose.pack(padx=10, pady=10)
+    # employment_five_frame_description = LabelFrame(tab_employment_five)
+    # employment_five_frame_description.pack()
     #
-    # Создаем кнопку обработки данных
-
-    btn_proccessing_data_employment_nose = Button(tab_employment_nose, text='3) Обработать данные',
-                                                  font=('Arial Bold', 20),
-                                                  command=processing_nose_employment
-                                                  )
-    btn_proccessing_data_employment_nose.pack(padx=10, pady=10)
+    # lbl_hello_employment_five = Label(employment_five_frame_description,
+    #                               text='Центр опережающей профессиональной подготовки Республики Бурятия\n'
+    #                        'Трудоустройство выпускников. Форма 1 пятистрочная', width=60)
+    # lbl_hello_employment_five.pack(side=LEFT, anchor=N, ipadx=25, ipady=10)
     #
-
-    """
-    Вкладка для обработки формы 3 Ожидаемый выпуск
-    """
-    tab_employment_expect = ttk.Frame(tab_control)
-    tab_control.add(tab_employment_expect, text='Форма 3\n (ожидаемый выпуск)')
-
-    employment_expect_frame_description = LabelFrame(tab_employment_expect)
-    employment_expect_frame_description.pack()
-
-    lbl_hello_employment_expect = Label(employment_expect_frame_description,
-                                        text='Центр опережающей профессиональной подготовки Республики Бурятия\n'
-                                             'Трудоустройство выпускников. Форма 3 Ожидаемый выпуск',
-                                        width=60)
-    lbl_hello_employment_expect.pack(side=LEFT, anchor=N, ipadx=25, ipady=10)
-
-    # Картинка
-    path_to_img_employment_expect = resource_path('logo.png')
-    img_employment_expect = PhotoImage(file=path_to_img_employment_expect)
-    Label(employment_expect_frame_description,
-          image=img_employment_expect, padx=10, pady=10
-          ).pack(side=LEFT, anchor=E, ipadx=5, ipady=5)
-
-    # Создаем область для того чтобы поместить туда подготовительные кнопки(выбрать файл,выбрать папку и т.п.)
-    frame_data_employment_expect = LabelFrame(tab_employment_expect, text='Подготовка')
-    frame_data_employment_expect.pack(padx=10, pady=10)
-
-    btn_choose_data_employment_expect = Button(frame_data_employment_expect, text='1) Выберите папку с данными',
-                                               font=('Arial Bold', 20),
-                                               command=select_folder_data_form_three
-                                               )
-    btn_choose_data_employment_expect.pack(padx=10, pady=10)
-
-    # Создаем кнопку для выбора папки куда будут генерироваться файлы
-
-    btn_choose_end_folder_employment_expect = Button(frame_data_employment_expect, text='2) Выберите конечную папку',
-                                                     font=('Arial Bold', 20),
-                                                     command=select_end_folder_form_three
-                                                     )
-    btn_choose_end_folder_employment_expect.pack(padx=10, pady=10)
+    # # Картинка
+    # path_to_img_employment_five = resource_path('logo.png')
+    # img_employment_five = PhotoImage(file=path_to_img_employment_five)
+    # Label(employment_five_frame_description,
+    #       image=img_employment_five, padx=10, pady=10
+    #       ).pack(side=LEFT, anchor=E, ipadx=5, ipady=5)
     #
-    # Создаем кнопку обработки данных
-
-    btn_proccessing_data_employment_expect = Button(tab_employment_expect, text='3) Обработать данные',
-                                                    font=('Arial Bold', 20),
-                                                    command=processing_form_three_employment
-                                                    )
-    btn_proccessing_data_employment_expect.pack(padx=10, pady=10)
-
-    """
-    Создаем вкладку для обработки мониторинга занятости выпускников для сайта СССР
-    """
-
-
-    tab_employment_grad_mon = ttk.Frame(tab_control)
-    tab_control.add(tab_employment_grad_mon, text='Мониторинг занятости\nвыпускников Май 2025')
-
-    employment_grad_mon_frame_description = LabelFrame(tab_employment_grad_mon)
-    employment_grad_mon_frame_description.pack()
-
-    lbl_hello_employment_grad_mon = Label(employment_grad_mon_frame_description,
-                                          text='Центр опережающей профессиональной подготовки Республики Бурятия\n'
-                                               'Мониторинг занятости выпускников 2025 для сервиса\n'
-                                               '«Система сбора и синхронизации ресурсов» (https://data.firpo.ru).',
-                                          width=60)
-    lbl_hello_employment_grad_mon.pack(side=LEFT, anchor=N, ipadx=25, ipady=10)
-
-    # Картинка
-    path_to_img_employment_grad_mon = resource_path('logo.png')
-    img_employment_grad_mon = PhotoImage(file=path_to_img_employment_grad_mon)
-    Label(employment_grad_mon_frame_description,
-          image=img_employment_grad_mon, padx=10, pady=10
-          ).pack(side=LEFT, anchor=E, ipadx=5, ipady=5)
-
-    # Создаем область для того чтобы поместить туда подготовительные кнопки(выбрать файл,выбрать папку и т.п.)
-    frame_data_employment_grad_mon = LabelFrame(tab_employment_grad_mon, text='Подготовка')
-    frame_data_employment_grad_mon.pack(padx=10, pady=10)
-
-    btn_choose_data_employment_grad_mon = Button(frame_data_employment_grad_mon, text='1) Выберите папку с данными',
-                                                 font=('Arial Bold', 20),
-                                                 command=select_folder_data_mon_grad
-                                                 )
-    btn_choose_data_employment_grad_mon.pack(padx=10, pady=10)
-
-    # Создаем кнопку для выбора папки куда будут генерироваться файлы
-
-    btn_choose_end_folder_employment_grad_mon = Button(frame_data_employment_grad_mon,
-                                                       text='2) Выберите конечную папку',
-                                                       font=('Arial Bold', 20),
-                                                       command=select_end_folder_mon_grad
-                                                       )
-    btn_choose_end_folder_employment_grad_mon.pack(padx=10, pady=10)
+    # # Создаем область для того чтобы поместить туда подготовительные кнопки(выбрать файл,выбрать папку и т.п.)
+    # frame_data_employment_five = LabelFrame(tab_employment_five, text='Подготовка')
+    # frame_data_employment_five.pack(padx=10, pady=10)
     #
-    # Создаем кнопку обработки данных
-
-    btn_proccessing_data_employment_grad_mon = Button(tab_employment_grad_mon, text='3) Обработать данные',
-                                                      font=('Arial Bold', 20),
-                                                      command=processing_mon_may_2025
-                                                      )
-    btn_proccessing_data_employment_grad_mon.pack(padx=10, pady=10)
-
-    """
-        Создаем вкладку для обработки мониторинга занятости выпускников для сайта СССР сентябрь 2025
-        """
-
-    tab_employment_grad_mon_sept = ttk.Frame(tab_control)
-    tab_control.add(tab_employment_grad_mon_sept, text='Мониторинг занятости\nвыпускников Сентябрь 2025')
-
-    employment_grad_mon_sept_frame_description = LabelFrame(tab_employment_grad_mon_sept)
-    employment_grad_mon_sept_frame_description.pack()
-
-    lbl_hello_employment_grad_mon_sept = Label(employment_grad_mon_sept_frame_description,
-                                               text='Центр опережающей профессиональной подготовки Республики Бурятия\n'
-                                                    'Мониторинг занятости выпускников на СЕНТЯБРЬ 2025 для сервиса\n'
-                                                    '«Система сбора и синхронизации ресурсов» (https://data.firpo.ru).',
-                                               width=60)
-    lbl_hello_employment_grad_mon_sept.pack(side=LEFT, anchor=N, ipadx=25, ipady=10)
-
-    # Картинка
-    path_to_img_employment_grad_mon_sept = resource_path('logo.png')
-    img_employment_grad_mon_sept = PhotoImage(file=path_to_img_employment_grad_mon_sept)
-    Label(employment_grad_mon_sept_frame_description,
-          image=img_employment_grad_mon_sept, padx=10, pady=10
-          ).pack(side=LEFT, anchor=E, ipadx=5, ipady=5)
-
-    # Создаем область для того чтобы поместить туда подготовительные кнопки(выбрать файл,выбрать папку и т.п.)
-    frame_data_employment_grad_mon_sept = LabelFrame(tab_employment_grad_mon_sept, text='Подготовка')
-    frame_data_employment_grad_mon_sept.pack(padx=10, pady=10)
-
-    btn_choose_data_employment_grad_mon_sept = Button(frame_data_employment_grad_mon_sept,
-                                                      text='1) Выберите папку с данными',
-                                                      font=('Arial Bold', 20),
-                                                      command=select_folder_data_mon_grad_sept
-                                                      )
-    btn_choose_data_employment_grad_mon_sept.pack(padx=10, pady=10)
-
-    # Создаем кнопку для выбора папки куда будут генерироваться файлы
-
-    btn_choose_end_folder_employment_grad_mon_sept = Button(frame_data_employment_grad_mon_sept,
-                                                            text='2) Выберите конечную папку',
-                                                            font=('Arial Bold', 20),
-                                                            command=select_end_folder_mon_grad_sept
-                                                            )
-    btn_choose_end_folder_employment_grad_mon_sept.pack(padx=10, pady=10)
+    # btn_choose_data_employment_five = Button(frame_data_employment_five, text='1) Выберите папку с данными', font=('Arial Bold', 20),
+    #                          command=select_folder_data_base
+    #                          )
+    # btn_choose_data_employment_five.pack(padx=10, pady=10)
     #
-    # Создаем кнопку обработки данных
-
-    btn_proccessing_data_employment_grad_mon_sept = Button(tab_employment_grad_mon_sept, text='3) Обработать данные',
-                                                           font=('Arial Bold', 20),
-                                                           command=processing_mon_sept_2025
-                                                           )
-    btn_proccessing_data_employment_grad_mon_sept.pack(padx=10, pady=10)
-
-
+    #
+    # # Создаем кнопку для выбора папки куда будут генерироваться файлы
+    #
+    # btn_choose_end_folder_employment_five = Button(frame_data_employment_five, text='2) Выберите конечную папку', font=('Arial Bold', 20),
+    #                                command=select_end_folder_base
+    #                                )
+    # btn_choose_end_folder_employment_five.pack(padx=10, pady=10)
+    # #
+    # # Создаем кнопку обработки данных
+    #
+    # btn_proccessing_data_employment_five = Button(tab_employment_five, text='3) Обработать данные', font=('Arial Bold', 20),
+    #                               command=processing_base_employment
+    #                               )
+    # btn_proccessing_data_employment_five.pack(padx=10, pady=10)
+    #
+    #
+    # """
+    # Вкладка для обработки формы 2 нозологии 15 строк
+    # """
+    # tab_employment_nose = ttk.Frame(tab_control)
+    # tab_control.add(tab_employment_nose, text='Форма 2\n (нозологии)')
+    #
+    # employment_nose_frame_description = LabelFrame(tab_employment_nose)
+    # employment_nose_frame_description.pack()
+    #
+    # lbl_hello_employment_nose = Label(employment_nose_frame_description,
+    #                                   text='Центр опережающей профессиональной подготовки Республики Бурятия\n'
+    #                                        'Трудоустройство выпускников. Форма 2 нозологии (15 строк)\n'
+    #                                        'Форма мониторинга январь 2025',
+    #                                   width=60)
+    # lbl_hello_employment_nose.pack(side=LEFT, anchor=N, ipadx=25, ipady=10)
+    #
+    # # Картинка
+    # path_to_img_employment_nose = resource_path('logo.png')
+    # img_employment_nose = PhotoImage(file=path_to_img_employment_nose)
+    # Label(employment_nose_frame_description,
+    #       image=img_employment_nose, padx=10, pady=10
+    #       ).pack(side=LEFT, anchor=E, ipadx=5, ipady=5)
+    #
+    # # Создаем область для того чтобы поместить туда подготовительные кнопки(выбрать файл,выбрать папку и т.п.)
+    # frame_data_employment_nose = LabelFrame(tab_employment_nose, text='Подготовка')
+    # frame_data_employment_nose.pack(padx=10, pady=10)
+    #
+    # btn_choose_data_employment_nose = Button(frame_data_employment_nose, text='1) Выберите папку с данными',
+    #                                          font=('Arial Bold', 20),
+    #                                          command=select_folder_data_nose
+    #                                          )
+    # btn_choose_data_employment_nose.pack(padx=10, pady=10)
+    #
+    # # Создаем кнопку для выбора папки куда будут генерироваться файлы
+    #
+    # btn_choose_end_folder_employment_nose = Button(frame_data_employment_nose, text='2) Выберите конечную папку',
+    #                                                font=('Arial Bold', 20),
+    #                                                command=select_end_folder_nose
+    #                                                )
+    # btn_choose_end_folder_employment_nose.pack(padx=10, pady=10)
+    # #
+    # # Создаем кнопку обработки данных
+    #
+    # btn_proccessing_data_employment_nose = Button(tab_employment_nose, text='3) Обработать данные',
+    #                                               font=('Arial Bold', 20),
+    #                                               command=processing_nose_employment
+    #                                               )
+    # btn_proccessing_data_employment_nose.pack(padx=10, pady=10)
+    # #
+    #
+    # """
+    # Вкладка для обработки формы 3 Ожидаемый выпуск
+    # """
+    # tab_employment_expect = ttk.Frame(tab_control)
+    # tab_control.add(tab_employment_expect, text='Форма 3\n (ожидаемый выпуск)')
+    #
+    # employment_expect_frame_description = LabelFrame(tab_employment_expect)
+    # employment_expect_frame_description.pack()
+    #
+    # lbl_hello_employment_expect = Label(employment_expect_frame_description,
+    #                                     text='Центр опережающей профессиональной подготовки Республики Бурятия\n'
+    #                                          'Трудоустройство выпускников. Форма 3 Ожидаемый выпуск',
+    #                                     width=60)
+    # lbl_hello_employment_expect.pack(side=LEFT, anchor=N, ipadx=25, ipady=10)
+    #
+    # # Картинка
+    # path_to_img_employment_expect = resource_path('logo.png')
+    # img_employment_expect = PhotoImage(file=path_to_img_employment_expect)
+    # Label(employment_expect_frame_description,
+    #       image=img_employment_expect, padx=10, pady=10
+    #       ).pack(side=LEFT, anchor=E, ipadx=5, ipady=5)
+    #
+    # # Создаем область для того чтобы поместить туда подготовительные кнопки(выбрать файл,выбрать папку и т.п.)
+    # frame_data_employment_expect = LabelFrame(tab_employment_expect, text='Подготовка')
+    # frame_data_employment_expect.pack(padx=10, pady=10)
+    #
+    # btn_choose_data_employment_expect = Button(frame_data_employment_expect, text='1) Выберите папку с данными',
+    #                                            font=('Arial Bold', 20),
+    #                                            command=select_folder_data_form_three
+    #                                            )
+    # btn_choose_data_employment_expect.pack(padx=10, pady=10)
+    #
+    # # Создаем кнопку для выбора папки куда будут генерироваться файлы
+    #
+    # btn_choose_end_folder_employment_expect = Button(frame_data_employment_expect, text='2) Выберите конечную папку',
+    #                                                  font=('Arial Bold', 20),
+    #                                                  command=select_end_folder_form_three
+    #                                                  )
+    # btn_choose_end_folder_employment_expect.pack(padx=10, pady=10)
+    # #
+    # # Создаем кнопку обработки данных
+    #
+    # btn_proccessing_data_employment_expect = Button(tab_employment_expect, text='3) Обработать данные',
+    #                                                 font=('Arial Bold', 20),
+    #                                                 command=processing_form_three_employment
+    #                                                 )
+    # btn_proccessing_data_employment_expect.pack(padx=10, pady=10)
+    #
+    # """
+    # Создаем вкладку для обработки мониторинга занятости выпускников для сайта СССР
+    # """
+    #
+    #
+    # tab_employment_grad_mon = ttk.Frame(tab_control)
+    # tab_control.add(tab_employment_grad_mon, text='Мониторинг занятости\nвыпускников Май 2025')
+    #
+    # employment_grad_mon_frame_description = LabelFrame(tab_employment_grad_mon)
+    # employment_grad_mon_frame_description.pack()
+    #
+    # lbl_hello_employment_grad_mon = Label(employment_grad_mon_frame_description,
+    #                                       text='Центр опережающей профессиональной подготовки Республики Бурятия\n'
+    #                                            'Мониторинг занятости выпускников 2025 для сервиса\n'
+    #                                            '«Система сбора и синхронизации ресурсов» (https://data.firpo.ru).',
+    #                                       width=60)
+    # lbl_hello_employment_grad_mon.pack(side=LEFT, anchor=N, ipadx=25, ipady=10)
+    #
+    # # Картинка
+    # path_to_img_employment_grad_mon = resource_path('logo.png')
+    # img_employment_grad_mon = PhotoImage(file=path_to_img_employment_grad_mon)
+    # Label(employment_grad_mon_frame_description,
+    #       image=img_employment_grad_mon, padx=10, pady=10
+    #       ).pack(side=LEFT, anchor=E, ipadx=5, ipady=5)
+    #
+    # # Создаем область для того чтобы поместить туда подготовительные кнопки(выбрать файл,выбрать папку и т.п.)
+    # frame_data_employment_grad_mon = LabelFrame(tab_employment_grad_mon, text='Подготовка')
+    # frame_data_employment_grad_mon.pack(padx=10, pady=10)
+    #
+    # btn_choose_data_employment_grad_mon = Button(frame_data_employment_grad_mon, text='1) Выберите папку с данными',
+    #                                              font=('Arial Bold', 20),
+    #                                              command=select_folder_data_mon_grad
+    #                                              )
+    # btn_choose_data_employment_grad_mon.pack(padx=10, pady=10)
+    #
+    # # Создаем кнопку для выбора папки куда будут генерироваться файлы
+    #
+    # btn_choose_end_folder_employment_grad_mon = Button(frame_data_employment_grad_mon,
+    #                                                    text='2) Выберите конечную папку',
+    #                                                    font=('Arial Bold', 20),
+    #                                                    command=select_end_folder_mon_grad
+    #                                                    )
+    # btn_choose_end_folder_employment_grad_mon.pack(padx=10, pady=10)
+    # #
+    # # Создаем кнопку обработки данных
+    #
+    # btn_proccessing_data_employment_grad_mon = Button(tab_employment_grad_mon, text='3) Обработать данные',
+    #                                                   font=('Arial Bold', 20),
+    #                                                   command=processing_mon_may_2025
+    #                                                   )
+    # btn_proccessing_data_employment_grad_mon.pack(padx=10, pady=10)
+    #
+    # """
+    #     Создаем вкладку для обработки мониторинга занятости выпускников для сайта СССР сентябрь 2025
+    #     """
+    #
+    # tab_employment_grad_mon_sept = ttk.Frame(tab_control)
+    # tab_control.add(tab_employment_grad_mon_sept, text='Мониторинг занятости\nвыпускников Сентябрь 2025')
+    #
+    # employment_grad_mon_sept_frame_description = LabelFrame(tab_employment_grad_mon_sept)
+    # employment_grad_mon_sept_frame_description.pack()
+    #
+    # lbl_hello_employment_grad_mon_sept = Label(employment_grad_mon_sept_frame_description,
+    #                                            text='Центр опережающей профессиональной подготовки Республики Бурятия\n'
+    #                                                 'Мониторинг занятости выпускников на СЕНТЯБРЬ 2025 для сервиса\n'
+    #                                                 '«Система сбора и синхронизации ресурсов» (https://data.firpo.ru).',
+    #                                            width=60)
+    # lbl_hello_employment_grad_mon_sept.pack(side=LEFT, anchor=N, ipadx=25, ipady=10)
+    #
+    # # Картинка
+    # path_to_img_employment_grad_mon_sept = resource_path('logo.png')
+    # img_employment_grad_mon_sept = PhotoImage(file=path_to_img_employment_grad_mon_sept)
+    # Label(employment_grad_mon_sept_frame_description,
+    #       image=img_employment_grad_mon_sept, padx=10, pady=10
+    #       ).pack(side=LEFT, anchor=E, ipadx=5, ipady=5)
+    #
+    # # Создаем область для того чтобы поместить туда подготовительные кнопки(выбрать файл,выбрать папку и т.п.)
+    # frame_data_employment_grad_mon_sept = LabelFrame(tab_employment_grad_mon_sept, text='Подготовка')
+    # frame_data_employment_grad_mon_sept.pack(padx=10, pady=10)
+    #
+    # btn_choose_data_employment_grad_mon_sept = Button(frame_data_employment_grad_mon_sept,
+    #                                                   text='1) Выберите папку с данными',
+    #                                                   font=('Arial Bold', 20),
+    #                                                   command=select_folder_data_mon_grad_sept
+    #                                                   )
+    # btn_choose_data_employment_grad_mon_sept.pack(padx=10, pady=10)
+    #
+    # # Создаем кнопку для выбора папки куда будут генерироваться файлы
+    #
+    # btn_choose_end_folder_employment_grad_mon_sept = Button(frame_data_employment_grad_mon_sept,
+    #                                                         text='2) Выберите конечную папку',
+    #                                                         font=('Arial Bold', 20),
+    #                                                         command=select_end_folder_mon_grad_sept
+    #                                                         )
+    # btn_choose_end_folder_employment_grad_mon_sept.pack(padx=10, pady=10)
+    # #
+    # # Создаем кнопку обработки данных
+    #
+    # btn_proccessing_data_employment_grad_mon_sept = Button(tab_employment_grad_mon_sept, text='3) Обработать данные',
+    #                                                        font=('Arial Bold', 20),
+    #                                                        command=processing_mon_sept_2025
+    #                                                        )
+    # btn_proccessing_data_employment_grad_mon_sept.pack(padx=10, pady=10)
+    #
+    #
 
 
 
@@ -965,120 +1017,6 @@ if __name__ == '__main__':
     btn_proccessing_data_diff_svod_trudvsem.pack(padx=10, pady=10)
 
 
-
-
-
-
-
-
-
-
-
-    # """
-    # Вкладка для обработки отчетов центров карьеры
-    # """
-    # tab_employment_ck = ttk.Frame(tab_control)
-    # tab_control.add(tab_employment_ck, text='Отчет ЦК')
-    #
-    # employment_ck_frame_description = LabelFrame(tab_employment_ck)
-    # employment_ck_frame_description.pack()
-    #
-    # lbl_hello_employment_ck = Label(employment_ck_frame_description,
-    #                                 text='Центр опережающей профессиональной подготовки Республики Бурятия\n'
-    #                                      'Обработка данных центров карьеры по трудоустроенным выпускникам',
-    #                                 width=60)
-    # lbl_hello_employment_ck.pack(side=LEFT, anchor=N, ipadx=25, ipady=10)
-    #
-    # # Картинка
-    # path_to_img_employment_ck = resource_path('logo.png')
-    # img_employment_ck = PhotoImage(file=path_to_img_employment_ck)
-    # Label(employment_ck_frame_description,
-    #       image=img_employment_ck, padx=10, pady=10
-    #       ).pack(side=LEFT, anchor=E, ipadx=5, ipady=5)
-    #
-    # # Создаем область для того чтобы поместить туда подготовительные кнопки(выбрать файл,выбрать папку и т.п.)
-    # frame_data_employment_ck = LabelFrame(tab_employment_ck, text='Подготовка')
-    # frame_data_employment_ck.pack(padx=10, pady=10)
-    #
-    # btn_choose_data_employment_ck = Button(frame_data_employment_ck, text='1) Выберите папку с данными',
-    #                                        font=('Arial Bold', 20),
-    #                                        command=select_folder_data_ck
-    #                                        )
-    # btn_choose_data_employment_ck.pack(padx=10, pady=10)
-    #
-    # # Создаем кнопку для выбора папки куда будут генерироваться файлы
-    #
-    # btn_choose_end_folder_employment_ck = Button(frame_data_employment_ck, text='2) Выберите конечную папку',
-    #                                              font=('Arial Bold', 20),
-    #                                              command=select_end_folder_ck
-    #                                              )
-    # btn_choose_end_folder_employment_ck.pack(padx=10, pady=10)
-    # #
-    # # Создаем кнопку обработки данных
-    #
-    # btn_proccessing_data_employment_ck = Button(tab_employment_ck, text='3) Обработать данные',
-    #                                             font=('Arial Bold', 20),
-    #                                             command=processing_ck_employment
-    #                                             )
-    # btn_proccessing_data_employment_ck.pack(padx=10, pady=10)
-    #
-    #
-    #
-    # """
-    # Подсчет данных по трудоустройству ОПК
-    # """
-    # tab_employment_opk = ttk.Frame(tab_control)
-    # tab_control.add(tab_employment_opk, text='Отчет ОПК с отраслями')
-    #
-    # employment_opk_frame_description = LabelFrame(tab_employment_opk)
-    # employment_opk_frame_description.pack()
-    #
-    # lbl_hello_employment_opk = Label(employment_opk_frame_description,
-    #                                  text='Центр опережающей профессиональной подготовки Республики Бурятия\n'
-    #                                       'Обработка данных по трудоустройству ОПК (по отраслям)\n'
-    #                                       'В обрабатываемых файлах должны быть листы Форма 1 и Форма 2,\n'
-    #                                       'В Форме 1 должно быть 80 колонок включая 2 колонки проверки\n'
-    #                                       ',внизу после окончания таблицы должна быть пустая строка.\n'
-    #                                       ' На 9 строке должна быть строка с номерами колонок.\n'
-    #                                       'В форме 2 должно быть 10 колонок',
-    #                                  width=60)
-    # lbl_hello_employment_opk.pack(side=LEFT, anchor=N, ipadx=25, ipady=10)
-    #
-    # # Картинка
-    # path_to_img_employment_opk = resource_path('logo.png')
-    # img_employment_opk = PhotoImage(file=path_to_img_employment_opk)
-    # Label(employment_opk_frame_description,
-    #       image=img_employment_opk, padx=10, pady=10
-    #       ).pack(side=LEFT, anchor=E, ipadx=5, ipady=5)
-    #
-    # # Создаем область для того чтобы поместить туда подготовительные кнопки(выбрать файл,выбрать папку и т.п.)
-    # frame_data_employment_opk = LabelFrame(tab_employment_opk, text='Подготовка')
-    # frame_data_employment_opk.pack(padx=10, pady=10)
-    #
-    # btn_choose_data_employment_opk = Button(frame_data_employment_opk, text='1) Выберите папку с данными',
-    #                                         font=('Arial Bold', 20),
-    #                                         command=select_folder_data_opk
-    #                                         )
-    # btn_choose_data_employment_opk.pack(padx=10, pady=10)
-    #
-    # # Создаем кнопку для выбора папки куда будут генерироваться файлы
-    #
-    # btn_choose_end_folder_employment_opk = Button(frame_data_employment_opk, text='2) Выберите конечную папку',
-    #                                               font=('Arial Bold', 20),
-    #                                               command=select_end_folder_opk
-    #                                               )
-    # btn_choose_end_folder_employment_opk.pack(padx=10, pady=10)
-    # #
-    # # Создаем кнопку обработки данных
-    #
-    # btn_proccessing_data_employment_opk = Button(tab_employment_opk, text='3) Обработать данные',
-    #                                              font=('Arial Bold', 20),
-    #                                              command=processing_opk_employment
-    #                                              )
-    # btn_proccessing_data_employment_opk.pack(padx=10, pady=10)
-
-
-
     """
     Разница двух таблиц
     """
@@ -1155,6 +1093,68 @@ if __name__ == '__main__':
                                    command=processing_diffrence
                                    )
     btn_data_do_diffrence.pack(padx=10, pady=10)
+
+    """
+        Создаем вкладку для обработки мониторингов
+        """
+    tab_monitorings_employment = ttk.Frame(tab_control)
+    tab_control.add(tab_monitorings_employment, text='Обработка мониторингов\n трудоустройства выпускников')
+
+    monitorings_employment_frame_description = LabelFrame(tab_monitorings_employment)
+    monitorings_employment_frame_description.pack()
+
+    lbl_hello_monitorings_employment = Label(monitorings_employment_frame_description,
+                                             text='Центр опережающей профессиональной подготовки Республики Бурятия\n'
+                                                  'Обработка различных мониторингов трудоустройства выпускников',
+                                             width=60)
+    lbl_hello_monitorings_employment.pack(side=LEFT, anchor=N, ipadx=25, ipady=10)
+
+    # Картинка
+    path_to_img_monitorings_employment = resource_path('logo.png')
+    img_path_to_img_monitorings_employment = PhotoImage(file=path_to_img_monitorings_employment)
+    Label(monitorings_employment_frame_description,
+          image=img_path_to_img_monitorings_employment, padx=10, pady=10
+          ).pack(side=LEFT, anchor=E, ipadx=5, ipady=5)
+
+    # Создаем область для того чтобы поместить туда подготовительные кнопки(выбрать файл,выбрать папку и т.п.)
+    frame_data_monitorings_employment = LabelFrame(tab_monitorings_employment, text='Подготовка')
+    frame_data_monitorings_employment.pack(padx=10, pady=10)
+
+    # Создаем переключатель
+    group_rb_type_monitoring = IntVar()
+    # Создаем фрейм для размещения переключателей(pack и грид не используются в одном контейнере)
+    frame_rb_type_monitoring = LabelFrame(frame_data_monitorings_employment, text='1) Выберите вид мониторинга')
+    frame_rb_type_monitoring.pack(padx=10, pady=10)
+    #
+    Radiobutton(frame_rb_type_monitoring, text='Форма 1 (5 строк)', variable=group_rb_type_monitoring, value=0).pack()
+    Radiobutton(frame_rb_type_monitoring, text='Форма 2 (нозологии)', variable=group_rb_type_monitoring, value=1).pack()
+    Radiobutton(frame_rb_type_monitoring, text='Форма 3 (ожидаемый выпуск)', variable=group_rb_type_monitoring,
+                value=2).pack()
+    Radiobutton(frame_rb_type_monitoring, text='Мониторинг занятости выпускников Май 2025',
+                variable=group_rb_type_monitoring, value=3).pack()
+    Radiobutton(frame_rb_type_monitoring, text='Мониторинг занятости выпускников Сентябрь 2025',
+                variable=group_rb_type_monitoring, value=4).pack()
+
+    btn_choose_data_monitorings_employment = Button(frame_data_monitorings_employment,
+                                                    text='1) Выберите папку с данными', font=('Arial Bold', 20),
+                                                    command=select_folder_data_monitoring
+                                                    )
+    btn_choose_data_monitorings_employment.pack(padx=10, pady=10)
+
+    # Создаем кнопку для выбора папки куда будут генерироваться файлы
+
+    btn_choose_end_folder_monitorings_employment = Button(frame_data_monitorings_employment,
+                                                          text='2) Выберите конечную папку', font=('Arial Bold', 20),
+                                                          command=select_end_folder_monitoring
+                                                          )
+    btn_choose_end_folder_monitorings_employment.pack(padx=10, pady=10)
+
+    btn_proccessing_data_monitorings_employment = Button(tab_monitorings_employment, text='3) Обработать данные',
+                                                         font=('Arial Bold', 20),
+                                                         command=processing_monintoring
+                                                         )
+    btn_proccessing_data_monitorings_employment.pack(padx=10, pady=10)
+
 
 
 
