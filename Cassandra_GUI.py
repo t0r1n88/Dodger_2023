@@ -1126,14 +1126,14 @@ if __name__ == '__main__':
     frame_rb_type_monitoring = LabelFrame(frame_data_monitorings_employment, text='1) Выберите вид мониторинга')
     frame_rb_type_monitoring.pack(padx=10, pady=10)
     #
-    Radiobutton(frame_rb_type_monitoring, text='Форма 1 (5 строк)', variable=group_rb_type_monitoring, value=0).pack()
-    Radiobutton(frame_rb_type_monitoring, text='Форма 2 (нозологии)', variable=group_rb_type_monitoring, value=1).pack()
+    Radiobutton(frame_rb_type_monitoring, text='Форма 1 (5 строк)', variable=group_rb_type_monitoring, value=0).pack(anchor='w', padx=5)
+    Radiobutton(frame_rb_type_monitoring, text='Форма 2 (нозологии)', variable=group_rb_type_monitoring, value=1).pack(anchor='w', padx=5)
     Radiobutton(frame_rb_type_monitoring, text='Форма 3 (ожидаемый выпуск)', variable=group_rb_type_monitoring,
-                value=2).pack()
+                value=2).pack(anchor='w', padx=5)
     Radiobutton(frame_rb_type_monitoring, text='Мониторинг занятости выпускников Май 2025',
-                variable=group_rb_type_monitoring, value=3).pack()
+                variable=group_rb_type_monitoring, value=3).pack(anchor='w', padx=5)
     Radiobutton(frame_rb_type_monitoring, text='Мониторинг занятости выпускников Сентябрь 2025',
-                variable=group_rb_type_monitoring, value=4).pack()
+                variable=group_rb_type_monitoring, value=4).pack(anchor='w', padx=5)
 
     btn_choose_data_monitorings_employment = Button(frame_data_monitorings_employment,
                                                     text='1) Выберите папку с данными', font=('Arial Bold', 20),
