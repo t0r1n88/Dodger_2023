@@ -5,11 +5,8 @@
 from form_one_five_row import prepare_form_one_employment  # импортируем функцию для обработки Формы 1 (5 строк)
 from form_two_fifteen_row_nose import prepare_form_two_employment  # импортируем функцию для обработки Форма 2 нозологии 15 строк
 from form_three_expected_release import prepare_form_three_employment # импортируем функцию для обработки Формы 3 Ожидаемый выпуск
-#from monitoring_graduate_employment import prepare_graduate_employment
 from monitoring_may_2025 import prepare_may_2025 # мониториг май 2025
 from monitoring_september_2025 import prepare_september_2025 # мониторинг сентябрь 2025
-from ck_employment import prepare_ck_employment  # импортируем функцию для обработки данных для отчета центров карьеры
-from opk_employment import prepare_opk_employment  # импортируем функцию для обработки данных по ОПК
 from create_svod_trudvsem import processing_data_trudvsem # импортируем функцию для обработки данных с трудвсем
 from contrast_svod_trudvsem import prepare_diff_svod_trudvsem # импортируем функцию для измерения разницы между двумя сводами
 from cass_difference import prepare_diffrence  # импортируем функцию для нахождения разницы между двумя таблицами
@@ -464,35 +461,6 @@ def processing_diff_svod_trudvsem():
                              f'Выберите файлы с данными и папку куда будет генерироваться файл')
 
 
-
-"""
-Обработка отчетов ЦК
-"""
-
-
-def processing_ck_employment():
-    """
-    Функция для обработки отчетов центров карьеры
-    :return:
-    """
-    try:
-        prepare_ck_employment(path_folder_data_ck, path_to_end_folder_ck)
-
-    except NameError:
-        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
-                             f'Выберите файлы с данными и папку куда будет генерироваться файл')
-
-
-def processing_opk_employment():
-    """
-    Функция для обработки полной таблицы занятости выпускников в ОПК
-    """
-    try:
-        prepare_opk_employment(path_folder_data_opk, path_to_end_folder_opk)
-
-    except NameError:
-        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
-                             f'Выберите файлы с данными и папку куда будет генерироваться файл')
 
 
 """
