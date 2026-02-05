@@ -535,7 +535,7 @@ def set_window_size(window):
     else:
         width = int(screen_width * 1)
 
-    height = int(screen_height * 0.6)
+    height = int(screen_height * 0.7)
 
     # Рассчитываем координаты для центрирования окна
     x = (screen_width - width) // 2
