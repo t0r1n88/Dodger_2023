@@ -142,6 +142,10 @@ def create_missing_cols(diff_cols:set,df:pd.DataFrame):
     for miss_col in diff_cols:
         df[miss_col] = None
 
+    df['Сфера деятельности'] = df['Сфера деятельности'].fillna('Не указана сфера деятельности')
+    df['График работы'] = df['График работы'].fillna('Не указан')
+    df['Тип занятости'] = df['Тип занятости'].fillna('Не указан')
+
     return df
 
 
