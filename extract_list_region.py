@@ -8,9 +8,12 @@ import pandas as pd
 from tkinter import messagebox
 import os
 import time
-import gc
 
-
+class NotFile(Exception):
+    """
+    Обработка случаев когда нет файлов в папке
+    """
+    pass
 
 
 def extract_municipality(cell):
@@ -160,156 +163,182 @@ def processing_time_series_list_vac(data_folder:str,end_folder:str,file_params_c
     """
     Функция для формирования датафрейма в виде списка вакансий с выбранными колонками и добавленной
     """
-    t = time.localtime()  # получаем текущее время и дату
-    current_time = time.strftime('%H_%M_%S', t)
-    current_date = time.strftime('%d_%m_%Y', t)
+    try:
+        t = time.localtime()  # получаем текущее время и дату
+        current_time = time.strftime('%H_%M_%S', t)
+        current_date = time.strftime('%d_%m_%Y', t)
 
-    # Обязательные листы
-    error_df = pd.DataFrame(
-        columns=['Название файла', 'Описание ошибки'])  # датафрейм для ошибок
-
-
-    dct_filter_vac = dict() # словарь для хранения подготовленных списков с вакансиями которые нужно искать
-    dct_exclude_filter_vac = dict() # словарь для хранения списков со значениями которые нужно отбросить в уже отфильтрованных данных
-    lst_for_index_vac_df = [] # список для хранения наименований вакансий для последующего соединения
-
-    # Проверяем заполнение файла со списком вакансий динамику по которым нужно получить
-    if file_params_vac != '' and file_params_vac != 'Не выбрано':
-        df_param_filter = pd.read_excel(file_params_vac,dtype=str,usecols='A:B')
-        if len(df_param_filter) != 0:
-            df_param_filter = df_param_filter.replace(r'^\s*$', pd.NA, regex=True).dropna(subset=df_param_filter.columns[0])
-            # Создаем словарь по строкам с указанием вакансий которые есть в этой строке
-            for idx,row in enumerate(df_param_filter.itertuples(),1):
-                # создаем списки вакансий которые будут искаться
-                lst_temp = row[1].split(',')
-                lst_temp = [value.strip().lower() for value in lst_temp if value]
-                dct_filter_vac[idx] = lst_temp
-
-                lst_for_index_vac_df.append(','.join(lst_temp))
-                # создаем списки для дополнительной фильтрации
-                if isinstance(row[2],str):
-                    lst_dop_temp = row[2].split(',')
-                    lst_dop_temp = [value.strip().lower() for value in lst_dop_temp if value]
-                    dct_exclude_filter_vac[idx] = lst_dop_temp
-                else:
-                    dct_exclude_filter_vac[idx] = []
-
-    # считываем колонки базового датафрейма
-    base_df = pd.read_excel(file_params_cols)
-    lst_req_cols = list(base_df.columns) # для фильтрации промежуточных
-    lst_cols_add_data = list(base_df.columns)
-    lst_cols_add_data.append('Данные на')
+        # Обязательные листы
+        error_df = pd.DataFrame(
+            columns=['Название файла', 'Описание ошибки'])  # датафрейм для ошибок
 
 
+        dct_filter_vac = dict() # словарь для хранения подготовленных списков с вакансиями которые нужно искать
+        dct_exclude_filter_vac = dict() # словарь для хранения списков со значениями которые нужно отбросить в уже отфильтрованных данных
+        lst_for_index_vac_df = [] # список для хранения наименований вакансий для последующего соединения
 
-    base_df = pd.DataFrame(columns=lst_cols_add_data) # оставляем только колонки
+        # Проверяем заполнение файла со списком вакансий динамику по которым нужно получить
+        if file_params_vac != '' and file_params_vac != 'Не выбрано':
+            df_param_filter = pd.read_excel(file_params_vac,dtype=str,usecols='A:B')
+            if len(df_param_filter) != 0:
+                df_param_filter = df_param_filter.replace(r'^\s*$', pd.NA, regex=True).dropna(subset=df_param_filter.columns[0])
+                # Создаем словарь по строкам с указанием вакансий которые есть в этой строке
+                for idx,row in enumerate(df_param_filter.itertuples(),1):
+                    # создаем списки вакансий которые будут искаться
+                    lst_temp = row[1].split(',')
+                    lst_temp = [value.strip().lower() for value in lst_temp if value]
+                    dct_filter_vac[idx] = lst_temp
 
-    lst_cols_add_data.append('Ключевые_слова') # добавляем поисковую комбинацию
+                    lst_for_index_vac_df.append(','.join(lst_temp))
+                    # создаем списки для дополнительной фильтрации
+                    if isinstance(row[2],str):
+                        lst_dop_temp = row[2].split(',')
+                        lst_dop_temp = [value.strip().lower() for value in lst_dop_temp if value]
+                        dct_exclude_filter_vac[idx] = lst_dop_temp
+                    else:
+                        dct_exclude_filter_vac[idx] = []
 
-    vac_df = pd.DataFrame(columns=lst_cols_add_data) # датафрейм для данных по отслеживаемым вакансиям
-
-
-    req_cols = set(lst_req_cols) # множество для проверки наличия колонок
-
-
-    for dirpath, dirnames, filenames in os.walk(data_folder):
-        for file in filenames:
-            if not file.startswith('~$') and (file.endswith('.xlsx')):
-                name_file = file.split('.xlsx')[0].strip()
-                print(name_file)
-
-                # проверяем на правильность даты в названии
-                result_date = re.search(r'\d{2}_\d{2}_\d{4}', name_file)
-                if result_date:
-                    file_date = result_date.group()
-                    file_date = file_date.replace('_', '.')
-                else:
-                    temp_error_df = pd.DataFrame(
-                        data=[[f'{name_file}',
-                               f'В названии файла отсутствует дата в правильном формате. Требуется формат DD_MM_YYYY т.е. 25.12.2025'
-                               ]],
-                        columns=['Название файла',
-                                 'Описание ошибки'])
-                    error_df = pd.concat([error_df, temp_error_df], axis=0,
-                                         ignore_index=True)
-                    continue
+        # считываем колонки базового датафрейма
+        base_df = pd.read_excel(file_params_cols)
+        lst_req_cols = list(base_df.columns) # для фильтрации промежуточных
+        lst_cols_add_data = list(base_df.columns)
+        lst_cols_add_data.append('Данные на')
 
 
-                # начинаем проверку
-                temp_wb = openpyxl.load_workbook(f'{dirpath}/{file}', read_only=True)
-                lst_sheets = temp_wb.sheetnames
-                temp_wb.close()
-                # проверяем наличие нужного листа в файле
-                if source_sheet not in lst_sheets:
-                    temp_error_df = pd.DataFrame(
-                        data=[[f'{name_file}',
-                               f'Отсутствует лист {source_sheet}'
-                               ]],
-                        columns=['Название файла',
-                                 'Описание ошибки'])
-                    error_df = pd.concat([error_df, temp_error_df], axis=0,
-                                         ignore_index=True)
 
-                    continue
+        base_df = pd.DataFrame(columns=lst_cols_add_data) # оставляем только колонки
 
-                df = pd.read_excel(f'{dirpath}/{file}',sheet_name=source_sheet)
-                diff_cols = req_cols.difference(set(df.columns)) # проверяем отсутствующие колонки
-                if len(diff_cols) != 0:
-                    df = create_missing_cols(diff_cols,df)
-                    temp_error_df = pd.DataFrame(
-                        data=[[f'{name_file}',
-                               f'Отсутствуют колонки {diff_cols}. Вместо данных указано значение Нет данных'
-                               ]],
-                        columns=['Название файла',
-                                 'Описание ошибки'])
-                    error_df = pd.concat([error_df, temp_error_df], axis=0,
-                                         ignore_index=True)
-                df = df[lst_req_cols]
-                df['Данные на'] = file_date
-                base_df = pd.concat([base_df,df])
+        lst_cols_add_data.append('Ключевые_слова') # добавляем поисковую комбинацию
 
-    # Приводим к единым значениям
-    if 'Образование' in base_df.columns:
-        base_df['Образование'] = base_df['Образование'].replace({'Высшее':'Высшее образование','Высшее-бакалавриат':'Высшее образование — бакалавриат',
-                                                               'Высшее-подготовка кадров высшей квалификации':'Высшее образование — подготовка кадров высшей квалификации',
-                                                               'Высшее-специалитет, магистратура':'Высшее образование — специалитет, магистратура',
-                                                               'Среднее общее':'Среднее общее образование',
-                                                               'Среднее':'Среднее общее образование',
-                                                               'Основное общее':'Основное общее образование',
-                                                               'Общее образование':'Основное общее образование',
-                                                                 'Среднее профессиональное':'Среднее профессиональное образование',
-                                                              })
-    if 'Сфера деятельности' in base_df.columns:
-        base_df['Сфера деятельности'] = base_df['Сфера деятельности'].fillna('Не указана сфера деятельности')
-    if 'График работы' in base_df.columns:
-        base_df['График работы'] = base_df['График работы'].fillna('Не указан')
-        base_df['График работы'] = base_df['График работы'].replace({'Сменный график':'Сменная работа',
-                                                           'Неполный рабочий день':'Неполный рабочий день/неполная рабочая неделя',
-                                                           'Гибкий график':'Режим гибкого рабочего времени'})
-    if 'Тип занятости' in base_df.columns:
-        base_df['Тип занятости'] = base_df['Тип занятости'].fillna('Не указан')
-        base_df['Тип занятости'] = base_df['Тип занятости'].replace({'Удаленная':'Удалённая'})
+        vac_df = pd.DataFrame(columns=lst_cols_add_data) # датафрейм для данных по отслеживаемым вакансиям
 
-    base_df.to_excel(f'{end_folder}/Общий список {source_sheet} {current_time}.xlsx',index=False)
-    error_df.to_excel(f'{end_folder}/Ошибки {current_time}.xlsx',index=False)
 
-    # Создаем датафрейм только по отслеживаемым вакансиям
+        req_cols = set(lst_req_cols) # множество для проверки наличия колонок
 
-    for key, lst_vac in dct_filter_vac.items():
-        base_df['Вакансия'] = base_df['Вакансия'].fillna('Не заполнено')
-        temp_filter_df = base_df[base_df['Вакансия'].str.contains('|'.join(lst_vac), case=False,
-                                                                            regex=True)]  # отбираем если содержит в себе список значений
-        key_word = ','.join(lst_vac)
 
-        # Проводим дополнительную фильтрацию
-        if len(dct_exclude_filter_vac[key]) != 0:
-            temp_filter_df = temp_filter_df[
-                ~temp_filter_df['Вакансия'].str.contains('|'.join(dct_exclude_filter_vac[key]), case=False, regex=True)]
-        temp_filter_df = temp_filter_df.assign(Ключевые_слова=key_word)
+        for dirpath, dirnames, filenames in os.walk(data_folder):
+            for file in filenames:
+                if not file.startswith('~$') and (file.endswith('.xlsx')):
+                    name_file = file.split('.xlsx')[0].strip()
+                    print(name_file)
 
-        vac_df = pd.concat([vac_df,temp_filter_df])
+                    # проверяем на правильность даты в названии
+                    result_date = re.search(r'\d{2}_\d{2}_\d{4}', name_file)
+                    if result_date:
+                        file_date = result_date.group()
+                        file_date = file_date.replace('_', '.')
+                    else:
+                        temp_error_df = pd.DataFrame(
+                            data=[[f'{name_file}',
+                                   f'В названии файла отсутствует дата в правильном формате. Требуется формат DD_MM_YYYY т.е. 25.12.2025'
+                                   ]],
+                            columns=['Название файла',
+                                     'Описание ошибки'])
+                        error_df = pd.concat([error_df, temp_error_df], axis=0,
+                                             ignore_index=True)
+                        continue
 
-    vac_df.to_excel(f'{end_folder}/Отслеживаемые вакансии {source_sheet} {current_time}.xlsx', index=False)
+
+                    # начинаем проверку
+                    temp_wb = openpyxl.load_workbook(f'{dirpath}/{file}', read_only=True)
+                    lst_sheets = temp_wb.sheetnames
+                    temp_wb.close()
+                    # проверяем наличие нужного листа в файле
+                    if source_sheet not in lst_sheets:
+                        temp_error_df = pd.DataFrame(
+                            data=[[f'{name_file}',
+                                   f'Отсутствует лист {source_sheet}'
+                                   ]],
+                            columns=['Название файла',
+                                     'Описание ошибки'])
+                        error_df = pd.concat([error_df, temp_error_df], axis=0,
+                                             ignore_index=True)
+
+                        continue
+
+                    df = pd.read_excel(f'{dirpath}/{file}',sheet_name=source_sheet)
+                    diff_cols = req_cols.difference(set(df.columns)) # проверяем отсутствующие колонки
+                    if len(diff_cols) != 0:
+                        df = create_missing_cols(diff_cols,df)
+                        temp_error_df = pd.DataFrame(
+                            data=[[f'{name_file}',
+                                   f'Отсутствуют колонки {diff_cols}. Вместо данных указано значение Нет данных'
+                                   ]],
+                            columns=['Название файла',
+                                     'Описание ошибки'])
+                        error_df = pd.concat([error_df, temp_error_df], axis=0,
+                                             ignore_index=True)
+                    df = df[lst_req_cols]
+                    df['Данные на'] = file_date
+                    base_df = pd.concat([base_df,df])
+
+        # Приводим к единым значениям
+        if 'Образование' in base_df.columns:
+            base_df['Образование'] = base_df['Образование'].replace({'Высшее':'Высшее образование','Высшее-бакалавриат':'Высшее образование — бакалавриат',
+                                                                   'Высшее-подготовка кадров высшей квалификации':'Высшее образование — подготовка кадров высшей квалификации',
+                                                                   'Высшее-специалитет, магистратура':'Высшее образование — специалитет, магистратура',
+                                                                   'Среднее общее':'Среднее общее образование',
+                                                                   'Среднее':'Среднее общее образование',
+                                                                   'Основное общее':'Основное общее образование',
+                                                                   'Общее образование':'Основное общее образование',
+                                                                     'Среднее профессиональное':'Среднее профессиональное образование',
+                                                                  })
+        if 'Сфера деятельности' in base_df.columns:
+            base_df['Сфера деятельности'] = base_df['Сфера деятельности'].fillna('Не указана сфера деятельности')
+        if 'График работы' in base_df.columns:
+            base_df['График работы'] = base_df['График работы'].fillna('Не указан')
+            base_df['График работы'] = base_df['График работы'].replace({'Сменный график':'Сменная работа',
+                                                               'Неполный рабочий день':'Неполный рабочий день/неполная рабочая неделя',
+                                                               'Гибкий график':'Режим гибкого рабочего времени'})
+        if 'Тип занятости' in base_df.columns:
+            base_df['Тип занятости'] = base_df['Тип занятости'].fillna('Не указан')
+            base_df['Тип занятости'] = base_df['Тип занятости'].replace({'Удаленная':'Удалённая'})
+
+        base_df.to_excel(f'{end_folder}/Общий список {source_sheet} {current_time}.xlsx',index=False)
+        error_df.to_excel(f'{end_folder}/Ошибки {current_time}.xlsx',index=False)
+
+        # Создаем датафрейм только по отслеживаемым вакансиям
+
+        if len(dct_filter_vac) != 0:
+            for key, lst_vac in dct_filter_vac.items():
+                base_df['Вакансия'] = base_df['Вакансия'].fillna('Не заполнено')
+                temp_filter_df = base_df[base_df['Вакансия'].str.contains('|'.join(lst_vac), case=False,
+                                                                                    regex=True)]  # отбираем если содержит в себе список значений
+                key_word = ','.join(lst_vac)
+
+                # Проводим дополнительную фильтрацию
+                if len(dct_exclude_filter_vac[key]) != 0:
+                    temp_filter_df = temp_filter_df[
+                        ~temp_filter_df['Вакансия'].str.contains('|'.join(dct_exclude_filter_vac[key]), case=False, regex=True)]
+                temp_filter_df = temp_filter_df.assign(Ключевые_слова=key_word)
+
+                vac_df = pd.concat([vac_df,temp_filter_df])
+
+            vac_df.to_excel(f'{end_folder}/Отслеживаемые вакансии {source_sheet} {current_time}.xlsx', index=False)
+    except NotFile:
+        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
+                                 f'В выбранной папке отсутствуют файлы Excel с расширением xlsx')
+    except PermissionError as e:
+        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
+                             f'Закройте открытые файлы Excel {e.args}')
+    except NameError:
+        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
+                             f'Выберите файлы с данными и папку куда будет генерироваться файл')
+    except KeyError as e:
+        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
+                             f'Не найдено значение {e.args}')
+    except FileNotFoundError:
+        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
+                             f'Перенесите файлы которые вы хотите обработать в корень диска. Проблема может быть\n '
+                             f'в слишком длинном пути к обрабатываемым файлам')
+    except OSError:
+        messagebox.showerror('Кассандра Подсчет данных по трудоустройству выпускников',
+                             f'Укажите в качестве конечной папки, папку в корне диска с коротким названием. Проблема может быть\n '
+                             f'в слишком длинном пути к создаваемому файлу')
+
+    else:
+        messagebox.showinfo('Кассандра Подсчет данных по трудоустройству выпускников',
+                            'Данные успешно обработаны.Ошибок не обнаружено')
 
 
 
