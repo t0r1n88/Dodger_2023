@@ -11,7 +11,7 @@ from create_svod_trudvsem import processing_data_trudvsem # импортируе
 from contrast_svod_trudvsem import prepare_diff_svod_trudvsem # импортируем функцию для измерения разницы между двумя сводами
 from cass_difference import prepare_diffrence  # импортируем функцию для нахождения разницы между двумя таблицами
 from create_time_series_svod import processing_time_series # импортируем функцию создания временных рядов по сводам вакансий
-from extract_list_region import processing_time_series_list_vac # импортируем функцию для создания временных рядов по спискам вакансий
+from create_time_series_list import processing_time_series_list_vac # импортируем функцию для создания временных рядов по спискам вакансий
 import sys
 import pandas as pd
 import os
