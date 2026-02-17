@@ -1271,7 +1271,7 @@ if __name__ == '__main__':
 
     main_file_data = 'data/vacancy.csv'
     main_org_file = 'data/Пустой файл организаций.xlsx'
-    main_filter_vac_file = 'data/Свод для динамики вакансий.xlsx'
+    main_filter_vac_file = 'data/Отслеживаемые вакансии.xlsx'
     df = pd.read_csv(main_file_data, encoding='UTF-8', sep='|', dtype=str, on_bad_lines='skip')
     temp_df = pd.read_excel('data/Список регионов.xlsx')
     lst_region = temp_df['Регион'].tolist()
