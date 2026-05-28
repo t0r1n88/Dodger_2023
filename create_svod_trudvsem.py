@@ -217,13 +217,11 @@ def extract_phone_number(value):
         if value:
             data = json.loads(value)
             for item in data:
-                if item.get('contactType') == 'Телефон':
-                    phone_number = item.get('contactValue','Не указан')
-                    break
-            if phone_number:
-                return phone_number
-            else:
-                return None
+                phone_number = item.get('contactValue','Не указан')
+                if '@' not in phone_number:
+                    return phone_number
+                else:
+                    continue
         else:
             return None
     except:
@@ -237,13 +235,11 @@ def extract_contact_email(value):
         if value:
             data = json.loads(value)
             for item in data:
-                if item.get('contactType') == 'Эл. почта':
-                    email = item.get('contactValue','Не указан')
-                    break
-            if email:
-                return email
-            else:
-                return None
+                email = item.get('contactValue','Не указан')
+                if '@' in email:
+                    return email
+                else:
+                    continue
         else:
             return None
     except:
