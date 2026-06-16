@@ -1,0 +1,24 @@
+Ссылка на свидетельство:
+https://fips.ru/EGD/c0620c55-b2ac-444f-9011-855e11a9e51f
+
+Обучающие материалы по программе Кассандра
+
+Руководство пользователя
+https://itdarhan.ru/files/cassandra/Руководство%20пользователя%20программы%20Лахесис.docx
+
+Инструкция по установке и началу работы
+https://itdarhan.ru/files/cassandra/Инструкция%20по%20установке%20и%20началу%20работы.docx
+
+Материалы для внедрения
+https://itdarhan.ru/files/cassandra/Материалы%20для%20внедрения.zip
+
+Обучающие ролики
+
+
+Ссылки для скачивания
+Windows x64
+https://itdarhan.ru/files/cassandra/Кассандра%20для%20Windows%20x64.zip
+
+
+Linux x64
+https://itdarhan.ru/files/cassandra/Кассандра%20для%20Linux%20x64.zip
