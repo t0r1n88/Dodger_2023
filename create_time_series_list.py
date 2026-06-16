@@ -262,7 +262,7 @@ def processing_time_series_list_vac(data_folder:str,end_folder:str,file_params_c
                         df = create_missing_cols(diff_cols,df)
                         temp_error_df = pd.DataFrame(
                             data=[[f'{name_file}',
-                                   f'Отсутствуют колонки {diff_cols}. Вместо данных указано значение Нет данных'
+                                   f'Отсутствуют колонки {diff_cols}. Вместо данных будет указано значение Нет данных'
                                    ]],
                             columns=['Название файла',
                                      'Описание ошибки'])

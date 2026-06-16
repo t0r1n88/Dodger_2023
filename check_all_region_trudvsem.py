@@ -806,7 +806,10 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
     try:
         t = time.localtime()  # получаем текущее время и дату
         current_time = time.strftime('%H_%M_%S', t)
-        current_date = time.strftime('%d_%m_%Y', t)
+        # current_date = time.strftime('%d_%m_%Y', t)
+        now = datetime.datetime.now()
+        previous_day = now - datetime.timedelta(days=1)
+        current_date = previous_day.strftime('%d_%m_%Y')
         # Получаем данные из csv
         company_df = pd.read_excel(file_org, dtype=str,usecols='A:B') # получаем данные из файла с организациями
         company_df.dropna(inplace=True) # удаляем незаполненные строки
