@@ -4,7 +4,7 @@ https://fips.ru/EGD/c0620c55-b2ac-444f-9011-855e11a9e51f
 Обучающие материалы по программе Кассандра
 
 Руководство пользователя
-https://itdarhan.ru/files/cassandra/Руководство%20пользователя%20программы%20Лахесис.docx
+https://itdarhan.ru/files/cassandra/Руководство%20пользователя%20программы%20Кассандра.docx
 
 Инструкция по установке и началу работы
 https://itdarhan.ru/files/cassandra/Инструкция%20по%20установке%20и%20началу%20работы.docx
@@ -13,7 +13,7 @@ https://itdarhan.ru/files/cassandra/Инструкция%20по%20установ
 https://itdarhan.ru/files/cassandra/Материалы%20для%20внедрения.zip
 
 Обучающие ролики
-
+https://disk.yandex.ru/d/P5T16h-zxFAlSg
 
 Ссылки для скачивания
 Windows x64
