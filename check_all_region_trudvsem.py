@@ -924,7 +924,7 @@ def processing_data_trudvsem(file_data:str,file_org:str,end_folder:str,region:st
                     company_program_mobile_df.to_excel(writer, sheet_name='Трудовая мобильность', index=False)
                     company_migrant_mobile_df.to_excel(writer, sheet_name='Для иностранцев', index=False)
 
-            with pd.ExcelWriter(f'{end_folder}/Вакансии по региону от {current_time}.xlsx') as writer:
+            with pd.ExcelWriter(f'{end_folder}/Вакансии по региону от {current_date}.xlsx') as writer:
                 prepared_df.to_excel(writer, sheet_name='Только подтвержденные вакансии', index=False)
                 quote_df.to_excel(writer, sheet_name='Квотируемые', index=False)
                 soc_df.to_excel(writer, sheet_name='Для соц категорий', index=False)
