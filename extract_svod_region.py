@@ -114,8 +114,8 @@ if __name__ == '__main__':
     main_data_folder = 'e:/Работа в России/'
     main_end_folder ='e:/Все регионы'
     main_end_folder ='e:/Отдельные регионы'
-    main_lst_region = ['Иркутская область','Республика Бурятия']
     main_lst_region = []
+    main_lst_region = ['Иркутская область','Республика Бурятия']
 
     start_time = time.time()
     collecting_svod_region(main_data_folder,main_end_folder,main_lst_region)
